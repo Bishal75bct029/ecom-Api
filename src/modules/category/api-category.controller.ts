@@ -3,8 +3,8 @@ import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 
-@Controller('category')
-export class CategoryController {
+@Controller('api/categories')
+export class ApiCategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
