@@ -1,0 +1,12 @@
+import * as dotenv from 'dotenv';
+import { cleanEnv, port, str } from 'envalid';
+
+dotenv.config();
+
+export const envConfig = cleanEnv(process.env, {
+  DB_NAME: str(),
+  DB_HOST: str(),
+  DB_PORT: port(),
+  DB_USER: str(),
+  DB_PASSWORD: str(),
+});
