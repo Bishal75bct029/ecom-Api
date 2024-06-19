@@ -9,6 +9,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { TransformResponseInterceptor } from './common/interceptors/transform-response.interceptor';
 import { AdminMiddleware } from './common/middlewares/admin/admin.middleware';
 import { ApiMiddleware } from './common/middlewares/api/api.middleware';
+import { ReviewModule } from './modules/review/review.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ApiMiddleware } from './common/middlewares/api/api.middleware';
       retryAttempts: 5,
     }),
     CategoryModule,
+    ReviewModule,
   ],
   controllers: [AppController],
   providers: [

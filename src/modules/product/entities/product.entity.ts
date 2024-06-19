@@ -2,6 +2,7 @@ import { BaseEntity } from '@/libs/entity/base.entity';
 import { Column, Entity, JoinTable, ManyToMany, OneToMany } from 'typeorm';
 import { ProductMetaEntity } from './productMeta.entity';
 import { CategoryEntity } from '@/modules/category/entities/category.entity';
+import { ReviewEntity } from '@/modules/review/entities/review.entity';
 
 @Entity({ name: 'products' })
 export class ProductEntity extends BaseEntity {
@@ -20,4 +21,7 @@ export class ProductEntity extends BaseEntity {
 
   @OneToMany(() => ProductMetaEntity, (productMeta) => productMeta.product)
   productMeta: ProductMetaEntity[];
+
+  @OneToMany(() => ReviewEntity, (review) => review.product)
+  reviews: ReviewEntity[];
 }

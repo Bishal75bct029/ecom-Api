@@ -14,9 +14,9 @@ export class ApiProductController {
   create(@Body() createProductDto: CreateProductDto) {
     return this.productService.create(createProductDto);
   }
-  
+
   @Get()
   get() {
-    return "api"
+    return 'api';
   }
 }
