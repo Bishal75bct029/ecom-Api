@@ -15,17 +15,17 @@ export abstract class AbstractService<T> {
     return this.repository.find(findManyOptions);
   }
 
-  async createAndSave(newData: DeepPartial<T>) {
-    const newEntity = this.repository.create(newData);
+  async createAndSave(data: DeepPartial<T>) {
+    const newEntity = this.repository.create(data);
     return this.repository.save(newEntity);
   }
 
-  create(newData: DeepPartial<T>) {
-    return this.repository.create(newData);
+  create(data: DeepPartial<T>) {
+    return this.repository.create(data);
   }
 
-  createMany(newData: DeepPartial<T>[]) {
-    return this.repository.create(newData);
+  createMany(data: DeepPartial<T>[]) {
+    return this.repository.create(data);
   }
 
   async update(findOption: FindOptionsWhere<T>, partialEntity: QueryDeepPartialEntity<T>) {
