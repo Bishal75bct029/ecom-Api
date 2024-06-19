@@ -19,7 +19,7 @@ export class ProductMetaEntity extends BaseEntity {
   @Column({ type: 'bool', default: false, nullable: false })
   isDefault?: boolean;
 
-  @Column({ nullable: true })
+  @Column({ nullable: false })
   stock: number;
 
   @ManyToOne(() => ProductEntity, (product) => product.productMeta)

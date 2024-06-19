@@ -36,6 +36,10 @@ export class CreateProductDto {
 }
 
 export class CreateProductMetaDto {
+  @IsUUID()
+  @IsOptional()
+  id: string;
+
   @IsString()
   @IsNotEmpty()
   sku: string;
@@ -55,4 +59,8 @@ export class CreateProductMetaDto {
   @IsBoolean()
   @IsOptional()
   isDefault: boolean;
+
+  @IsNumber()
+  @IsNotEmpty()
+  stock: number;
 }
