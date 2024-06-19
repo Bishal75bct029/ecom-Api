@@ -8,20 +8,18 @@ export abstract class AbstractService<T> {
   constructor(private readonly repository: Repository<T>) {}
 
   async findOne(findOneOptions: FindOneOptions<T>) {
-    const result = await this.repository.findOne(findOneOptions);
-
-    return result;
+    return this.repository.findOne(findOneOptions);
   }
 
-  async find(findManyOptions: FindManyOptions<T>) {
+  async find(findManyOptions: FindManyOptions<T> = {}) {
     return this.repository.find(findManyOptions);
   }
   async create(newData: DeepPartial<T>) {
     const newEntity = this.repository.create(newData);
-    return await this.repository.save(newEntity);
+    return this.repository.save(newEntity);
   }
 
   async update(findOption: FindOptionsWhere<T>, partialEntity: QueryDeepPartialEntity<T>) {
-    return await this.repository.update(findOption, partialEntity);
+    return this.repository.update(findOption, partialEntity);
   }
 }

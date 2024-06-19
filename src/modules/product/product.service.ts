@@ -6,9 +6,7 @@ import { ProductEntity } from './entities/product.entity';
 
 @Injectable()
 export class ProductService extends AbstractService<ProductEntity> {
-  constructor(
-    @InjectRepository(ProductEntity) private readonly itemRepository: Repository<ProductEntity>,
-  ) {
+  constructor(@InjectRepository(ProductEntity) private readonly itemRepository: Repository<ProductEntity>) {
     super(itemRepository);
   }
 }
