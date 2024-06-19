@@ -6,6 +6,10 @@ export class CreateCategoryDto {
   name: string;
 
   @IsString()
+  @IsNotEmpty()
+  image: string;
+
+  @IsString()
   @IsOptional()
   parent: string;
 }

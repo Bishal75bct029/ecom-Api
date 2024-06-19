@@ -14,7 +14,11 @@ export class CategoryService extends AbstractService<CategoryEntity> {
     return this.itemRepository.findTrees(options);
   }
 
-  async findDescendantsTree(entity: CategoryEntity) {
-    return this.itemRepository.findDescendantsTree(entity);
+  async findDescendantsTree(entity: CategoryEntity, options: FindTreeOptions = {}) {
+    return this.itemRepository.findDescendantsTree(entity, options);
+  }
+
+  async findAncestorsTree(entity: CategoryEntity, options: FindTreeOptions = {}) {
+    return this.itemRepository.findAncestorsTree(entity, options);
   }
 }

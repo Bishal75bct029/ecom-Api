@@ -8,6 +8,9 @@ export class CategoryEntity extends BaseEntity {
   @Column()
   name: string;
 
+  @Column({ type: 'text', nullable: false })
+  image: string;
+
   @TreeChildren()
   children: CategoryEntity[];
 

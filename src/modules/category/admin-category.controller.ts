@@ -10,14 +10,14 @@ export class AdminCategoryController {
   @Post()
   async create(@Body() createCategoryDto: CreateCategoryDto) {
     if (!createCategoryDto.parent) {
-      return this.categoryService.create({ name: createCategoryDto.name });
+      return this.categoryService.createAndSave({ name: createCategoryDto.name });
     }
 
     const parentCategory = await this.categoryService.findOne({ where: { id: createCategoryDto.parent } });
 
     if (!parentCategory) throw new BadRequestException('Category parent not found');
 
-    return this.categoryService.create({ name: createCategoryDto.name, parent: parentCategory });
+    return this.categoryService.createAndSave({ name: createCategoryDto.name, parent: parentCategory });
   }
 
   @Get()

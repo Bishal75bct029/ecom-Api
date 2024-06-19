@@ -8,6 +8,12 @@ export class ProductEntity extends BaseEntity {
   @Column()
   name: string;
 
+  @Column()
+  description: string;
+
+  @Column({ type: 'simple-array' })
+  tags: string[];
+
   @ManyToMany(() => CategoryEntity, (category) => category.products)
   @JoinTable({ name: 'product_categories' })
   categories: CategoryEntity[];
