@@ -14,4 +14,9 @@ export class AdminProductController {
   create(@Body() createProductDto: CreateProductDto) {
     return this.productService.create(createProductDto);
   }
+
+  @Get()
+  get() {
+    return "admin"
+  }
 }
