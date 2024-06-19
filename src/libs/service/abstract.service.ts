@@ -7,6 +7,14 @@ import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity
 export abstract class AbstractService<T> {
   constructor(private readonly repository: Repository<T>) {}
 
+  create(data: DeepPartial<T>) {
+    return this.repository.create(data);
+  }
+
+  createMany(data: DeepPartial<T>[]) {
+    return this.repository.create(data);
+  }
+
   async findOne(findOneOptions: FindOneOptions<T>) {
     return this.repository.findOne(findOneOptions);
   }
@@ -18,14 +26,6 @@ export abstract class AbstractService<T> {
   async createAndSave(data: DeepPartial<T>) {
     const newEntity = this.repository.create(data);
     return this.repository.save(newEntity);
-  }
-
-  create(data: DeepPartial<T>) {
-    return this.repository.create(data);
-  }
-
-  createMany(data: DeepPartial<T>[]) {
-    return this.repository.create(data);
   }
 
   async update(findOption: FindOptionsWhere<T>, partialEntity: QueryDeepPartialEntity<T>) {
