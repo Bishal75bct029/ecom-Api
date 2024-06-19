@@ -9,7 +9,7 @@ export class ProductEntity extends BaseEntity {
   name: string;
 
   @ManyToMany(() => CategoryEntity, (category) => category.products)
-  @JoinTable({name: "product_categories"})
+  @JoinTable({ name: 'product_categories' })
   categories: CategoryEntity[];
 
   @OneToMany(() => ProductMetaEntity, (productMeta) => productMeta.product)
