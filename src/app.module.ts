@@ -10,6 +10,7 @@ import { TransformResponseInterceptor } from './common/interceptors/transform-re
 import { AdminMiddleware } from './common/middlewares/admin/admin.middleware';
 import { ApiMiddleware } from './common/middlewares/api/api.middleware';
 import { ReviewModule } from './modules/review/review.module';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ReviewModule } from './modules/review/review.module';
     }),
     CategoryModule,
     ReviewModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [
