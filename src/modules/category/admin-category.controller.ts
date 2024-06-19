@@ -12,8 +12,11 @@ export class AdminCategoryController {
     if (!createCategoryDto.parent) {
       return this.categoryService.create({ name: createCategoryDto.name });
     }
+
     const parentCategory = await this.categoryService.findOne({ where: { id: createCategoryDto.parent } });
+
     if (!parentCategory) throw new BadRequestException('Category parent not found');
+
     return this.categoryService.create({ name: createCategoryDto.name, parent: parentCategory });
   }
 
@@ -25,14 +28,18 @@ export class AdminCategoryController {
   @Get(':id')
   async getById(@Param('id') id: string) {
     const category = await this.categoryService.findOne({ where: { id } });
+
     return this.categoryService.findDescendantsTree(category);
   }
 
   @Put(':id')
   async update(@Param('id') id: string, @Body() updateCategoryDto: UpdateCategoryDto) {
     const category = await this.categoryService.findOne({ where: { id } });
+
     if (!category) throw new BadRequestException('Category not found');
+
     await this.categoryService.update({ id }, updateCategoryDto);
+
     return this.categoryService.findDescendantsTree(category);
   }
 }
