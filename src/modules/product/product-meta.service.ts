@@ -3,11 +3,12 @@ import { AbstractService } from '@/libs/service/abstract.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ProductEntity } from './entities/product.entity';
+import { ProductMetaEntity } from './entities/productMeta.entity';
 
 @Injectable()
-export class ProductService extends AbstractService<ProductEntity> {
+export class ProductMetaService extends AbstractService<ProductMetaEntity> {
   constructor(
-    @InjectRepository(ProductEntity) private readonly itemRepository: Repository<ProductEntity>,
+    @InjectRepository(ProductMetaEntity) private readonly itemRepository: Repository<ProductMetaEntity>,
   ) {
     super(itemRepository);
   }
