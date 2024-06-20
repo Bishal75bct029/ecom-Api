@@ -5,7 +5,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductMetaService } from './product-meta.service';
 import { CategoryService } from '../category/category.service';
 import { ILike, In } from 'typeorm';
-import { getRecursiveDataArray } from '@/common/utils/getRecursiveDataArray.util';
+import { getRecursiveDataArray } from './helpers/getRecursiveDataArray.util';
 
 @Controller('admin/products')
 export class AdminProductController {
