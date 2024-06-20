@@ -1,13 +1,29 @@
-export const getRecursiveDataArray = (recursiveKey: string, dataKey: string) => {
+export const getRecursiveDataArrayFromObjectOrArray = ({
+  recursiveObjectKey,
+  dataKey,
+  recursiveData,
+}: {
+  recursiveObjectKey: string;
+  dataKey: string;
+  recursiveData: Array<Record<string, any>> | Record<string, any>;
+}) => {
   const array = [];
+
   const recursiveFunc = (x: Record<string, any>) => {
     if (!array.includes(x[dataKey])) {
       array.push(x[dataKey]);
     }
-    if (recursiveKey in x && Object.keys(x[recursiveKey]).length > 0) {
-      array.push(x[recursiveKey][dataKey]);
-      recursiveFunc(x[recursiveKey]);
+    if (recursiveObjectKey in x && Object.keys(x[recursiveObjectKey]).length > 0) {
+      array.push(x[recursiveObjectKey][dataKey]);
+      recursiveFunc(x[recursiveObjectKey]);
     }
   };
-  return { recursiveFunc, array };
+
+  if (Array.isArray(recursiveData)) {
+    recursiveData.forEach(recursiveFunc);
+  } else {
+    recursiveFunc(recursiveData);
+  }
+
+  return array;
 };

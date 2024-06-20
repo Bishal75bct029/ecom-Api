@@ -5,7 +5,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductMetaService } from './product-meta.service';
 import { CategoryService } from '../category/category.service';
 import { ILike, In } from 'typeorm';
-import { getRecursiveDataArray } from './helpers/getRecursiveDataArray.util';
+import { getRecursiveDataArrayFromObjectOrArray } from './helpers/getRecursiveDataArray.util';
 
 @Controller('admin/products')
 export class AdminProductController {
@@ -26,8 +26,11 @@ export class AdminProductController {
 
     const ancestors = await Promise.all(categories.map((category) => this.categoryService.findAncestorsTree(category)));
 
-    const { recursiveFunc, array: categoryAncestoryList } = getRecursiveDataArray('parent', 'name');
-    ancestors.forEach((ancestor) => recursiveFunc(ancestor));
+    const categoryAncestoryList = getRecursiveDataArrayFromObjectOrArray({
+      recursiveData: ancestors,
+      recursiveObjectKey: 'parent',
+      dataKey: 'name',
+    });
 
     const tags = [...new Set([...categoryAncestoryList, ...newProduct.tags])];
 
@@ -58,8 +61,11 @@ export class AdminProductController {
 
     const ancestors = await Promise.all(categories.map((category) => this.categoryService.findAncestorsTree(category)));
 
-    const { recursiveFunc, array: categoryAncestoryList } = getRecursiveDataArray('parent', 'name');
-    ancestors.forEach((ancestor) => recursiveFunc(ancestor));
+    const categoryAncestoryList = getRecursiveDataArrayFromObjectOrArray({
+      recursiveData: ancestors,
+      recursiveObjectKey: 'parent',
+      dataKey: 'name',
+    });
 
     const tags = [...new Set([...categoryAncestoryList, ...product.tags])];
 
