@@ -10,6 +10,8 @@ import { AdminMiddleware } from './common/middlewares/admin/admin.middleware';
 import { ApiMiddleware } from './common/middlewares/api/api.middleware';
 import { ReviewModule } from './modules/review/review.module';
 import { UserModule } from './modules/user/user.module';
+import { CartModule } from './modules/cart/cart.module';
+import { OrderModule } from './modules/order/order.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { UserModule } from './modules/user/user.module';
     CategoryModule,
     ReviewModule,
     UserModule,
+    CartModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [
