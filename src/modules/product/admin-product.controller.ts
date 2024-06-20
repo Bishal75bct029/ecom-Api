@@ -44,7 +44,7 @@ export class AdminProductController {
   }
 
   @Get()
-  async getAllProducts(@Query('name') name: string) {
+  async getAllProducts(@Query('name') name?: string) {
     return this.productService.find({
       where: [{ name: ILike(`%${name}%`) }, { tags: ILike(`%${name}%`) }, { description: ILike(`%${name}%`) }],
       relations: ['productMeta', 'categories'],

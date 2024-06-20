@@ -11,4 +11,6 @@ export const envConfig = cleanEnv(process.env, {
   DB_PASSWORD: str(),
   NODE_ENV: str({ default: 'local', choices: ['local', 'development', 'staging', 'production'] }),
   PORT: port({ default: 3000 }),
+
+  JWT_SECRET: str(),
 });
