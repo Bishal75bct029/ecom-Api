@@ -34,9 +34,7 @@ export class AdminUserController {
       throw new BadRequestException('Invalid Credentials');
 
     const [token, refreshToken] = await this.userService.generateAuthTokens(user);
-
-    res.cookie('x-auth-cookie', token, { httpOnly: true, maxAge: 2 * 60 * 1000 });
-    res.cookie('x-refresh-cookie', refreshToken, { httpOnly: true, maxAge: 5 * 24 * 60 * 60 * 1000 });
+    this.userService.setCookie(res, token, refreshToken);
     return res.send();
   }
 
@@ -56,12 +54,10 @@ export class AdminUserController {
 
       const user = await this.userService.findOne({ where: { id: payload.id } });
 
-      if (!user) throw new BadRequestException('Invalid Credentials');
+      if (!user) throw new ForbiddenException('Invalid Credentials');
 
       const [token, generatedRefreshToken] = await this.userService.generateAuthTokens(user);
-
-      res.cookie('x-auth-cookie', token, { httpOnly: true, maxAge: 2 * 60 * 1000 });
-      res.cookie('x-refresh-cookie', generatedRefreshToken, { httpOnly: true, maxAge: 5 * 24 * 60 * 60 * 1000 });
+      this.userService.setCookie(res, token, generatedRefreshToken);
       return res.send();
     } catch (error) {
       throw new ForbiddenException('Refresh token expired.');
