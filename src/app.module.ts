@@ -36,7 +36,10 @@ import { OrderModule } from './modules/order/order.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AdminMiddleware).forRoutes({ path: 'admin/*', method: RequestMethod.ALL });
+    consumer
+      .apply(AdminMiddleware)
+      .exclude('admin/users/login')
+      .forRoutes({ path: 'admin/*', method: RequestMethod.ALL });
     consumer.apply(ApiMiddleware).forRoutes({ path: 'api/*', method: RequestMethod.ALL });
   }
 }
