@@ -1,6 +1,6 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, BadRequestException } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateAdminUserDto } from './dto/create-user.dto';
+import { CreateAdminUserDto, LoginAdminUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { UserRoleEnum } from './entities/user.entity';
 @Controller('admin/users')
@@ -15,5 +15,17 @@ export class AdminUserController {
     delete user.password;
 
     return user;
+  }
+
+  @Post('login')
+  async loaginAdmin(@Body() loginAdminUserDto: LoginAdminUserDto) {
+    const user = await this.userService.findOne({ where: { email: loginAdminUserDto.email } });
+
+    if (!user) throw new BadRequestException('Invalid Credentials');
+
+    if (!(await bcrypt.compare(loginAdminUserDto.password, user.password)))
+      throw new BadRequestException('Invalid Credentials');
+    
+    return loginAdminUserDto;
   }
 }
