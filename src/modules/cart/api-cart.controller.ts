@@ -1,13 +1,34 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Put, Param, BadRequestException } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { CreateCartDto } from './dto/create-cart.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('API Cart')
 @Controller('api/carts')
 export class ApiCartController {
   constructor(private readonly cartService: CartService) {}
 
   @Post()
-  create(@Body() createCartDto: CreateCartDto) {
-    return this.cartService.create(createCartDto);
+  async addToCart(@Body() createCartDto: CreateCartDto) {
+    const isUserCartAvailable = await this.cartService.findOne({ where: { userId: createCartDto.userId } });
+    if (isUserCartAvailable) {
+      return this.cartService.createAndSave({ ...createCartDto, id: isUserCartAvailable.id });
+    }
+    return this.cartService.createAndSave(createCartDto);
+  }
+
+  @Put(':id')
+  async updateCartItems(@Body() createCartDto: CreateCartDto, @Param('id') id: string) {
+    const isCartAvailable = await this.cartService.findOne({ where: { id } });
+    if (!isCartAvailable) {
+      throw new BadRequestException('Cart not found');
+    }
+
+    const isUserCartAvailable = await this.cartService.findOne({ where: { userId: createCartDto.userId } });
+    if (!isUserCartAvailable) {
+      throw new BadRequestException('User cart not found');
+    }
+
+    return this.cartService.createAndSave({ ...createCartDto, id: isUserCartAvailable.id });
   }
 }

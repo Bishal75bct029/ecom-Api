@@ -2,7 +2,9 @@ import { Controller, Post, Body, Get, Param, BadRequestException, Put } from '@n
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Admin Category')
 @Controller('admin/categories')
 export class AdminCategoryController {
   constructor(private readonly categoryService: CategoryService) {}

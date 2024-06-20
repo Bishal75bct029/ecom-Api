@@ -6,7 +6,9 @@ import { ProductMetaService } from './product-meta.service';
 import { CategoryService } from '../category/category.service';
 import { ILike, In } from 'typeorm';
 import { getRecursiveDataArrayFromObjectOrArray } from './helpers/getRecursiveDataArray.util';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Admin Product')
 @Controller('admin/products')
 export class AdminProductController {
   constructor(
