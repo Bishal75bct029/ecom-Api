@@ -1,5 +1,7 @@
 import { BaseEntity } from '@/libs/entity/base.entity';
-import { Column, Entity } from 'typeorm';
+import { UserEntity } from '@/modules/user/entities/user.entity';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { OrderItemEntity } from './order-item.entity';
 
 @Entity('orders')
 export class OrderEntity extends BaseEntity {
@@ -9,15 +11,9 @@ export class OrderEntity extends BaseEntity {
   @Column({ type: 'bigint', nullable: false })
   totalPrice: number;
 
-  @Column({ type: 'text', nullable: false })
-  shippingAddress: string;
+  @OneToMany(() => OrderItemEntity, (orderItems) => orderItems.order)
+  orderItems: OrderItemEntity[];
 
-  @Column({ type: 'text', nullable: false })
-  billingAddress: string;
-
-  @Column({ type: 'text', nullable: false })
-  shippingContact: string;
-
-  @Column({ type: 'text', nullable: false })
-  billingContact: string;
+  @ManyToOne(() => UserEntity, (user) => user.orders)
+  user: UserEntity;
 }

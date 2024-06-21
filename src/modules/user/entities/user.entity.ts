@@ -1,6 +1,8 @@
 import { BaseEntity } from '@/libs/entity/base.entity';
 import { ReviewEntity } from '@/modules/review/entities/review.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
+import { AddressEntity } from './address.entity';
+import { OrderEntity } from '@/modules/order/entities/order.entity';
 
 export enum UserRoleEnum {
   ADMIN = 'ADMIN',
@@ -25,4 +27,10 @@ export class UserEntity extends BaseEntity {
 
   @OneToMany(() => ReviewEntity, (review) => review.user)
   reviews: ReviewEntity[];
+
+  @OneToMany(() => AddressEntity, (address) => address.user)
+  addresses: AddressEntity[];
+
+  @OneToMany(() => OrderEntity, (order) => order.user)
+  orders: OrderEntity[];
 }

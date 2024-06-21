@@ -4,9 +4,10 @@ import { ApiUserController } from './api-user.controller';
 import { AdminUserController } from './admin-user.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from './entities/user.entity';
+import { AddressEntity } from './entities/address.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity])],
+  imports: [TypeOrmModule.forFeature([UserEntity, AddressEntity])],
   controllers: [ApiUserController, AdminUserController],
   providers: [UserService],
 })
