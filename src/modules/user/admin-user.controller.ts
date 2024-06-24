@@ -23,7 +23,7 @@ export class AdminUserController {
 
   @Post('login')
   async loginAdmin(@Body() loginUserDto: LoginUserDto, @Res() res: Response) {
-    return this.userService.login(loginUserDto, res);
+    return this.userService.login(loginUserDto, res, UserRoleEnum.ADMIN);
   }
 
   @Post('logout')
@@ -33,6 +33,6 @@ export class AdminUserController {
 
   @Post('refresh')
   async refreshAdmin(@Req() req: Request, @Res() res: Response) {
-    return this.userService.refresh(req, res);
+    return this.userService.refresh(req, res, UserRoleEnum.ADMIN);
   }
 }

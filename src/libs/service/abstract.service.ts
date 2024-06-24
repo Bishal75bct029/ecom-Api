@@ -1,6 +1,6 @@
 // abstract.service.ts
 import { Injectable } from '@nestjs/common';
-import { Repository, DeepPartial, FindManyOptions, FindOneOptions, FindOptionsWhere } from 'typeorm';
+import { Repository, DeepPartial, FindManyOptions, FindOneOptions, FindOptionsWhere, SaveOptions } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 @Injectable()
@@ -23,9 +23,9 @@ export abstract class AbstractService<T> {
     return this.repository.find(findManyOptions);
   }
 
-  async createAndSave(data: DeepPartial<T>) {
+  async createAndSave(data: DeepPartial<T>, options: SaveOptions = {}) {
     const newEntity = this.repository.create(data);
-    return this.repository.save(newEntity);
+    return this.repository.save(newEntity, options);
   }
 
   async update(findOption: FindOptionsWhere<T>, partialEntity: QueryDeepPartialEntity<T>) {
@@ -40,11 +40,11 @@ export abstract class AbstractService<T> {
     return this.repository.softDelete(findOption);
   }
 
-  async save(newEntity: T) {
-    return this.repository.save(newEntity);
+  async save(newEntity: T, options: SaveOptions = {}) {
+    return this.repository.save(newEntity, options);
   }
 
-  async saveMany(newEntities: T[]) {
-    return this.repository.save(newEntities);
+  async saveMany(newEntities: T[], options: SaveOptions = {}) {
+    return this.repository.save(newEntities, options);
   }
 }

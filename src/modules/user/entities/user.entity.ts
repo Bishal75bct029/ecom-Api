@@ -8,6 +8,7 @@ export enum UserRoleEnum {
   ADMIN = 'ADMIN',
   USER = 'USER',
 }
+
 @Entity('users')
 export class UserEntity extends BaseEntity {
   @Column({ type: 'varchar', nullable: false, unique: true })

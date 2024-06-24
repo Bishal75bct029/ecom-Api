@@ -12,5 +12,6 @@ import { CategoryModule } from '../category/category.module';
   imports: [TypeOrmModule.forFeature([ProductEntity, ProductMetaEntity]), CategoryModule],
   controllers: [ApiProductController, AdminProductController],
   providers: [ProductService, ProductMetaService],
+  exports: [ProductService, ProductMetaService],
 })
 export class ProductModule {}

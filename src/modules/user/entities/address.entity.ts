@@ -1,5 +1,5 @@
 import { BaseEntity } from '@/libs/entity/base.entity';
-import { Column, Entity, ManyToMany, ManyToOne } from 'typeorm';
+import { Column, Entity, ManyToOne } from 'typeorm';
 import { UserEntity } from './user.entity';
 
 export enum AddressTypeEnum {
