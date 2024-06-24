@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv';
-import { cleanEnv, port, str } from 'envalid';
+import { cleanEnv, num, port, str } from 'envalid';
 
 dotenv.config();
 
@@ -13,4 +13,11 @@ export const envConfig = cleanEnv(process.env, {
   PORT: port({ default: 3000 }),
 
   JWT_SECRET: str(),
+  JWT_ISSUER: str(),
+  JWT_AUDIENCE: str(),
+  JWT_TTL: num(),
+  JWT_REFRESH_TOKEN_TTL: num(),
+
+  REDIS_URL: str(),
+  REDIS_PREFIX: str(),
 });

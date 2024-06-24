@@ -14,6 +14,7 @@ import { UserModule } from './modules/user/user.module';
 import { CartModule } from './modules/cart/cart.module';
 import { OrderModule } from './modules/order/order.module';
 import { envConfig } from './configs/envConfig';
+import { RedisModule } from './libs/redis/redis.module';
 
 @Module({
   imports: [
@@ -24,12 +25,13 @@ import { envConfig } from './configs/envConfig';
     JwtModule.register({
       global: true,
       secret: envConfig.JWT_SECRET,
-      signOptions: { audience: 'ecom-client', issuer: 'ecom-server' },
+      signOptions: { audience: envConfig.JWT_AUDIENCE, issuer: envConfig.JWT_ISSUER },
       verifyOptions: {
-        audience: 'ecom-client',
-        issuer: 'ecom-server',
+        audience: envConfig.JWT_AUDIENCE,
+        issuer: envConfig.JWT_ISSUER,
       },
     }),
+    RedisModule,
     ProductModule,
     CategoryModule,
     ReviewModule,

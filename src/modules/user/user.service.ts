@@ -3,9 +3,9 @@ import { AbstractService } from '@/libs/service/abstract.service';
 import { UserEntity } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { JwtPayload } from '@/common/middlewares/admin/admin.middleware';
 import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
+import { envConfig } from '@/configs/envConfig';
 
 @Injectable()
 export class UserService extends AbstractService<UserEntity> {
@@ -16,15 +16,23 @@ export class UserService extends AbstractService<UserEntity> {
     super(itemRepository);
   }
 
-  async generateAuthTokens(user: JwtPayload) {
+  async generateAuthTokens(user: UserJwtPayload) {
     return Promise.all([
-      this.jwtService.signAsync({ id: user.id, role: user.role }, { expiresIn: '2m' }),
-      this.jwtService.signAsync({ id: user.id, role: user.role }, { expiresIn: '5d' }),
+      this.jwtService.signAsync({ id: user.id, role: user.role }, { expiresIn: envConfig.JWT_TTL }),
+      this.jwtService.signAsync({ id: user.id, role: user.role }, { expiresIn: envConfig.JWT_REFRESH_TOKEN_TTL }),
     ]);
   }
 
   setCookie(res: Response, token: string, refreshToken: string) {
-    res.cookie('x-auth-cookie', token, { httpOnly: true, maxAge: 2 * 60 * 1000, secure: true });
-    res.cookie('x-refresh-cookie', refreshToken, { httpOnly: true, maxAge: 5 * 24 * 60 * 60 * 1000, secure: true });
+    res.cookie('x-auth-cookie', token, {
+      httpOnly: true,
+      maxAge: envConfig.JWT_TTL,
+      secure: envConfig.NODE_ENV !== 'local',
+    });
+    res.cookie('x-refresh-cookie', refreshToken, {
+      httpOnly: true,
+      maxAge: envConfig.JWT_REFRESH_TOKEN_TTL,
+      secure: envConfig.NODE_ENV !== 'local',
+    });
   }
 }

@@ -5,7 +5,6 @@ import * as bcrypt from 'bcrypt';
 import { UserRoleEnum } from './entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import { Request, Response } from 'express';
-import { JwtPayload } from '@/common/middlewares/admin/admin.middleware';
 
 @Controller('admin/users')
 export class AdminUserController {
@@ -50,7 +49,7 @@ export class AdminUserController {
     try {
       const refreshToken = req.cookies['x-refresh-cookie'];
 
-      const payload = await this.jwtService.verifyAsync<JwtPayload>(refreshToken);
+      const payload = await this.jwtService.verifyAsync<UserJwtPayload>(refreshToken);
 
       const user = await this.userService.findOne({ where: { id: payload.id } });
 

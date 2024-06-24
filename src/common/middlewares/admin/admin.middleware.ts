@@ -2,15 +2,10 @@ import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/commo
 import { JwtService } from '@nestjs/jwt';
 import { NextFunction, Request, Response } from 'express';
 
-export interface JwtPayload {
-  id: string;
-  role: string;
-}
-
 declare global {
   namespace Express {
     export interface Request {
-      currentUser?: JwtPayload;
+      currentUser?: UserJwtPayload;
     }
   }
 }
@@ -24,7 +19,7 @@ export class AdminMiddleware implements NestMiddleware {
 
       if (!token) throw new UnauthorizedException('Unauthorized');
 
-      const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
+      const payload = await this.jwtService.verifyAsync<UserJwtPayload>(token);
 
       if (payload.role !== 'ADMIN') throw new UnauthorizedException('Unauthorized');
       req.currentUser = payload;
