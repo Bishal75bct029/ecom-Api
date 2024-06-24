@@ -13,24 +13,12 @@ import { ReviewModule } from './modules/review/review.module';
 import { UserModule } from './modules/user/user.module';
 import { CartModule } from './modules/cart/cart.module';
 import { OrderModule } from './modules/order/order.module';
-import { envConfig } from './configs/envConfig';
 import { RedisModule } from './libs/redis/redis.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      ...TYPEORM_CONFIG,
-      retryAttempts: 5,
-    }),
-    JwtModule.register({
-      global: true,
-      secret: envConfig.JWT_SECRET,
-      signOptions: { audience: envConfig.JWT_AUDIENCE, issuer: envConfig.JWT_ISSUER },
-      verifyOptions: {
-        audience: envConfig.JWT_AUDIENCE,
-        issuer: envConfig.JWT_ISSUER,
-      },
-    }),
+    TypeOrmModule.forRoot({ ...TYPEORM_CONFIG, retryAttempts: 5 }),
+    JwtModule.register({ global: true }),
     RedisModule,
     ProductModule,
     CategoryModule,

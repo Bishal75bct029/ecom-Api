@@ -1,17 +1,15 @@
-import { Controller, Post, Body, BadRequestException, Res, Req, ForbiddenException } from '@nestjs/common';
-import { UserService } from './user.service';
-import { CreateAdminUserDto, LoginAdminUserDto } from './dto/create-user.dto';
+import { Controller, Post, Body, Res, Req } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { UserRoleEnum } from './entities/user.entity';
-import { JwtService } from '@nestjs/jwt';
 import { Request, Response } from 'express';
+import { ApiTags } from '@nestjs/swagger';
+import { UserService } from './user.service';
+import { CreateAdminUserDto, LoginUserDto } from './dto/create-user.dto';
+import { UserRoleEnum } from './entities/user.entity';
 
+@ApiTags('Admin User')
 @Controller('admin/users')
 export class AdminUserController {
-  constructor(
-    private readonly userService: UserService,
-    private readonly jwtService: JwtService,
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
   @Post('create')
   async createAdmin(@Body() createAdminUserDto: CreateAdminUserDto) {
@@ -24,42 +22,17 @@ export class AdminUserController {
   }
 
   @Post('login')
-  async loginAdmin(@Body() loginAdminUserDto: LoginAdminUserDto, @Res() res: Response) {
-    const user = await this.userService.findOne({ where: { email: loginAdminUserDto.email } });
-
-    if (!user) throw new BadRequestException('Invalid Credentials');
-
-    if (!(await bcrypt.compare(loginAdminUserDto.password, user.password)))
-      throw new BadRequestException('Invalid Credentials');
-
-    const [token, refreshToken] = await this.userService.generateAuthTokens(user);
-    this.userService.setCookie(res, token, refreshToken);
-    return res.send();
+  async loginAdmin(@Body() loginUserDto: LoginUserDto, @Res() res: Response) {
+    return this.userService.login(loginUserDto, res);
   }
 
   @Post('logout')
   async logoutAdmin(@Res() res: Response) {
-    res.clearCookie('x-auth-cookie');
-    res.clearCookie('x-refresh-cookie');
-    return res.send();
+    return this.userService.logout(res);
   }
 
   @Post('refresh')
   async refreshAdmin(@Req() req: Request, @Res() res: Response) {
-    try {
-      const refreshToken = req.cookies['x-refresh-cookie'];
-
-      const payload = await this.jwtService.verifyAsync<UserJwtPayload>(refreshToken);
-
-      const user = await this.userService.findOne({ where: { id: payload.id } });
-
-      if (!user) throw new ForbiddenException('Invalid Credentials');
-
-      const [token, generatedRefreshToken] = await this.userService.generateAuthTokens(user);
-      this.userService.setCookie(res, token, generatedRefreshToken);
-      return res.send();
-    } catch (error) {
-      throw new ForbiddenException('Refresh token expired.');
-    }
+    return this.userService.refresh(req, res);
   }
 }
