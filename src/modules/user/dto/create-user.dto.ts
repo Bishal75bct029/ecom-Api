@@ -18,4 +18,4 @@ export class CreateAdminUserDto {
   password: string;
 }
 
-export class LoginAdminUserDto extends OmitType(CreateAdminUserDto, ['name']) {}
+export class LoginUserDto extends OmitType(CreateAdminUserDto, ['name']) {}
