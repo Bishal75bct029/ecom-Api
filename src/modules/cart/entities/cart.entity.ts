@@ -1,9 +1,11 @@
 import { BaseEntity } from '@/libs/entity/base.entity';
-import { Column, Entity } from 'typeorm';
+import { UserEntity } from '@/modules/user/entities';
+import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 
 @Entity('carts')
 export class CartEntity extends BaseEntity {
-  @Column({ type: 'uuid', nullable: false })
+  @OneToOne(() => UserEntity)
+  @JoinColumn()
   userId: string;
 
   @Column({ type: 'simple-array', nullable: false })

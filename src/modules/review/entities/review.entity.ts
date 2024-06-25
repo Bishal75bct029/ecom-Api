@@ -5,9 +5,6 @@ import { Column, Entity, ManyToOne } from 'typeorm';
 
 @Entity('reviews')
 export class ReviewEntity extends BaseEntity {
-  @Column({ type: 'uuid', nullable: false })
-  userId: string;
-
   @Column({ type: 'text', nullable: true })
   comment: string;
 
