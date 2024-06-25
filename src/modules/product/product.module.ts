@@ -1,11 +1,8 @@
 import { Module } from '@nestjs/common';
-import { ProductService } from './product.service';
-import { ApiProductController } from './api-product.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ProductEntity } from './entities/product.entity';
-import { ProductMetaEntity } from './entities/productMeta.entity';
-import { AdminProductController } from './admin-product.controller';
-import { ProductMetaService } from './product-meta.service';
+import { ProductEntity, ProductMetaEntity } from './entities';
+import { AdminProductController, ApiProductController } from './controllers';
+import { ProductService, ProductMetaService } from './services';
 import { CategoryModule } from '../category/category.module';
 
 @Module({

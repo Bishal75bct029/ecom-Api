@@ -1,10 +1,10 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import * as cookieParser from 'cookie-parser';
 import { Logger, ValidationPipe } from '@nestjs/common';
-import { AllExceptionFilter } from './common/filters/exception.filter';
+import { AppModule } from './app.module';
+import { AllExceptionFilter } from './common/filters';
 import { envConfig } from './configs/envConfig';
 import { swaggerSetup } from './configs/swagger';
-import * as cookieParser from 'cookie-parser';
 
 (async () => {
   const app = await NestFactory.create(AppModule);

@@ -4,15 +4,9 @@ import { TYPEORM_CONFIG } from '@/configs/typeorm';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { AppController } from './app.controller';
-import { ProductModule } from '@/modules/product/product.module';
-import { CategoryModule } from './modules/category/category.module';
-import { TransformResponseInterceptor } from './common/interceptors/transform-response.interceptor';
-import { AdminMiddleware } from './common/middlewares/admin/admin.middleware';
-import { ApiMiddleware } from './common/middlewares/api/api.middleware';
-import { ReviewModule } from './modules/review/review.module';
-import { UserModule } from './modules/user/user.module';
-import { CartModule } from './modules/cart/cart.module';
-import { OrderModule } from './modules/order/order.module';
+import { TransformResponseInterceptor } from './common/interceptors';
+import { AdminMiddleware, ApiMiddleware } from './common/middlewares';
+import { ProductModule, CategoryModule, ReviewModule, UserModule, CartModule, OrderModule } from '@/modules';
 import { RedisModule } from './libs/redis/redis.module';
 
 @Module({
