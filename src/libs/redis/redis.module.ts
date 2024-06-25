@@ -3,7 +3,7 @@ import { ModuleRef } from '@nestjs/core';
 import { Redis } from 'ioredis';
 import { RedisService } from './redis.service';
 import { envConfig } from '@/configs/envConfig';
-import { REDIS_CLIENT } from './redis.constant';
+import { REDIS_CLIENT } from '@/app.constants';
 
 @Global()
 @Module({

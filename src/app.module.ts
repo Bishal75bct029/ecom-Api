@@ -8,6 +8,7 @@ import { TransformResponseInterceptor } from './common/interceptors';
 import { AdminMiddleware, ApiMiddleware } from './common/middlewares';
 import { ProductModule, CategoryModule, ReviewModule, UserModule, CartModule, OrderModule } from '@/modules';
 import { RedisModule } from './libs/redis/redis.module';
+import { ADMIN_PUBLIC_ROUTES, API_PUBLIC_ROUTES } from './app.constants';
 
 @Module({
   imports: [
@@ -33,11 +34,11 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(AdminMiddleware)
-      .exclude('admin/users/login', 'admin/users/create', 'admin/users/logout', 'admin/users/refresh')
+      .exclude(...ADMIN_PUBLIC_ROUTES)
       .forRoutes({ path: 'admin/*', method: RequestMethod.ALL });
     consumer
       .apply(ApiMiddleware)
-      .exclude('api/users/login', 'api/users/create', 'api/users/logout', 'api/users/refresh')
+      .exclude(...API_PUBLIC_ROUTES)
       .forRoutes({ path: 'api/*', method: RequestMethod.ALL });
   }
 }
