@@ -54,7 +54,7 @@ export class CreateProductMetaDto {
 
   @IsObject()
   @IsOptional()
-  variants: object;
+  variants: Record<string, any>;
 
   @IsBoolean()
   @IsOptional()
