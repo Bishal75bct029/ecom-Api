@@ -1,5 +1,5 @@
 import { OmitType } from '@nestjs/mapped-types';
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 
 export class CreateUserDto {}
 export class CreateAdminUserDto {
@@ -16,6 +16,10 @@ export class CreateAdminUserDto {
   @IsNotEmpty()
   @MinLength(6)
   password: string;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  isOtpEnabled: boolean;
 }
 
 export class LoginUserDto extends OmitType(CreateAdminUserDto, ['name']) {}
