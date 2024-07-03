@@ -26,6 +26,9 @@ export class UserEntity extends BaseEntity {
   @Column({ type: 'varchar', nullable: true })
   password?: string;
 
+  @Column({ type: 'boolean', default: false })
+  isOtpEnabled?: boolean;
+
   @OneToMany(() => ReviewEntity, (review) => review.user)
   reviews: ReviewEntity[];
 
