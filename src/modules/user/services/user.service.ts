@@ -67,14 +67,6 @@ export class UserService extends AbstractService<UserEntity> {
     return Math.floor(Math.random() * 1000000);
   }
 
-  async validateOtp(authenticateDto: ValidateOtpDto) {
-    const user = await this.findOne({ where: { email: authenticateDto.email, role: UserRoleEnum.ADMIN } });
-    if (!user) throw new BadRequestException('Invalid Credentials');
-
-    const otp = await this.redisService.get(user.email + '_OTP');
-    return !otp || otp != authenticateDto.otp ? false : true;
-  }
-
   async refresh(req: Request, res: Response, role: string) {
     try {
       const refreshToken = req.cookies['x-refresh-cookie'];
