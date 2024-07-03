@@ -1,13 +1,11 @@
-import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Request, Response } from 'express';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { AbstractService } from '@/libs/service/abstract.service';
-import { UserEntity, UserRoleEnum } from '../entities';
+import { UserEntity } from '../entities';
 import { envConfig } from '@/configs/envConfig';
-import { LoginUserDto, ValidateOtpDto } from '../dto';
 import { RedisService } from '@/libs/redis/redis.service';
 
 @Injectable()
@@ -20,71 +18,18 @@ export class UserService extends AbstractService<UserEntity> {
     super(itemRepository);
   }
 
-  setCookie(res: Response, token: string, refreshToken: string) {
-    res.cookie('x-auth-cookie', token, {
-      httpOnly: true,
-      maxAge: envConfig.JWT_TTL * 1000,
-      secure: true,
-      sameSite: 'strict',
-    });
-    res.cookie('x-refresh-cookie', refreshToken, {
-      httpOnly: true,
-      maxAge: envConfig.JWT_REFRESH_TOKEN_TTL * 1000,
-      secure: true,
-      sameSite: 'strict',
-    });
-  }
-
-  async login(loginUserDto: LoginUserDto, res: Response, role: string) {
-    const user = await this.findOne({ where: { email: loginUserDto.email } });
-
-    if (!user) throw new BadRequestException('Invalid Credentials');
-
-    if (user.role !== role) throw new BadRequestException('Invalid Credentials');
-
-    if (!(await bcrypt.compare(loginUserDto.password, user.password)))
-      throw new BadRequestException('Invalid Credentials');
-
-    const payload = { id: user.id, role: user.role };
-
-    const [token, refreshToken] = await this.generateJWTs(payload, user.role);
-
-    this.setCookie(res, token, refreshToken);
-    return res.send();
-  }
-
   async comparePassword(password: string, hashPassword: string) {
     return bcrypt.compare(password, hashPassword);
   }
 
-  logout(res: Response) {
-    res.clearCookie('x-auth-cookie');
-    res.clearCookie('x-refresh-cookie');
-    return res.send();
-  }
+  // logout(res: Response) {
+  //   res.clearCookie('x-auth-cookie');
+  //   res.clearCookie('x-refresh-cookie');
+  //   return res.send();
+  // }
 
   generateOtp() {
     return Math.floor(Math.random() * 1000000);
-  }
-
-  async refresh(req: Request, res: Response, role: string) {
-    try {
-      const refreshToken = req.cookies['x-refresh-cookie'];
-
-      const payload = await this.jwtService.verifyAsync<UserJwtPayload>(refreshToken);
-
-      const user = await this.findOne({ where: { id: payload.id } });
-
-      if (!user) throw new ForbiddenException('Invalid token');
-
-      if (user.role !== role) throw new BadRequestException('Invalid token');
-
-      const [token, generatedRefreshToken] = await this.generateJWTs(payload, user.role);
-      this.setCookie(res, token, generatedRefreshToken);
-      return res.send();
-    } catch (error) {
-      throw new ForbiddenException('Refresh token expired.');
-    }
   }
 
   async generateJWTs(payload: UserJwtPayload, role: UserRole) {
