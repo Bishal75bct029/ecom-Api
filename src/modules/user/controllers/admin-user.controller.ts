@@ -54,7 +54,7 @@ export class AdminUserController {
       secure: true,
       sameSite: 'strict',
     });
-    res.cookie('x-refresh-cookie', refreshToken, {
+    res.cookie('x-refresh-cookie', generatedRefreshToken, {
       httpOnly: true,
       maxAge: envConfig.JWT_REFRESH_TOKEN_TTL * 1000,
       secure: true,

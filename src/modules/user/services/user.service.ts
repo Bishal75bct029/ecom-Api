@@ -6,14 +6,12 @@ import { JwtService } from '@nestjs/jwt';
 import { AbstractService } from '@/libs/service/abstract.service';
 import { UserEntity } from '../entities';
 import { envConfig } from '@/configs/envConfig';
-import { RedisService } from '@/libs/redis/redis.service';
 
 @Injectable()
 export class UserService extends AbstractService<UserEntity> {
   constructor(
     @InjectRepository(UserEntity) private readonly itemRepository: Repository<UserEntity>,
     private readonly jwtService: JwtService,
-    private redisService: RedisService,
   ) {
     super(itemRepository);
   }
@@ -21,12 +19,6 @@ export class UserService extends AbstractService<UserEntity> {
   async comparePassword(password: string, hashPassword: string) {
     return bcrypt.compare(password, hashPassword);
   }
-
-  // logout(res: Response) {
-  //   res.clearCookie('x-auth-cookie');
-  //   res.clearCookie('x-refresh-cookie');
-  //   return res.send();
-  // }
 
   generateOtp() {
     return Math.floor(Math.random() * 1000000);

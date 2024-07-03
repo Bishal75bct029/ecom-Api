@@ -47,9 +47,8 @@ export class ApiUserController {
       secure: true,
       sameSite: 'strict',
     });
-    return res.send();
 
-    // return this.userService.login(loginUserDto, res, UserRoleEnum.USER);
+    return res.send();
   }
 
   @Post('address')

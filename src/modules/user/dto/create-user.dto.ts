@@ -1,4 +1,4 @@
-import { OmitType, PickType } from '@nestjs/mapped-types';
+import { PickType } from '@nestjs/mapped-types';
 import { IsBoolean, IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 
 export class CreateUserDto {}

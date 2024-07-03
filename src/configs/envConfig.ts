@@ -24,4 +24,9 @@ export const envConfig = cleanEnv(process.env, {
 
   REDIS_URL: str(),
   REDIS_PREFIX: str(),
+
+  AWS_ACCESS_KEY_ID: str(),
+  AWS_SECRET_ACCESS_KEY: str(),
+  EMAIL_SQS_URL: str(),
+  AWS_REGION: str(),
 });

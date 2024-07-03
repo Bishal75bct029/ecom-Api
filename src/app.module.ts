@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TYPEORM_CONFIG } from '@/configs/typeorm';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { TransformResponseInterceptor } from './common/interceptors';
 import { AdminMiddleware, ApiMiddleware } from './common/middlewares';
@@ -13,6 +14,12 @@ import { ADMIN_PUBLIC_ROUTES, API_PUBLIC_ROUTES } from './app.constants';
 @Module({
   imports: [
     TypeOrmModule.forRoot({ ...TYPEORM_CONFIG, retryAttempts: 5 }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 10,
+      },
+    ]),
     JwtModule.register({ global: true }),
     RedisModule,
     ProductModule,
