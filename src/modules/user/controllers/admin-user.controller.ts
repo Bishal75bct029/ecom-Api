@@ -4,9 +4,8 @@ import { Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { ApiTags } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
-import { CreateAdminUserDto, LoginUserDto } from '../dto/create-user.dto';
+import { CreateAdminUserDto, LoginUserDto, ValidateOtpDto } from '../dto/create-user.dto';
 import { UserRoleEnum } from '../entities/user.entity';
-import { ValidateOtpDto, ValidateUserDto } from '../dto/authenticate-user.dto';
 import { RedisService } from '@/libs/redis/redis.service';
 
 @ApiTags('Admin User')
@@ -44,9 +43,8 @@ export class AdminUserController {
   }
 
   @Post('authenticate')
-  async authenticate(@Body() authenticateDto: ValidateUserDto, @Res() res: Response) {
+  async authenticate(@Body() authenticateDto: LoginUserDto, @Res() res: Response) {
     const user = await this.userService.findOne({ where: { email: authenticateDto.email, role: UserRoleEnum.ADMIN } });
-    console.log(authenticateDto);
     if (!user) throw new BadRequestException('Invalid credentials');
 
     const isAuthenticated = await this.userService.comparePassword(authenticateDto.password, user.password);
@@ -65,7 +63,6 @@ export class AdminUserController {
     }
 
     const otp = this.userService.generateOtp();
-    console.log(otp);
     await this.redisService.set(user.email + '_OTP', otp, 300);
 
     return res.send({
@@ -74,12 +71,12 @@ export class AdminUserController {
   }
 
   @Post('validate-otp')
-  async validateOtp(@Body() authenticateDto: ValidateOtpDto, @Res() res: Response) {
-    const user = await this.userService.findOne({ where: { email: authenticateDto.email, role: UserRoleEnum.ADMIN } });
+  async validateOtp(@Body() otpDto: ValidateOtpDto, @Res() res: Response) {
+    const user = await this.userService.findOne({ where: { email: otpDto.email, role: UserRoleEnum.ADMIN } });
     if (!user) throw new BadRequestException('Invalid credentials');
 
     const otp = await this.redisService.get(user.email + '_OTP');
-    if (!otp || otp != authenticateDto.otp) throw new BadRequestException('Invalid credentials');
+    if (!otp || otp != otpDto.otp) throw new BadRequestException('Invalid Otp');
 
     await this.redisService.delete(user.email + '_OTP');
 

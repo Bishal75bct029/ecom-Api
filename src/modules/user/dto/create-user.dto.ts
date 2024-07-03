@@ -22,4 +22,9 @@ export class CreateAdminUserDto {
   isOtpEnabled: boolean;
 }
 
-export class LoginUserDto extends OmitType(CreateAdminUserDto, ['name']) {}
+export class LoginUserDto extends OmitType(CreateAdminUserDto, ['name', 'isOtpEnabled']) {}
+
+export class ValidateOtpDto extends OmitType(CreateAdminUserDto, ['isOtpEnabled', 'name', 'password']) {
+  @IsString()
+  otp: string;
+}

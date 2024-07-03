@@ -7,9 +7,8 @@ import { JwtService } from '@nestjs/jwt';
 import { AbstractService } from '@/libs/service/abstract.service';
 import { UserEntity, UserRoleEnum } from '../entities';
 import { envConfig } from '@/configs/envConfig';
-import { LoginUserDto } from '../dto';
+import { LoginUserDto, ValidateOtpDto } from '../dto';
 import { RedisService } from '@/libs/redis/redis.service';
-import { ValidateOtpDto, ValidateUserDto } from '../dto/authenticate-user.dto';
 
 @Injectable()
 export class UserService extends AbstractService<UserEntity> {
