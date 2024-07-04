@@ -3,18 +3,34 @@ import { ApiTags } from '@nestjs/swagger';
 import { CartService } from '../services/cart.service';
 import { CreateCartDto } from '../dto';
 import { Request } from 'express';
+import { In } from 'typeorm';
+import { ProductMetaService, ProductService } from '@/modules/product/services';
 
 @ApiTags('API Cart')
 @Controller('api/carts')
 export class ApiCartController {
-  constructor(private readonly cartService: CartService) {}
+  constructor(
+    private readonly cartService: CartService,
+    private readonly productService: ProductService,
+  ) {}
 
   @Get()
   async getAllCartItems(@Req() req: Request) {
-    const cartItems = await this.cartService.find({
+    const productMetaId = await this.cartService.findOne({
       where: {
-        userId: req.currentUser.id,
+        user: {
+          id: req.currentUser.id,
+        },
       },
+    });
+
+    const cartItems = await this.productService.find({
+      where: {
+        productMeta: {
+          id: In(productMetaId.productMetaId),
+        },
+      },
+      relations: ['productMeta'],
     });
 
     return cartItems;
@@ -22,30 +38,27 @@ export class ApiCartController {
 
   @Post()
   async addToCart(@Body() createCartDto: CreateCartDto) {
-    const isUserCartAvailable = await this.cartService.findOne({ where: { userId: createCartDto.userId } });
+    const isUserCartAvailable = await this.cartService.findOne({
+      where: {
+        user: { id: createCartDto.userId },
+      },
+    });
+
     if (isUserCartAvailable) {
-      return this.cartService.createAndSave({ ...createCartDto, id: isUserCartAvailable.id });
+      return this.cartService.createAndSave({
+        id: isUserCartAvailable.id,
+        productMetaId: Array.from(new Set([...isUserCartAvailable.productMetaId, ...createCartDto.productMetaId])),
+        user: {
+          id: createCartDto.userId,
+        },
+      });
     }
 
-    return this.cartService.createAndSave(createCartDto);
-  }
-
-  //   @Put(':id')
-  //   async updateCartItems(@Body() createCartDto: CreateCartDto, @Param('id') id: string) {
-  //     const isCartAvailable = await this.cartService.findOne({ where: { id } });
-  //     if (!isCartAvailable) {
-  //       throw new BadRequestException('Cart not found');
-  //     }
-
-  //     const isUserCartAvailable = await this.cartService.findOne({ where: { userId: createCartDto.userId } });
-  //     if (!isUserCartAvailable) {
-  //       throw new BadRequestException('User cart not found');
-  //     }
-
-  //     return this.cartService.createAndSave({ ...createCartDto, id: isUserCartAvailable.id });
-  //   }
-
-  async delete(@Param() id: string) {
-    this.cartService.delete;
+    return this.cartService.createAndSave({
+      productMetaId: createCartDto.productMetaId,
+      user: {
+        id: createCartDto.userId,
+      },
+    });
   }
 }

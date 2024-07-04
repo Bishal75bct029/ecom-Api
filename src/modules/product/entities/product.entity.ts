@@ -19,7 +19,7 @@ export class ProductEntity extends BaseEntity {
   @JoinTable({ name: 'product_categories' })
   categories: CategoryEntity[];
 
-  @OneToMany(() => ProductMetaEntity, (productMeta) => productMeta.product, { eager: true })
+  @OneToMany(() => ProductMetaEntity, (productMeta) => productMeta.product)
   productMeta: ProductMetaEntity[];
 
   @OneToMany(() => ReviewEntity, (review) => review.product)
