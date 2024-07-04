@@ -6,7 +6,6 @@ import { CreateUserDto, LoginUserDto } from '../dto/create-user.dto';
 import { CreateAddressDto } from '../dto/address.dto';
 import { AddressService } from '../services/address.service';
 import { UserRoleEnum } from '../entities/user.entity';
-import bcrypt from 'bcrypt';
 import { envConfig } from '@/configs/envConfig';
 
 @ApiTags('API User')
@@ -29,7 +28,7 @@ export class ApiUserController {
 
     if (user.role !== UserRoleEnum.USER) throw new BadRequestException('Invalid Credentials');
 
-    if (!(await bcrypt.compare(loginUserDto.password, user.password)))
+    if (!(await this.userService.comparePassword(loginUserDto.password, user.password)))
       throw new BadRequestException('Invalid Credentials');
 
     const payload: UserJwtPayload = { id: user.id, role: user.role };
@@ -70,7 +69,16 @@ export class ApiUserController {
   }
 
   @Get('address')
-  async getAllAddress() {
-    return this.addressService.find();
+  async getMyAddress(@Req() req: Request) {
+    const addresses = await this.addressService.find({
+      where: {
+        user: {
+          id: req.currentUser.id,
+        },
+      },
+      select: ['id', 'contact', 'name', 'type'],
+    });
+
+    return addresses;
   }
 }

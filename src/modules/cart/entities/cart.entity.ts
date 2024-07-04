@@ -6,7 +6,7 @@ import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 export class CartEntity extends BaseEntity {
   @OneToOne(() => UserEntity)
   @JoinColumn()
-  userId: string;
+  user: UserEntity;
 
   @Column({ type: 'simple-array', nullable: false })
   productMetaId: string[];

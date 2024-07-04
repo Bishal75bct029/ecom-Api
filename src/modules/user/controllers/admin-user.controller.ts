@@ -23,7 +23,6 @@ export class AdminUserController {
   @Post('create')
   async createAdmin(@Body() createAdminUserDto: CreateAdminUserDto) {
     createAdminUserDto.password = await bcrypt.hash(createAdminUserDto.password, 10);
-
     const user = await this.userService.createAndSave({ ...createAdminUserDto, role: UserRoleEnum.ADMIN });
     delete user.password;
 
@@ -147,7 +146,6 @@ export class AdminUserController {
       secure: true,
       sameSite: 'strict',
     });
-    return res.send();
 
     return res.send();
   }
