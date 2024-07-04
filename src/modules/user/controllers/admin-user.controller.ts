@@ -8,6 +8,7 @@ import { CreateAdminUserDto, LoginUserDto, ValidateOtpDto } from '../dto/create-
 import { UserRoleEnum } from '../entities/user.entity';
 import { RedisService } from '@/libs/redis/redis.service';
 import { envConfig } from '@/configs/envConfig';
+import { SQSService } from '@/common/module/aws/sqs.service';
 
 @ApiTags('Admin User')
 @Controller('admin/users')
@@ -16,6 +17,7 @@ export class AdminUserController {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private redisService: RedisService,
+    private sqsService: SQSService,
   ) {}
 
   @Post('create')
@@ -46,7 +48,6 @@ export class AdminUserController {
     if (user.role !== payload.role) throw new BadRequestException('Invalid token');
 
     const [token, generatedRefreshToken] = await this.userService.generateJWTs(payload, user.role);
-    // this.userService.setCookie(res, token, generatedRefreshToken);
 
     res.cookie('x-auth-cookie', token, {
       httpOnly: true,
@@ -95,7 +96,21 @@ export class AdminUserController {
     }
 
     const otp = this.userService.generateOtp();
-    await this.redisService.set(user.email + '_OTP', otp, 300);
+    await Promise.all([
+      this.redisService.set(user.email + '_OTP', otp, 300),
+      this.sqsService.sendToQueue({
+        QueueUrl: envConfig.EMAIL_SQS_URL,
+        MessageBody: JSON.stringify({
+          emailTemplateName: 'OTP',
+          templateData: {
+            fullName: user.name,
+            OTPCode: otp,
+          },
+          emailFrom: '',
+          toAddress: user.email,
+        }),
+      }),
+    ]);
 
     return res.send({
       message: 'OTP sent successfully.',
