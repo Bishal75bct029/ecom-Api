@@ -10,8 +10,9 @@ export class AdminCategoryController {
 
   @Post()
   async create(@Body() createCategoryDto: CreateCategoryDto) {
+    console.log(createCategoryDto);
     if (!createCategoryDto.parent) {
-      return this.categoryService.createAndSave({ name: createCategoryDto.name });
+      return this.categoryService.createAndSave({ name: createCategoryDto.name, image: createCategoryDto.image });
     }
 
     const parentCategory = await this.categoryService.findOne({ where: { id: createCategoryDto.parent } });
