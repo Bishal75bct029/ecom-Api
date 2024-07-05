@@ -1,4 +1,4 @@
-import { Controller, Body, Put, Param, BadRequestException } from '@nestjs/common';
+import { Controller, Body, Put, Param, BadRequestException, Get, Req, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { DataSource, In } from 'typeorm';
 import { OrderService } from '../services/order.service';
@@ -6,6 +6,7 @@ import { UpdateOrderStatusDto } from '../dto/update-order.dto';
 import { OrderEntity, OrderStatusEnum } from '../entities/order.entity';
 import { ProductMetaService } from '../../product/services/product-meta.service';
 import { ProductMetaEntity } from '../../product/entities/productMeta.entity';
+import { Request } from 'express';
 
 @ApiTags('Admin Order')
 @Controller('admin/orders')
@@ -15,6 +16,28 @@ export class AdminOrderController {
     private readonly orderService: OrderService,
     private readonly productMetaService: ProductMetaService,
   ) {}
+
+  @Get()
+  async getOrders(@Query() query: Pagination, @Req() req: Request) {
+    const page = query.page || 1;
+    const limit = query.limit || 10;
+
+    const [orders, count] = await this.orderService.findAndCount({
+      take: limit,
+      skip: Math.floor(limit * (page - 1)),
+      relations: ['orderItems'],
+      select: {
+        id: true,
+        status: true,
+        orderItems: {
+          pricePerUnit: true,
+          id: true,
+        },
+      },
+    });
+
+    return { orders, count, totalPage: Math.ceil(count / limit) };
+  }
 
   @Put(':id/status')
   async update(@Body() updateOrderStatusDto: UpdateOrderStatusDto, @Param('id') id: string) {
@@ -39,6 +62,7 @@ export class AdminOrderController {
       }
       order = await entityManager.save(OrderEntity, { ...order, status: updateOrderStatusDto.status });
     });
+
     return order;
   }
 }

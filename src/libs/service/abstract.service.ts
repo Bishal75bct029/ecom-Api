@@ -47,4 +47,8 @@ export abstract class AbstractService<T> {
   async saveMany(newEntities: T[], options: SaveOptions = {}) {
     return this.repository.save(newEntities, options);
   }
+
+  async findAndCount(findManyOptions: FindManyOptions<T>) {
+    return this.repository.findAndCount(findManyOptions);
+  }
 }
