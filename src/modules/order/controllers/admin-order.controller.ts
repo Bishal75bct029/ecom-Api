@@ -50,13 +50,13 @@ export class AdminOrderController {
 
     // reduce product quantity when status is PACKED
     await this.dataSource.transaction(async (entityManager) => {
-      if (updateOrderStatusDto.status === OrderStatusEnum.PACKED) {
+      if (updateOrderStatusDto.status === OrderStatusEnum.CANCELLED) {
         const productMetas = await this.productMetaService.find({
           where: { id: In(order.orderItems.map((item) => item.productMeta.id)) },
         });
         productMetas.forEach((productMeta) => {
           productMeta.stock =
-            productMeta.stock - order.orderItems.find((item) => item.productMeta.id === productMeta.id).quantity;
+            productMeta.stock + order.orderItems.find((item) => item.productMeta.id === productMeta.id).quantity;
         });
         await entityManager.save(ProductMetaEntity, productMetas);
       }

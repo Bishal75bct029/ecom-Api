@@ -1,12 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { AbstractService } from '@/libs/service/abstract.service';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CartEntity } from '../entities/cart.entity';
+import { CartRepository } from '../repositories/cart.repository';
+import { CreateCartDto } from '../dto';
 
 @Injectable()
-export class CartService extends AbstractService<CartEntity> {
-  constructor(@InjectRepository(CartEntity) private readonly itemRepository: Repository<CartEntity>) {
-    super(itemRepository);
+export class CartService extends CartRepository {
+  constructor(public readonly cartRepository: CartRepository) {
+    super();
+  }
+
+  async getUserCarts(id: string) {
+    return this.cartRepository.getUserCarts(id);
+  }
+
+  async saveCart(cartItems: CreateCartDto) {
+    return this.cartRepository.createAndSave(cartItems);
   }
 }

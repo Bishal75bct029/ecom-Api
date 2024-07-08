@@ -4,7 +4,7 @@ import { CartService } from '../services/cart.service';
 import { CreateCartDto } from '../dto';
 import { Request } from 'express';
 import { In } from 'typeorm';
-import { ProductMetaService, ProductService } from '@/modules/product/services';
+import { ProductService } from '@/modules/product/services';
 
 @ApiTags('API Cart')
 @Controller('api/carts')
@@ -16,18 +16,12 @@ export class ApiCartController {
 
   @Get()
   async getAllCartItems(@Req() req: Request) {
-    const productMetaId = await this.cartService.findOne({
-      where: {
-        user: {
-          id: req.currentUser.id,
-        },
-      },
-    });
+    const userCarts = await this.cartService.getUserCarts(req.currentUser.id);
 
     const cartItems = await this.productService.find({
       where: {
         productMeta: {
-          id: In(productMetaId.productMetaId),
+          id: In(userCarts.productMetaId),
         },
       },
       relations: ['productMeta'],
@@ -38,27 +32,15 @@ export class ApiCartController {
 
   @Post()
   async addToCart(@Body() createCartDto: CreateCartDto) {
-    const isUserCartAvailable = await this.cartService.findOne({
-      where: {
-        user: { id: createCartDto.userId },
-      },
-    });
+    const isUserCartAvailable = await this.cartService.getUserCarts(createCartDto.userId);
 
     if (isUserCartAvailable) {
-      return this.cartService.createAndSave({
+      return await this.cartService.saveCart({
+        ...createCartDto,
         id: isUserCartAvailable.id,
-        productMetaId: Array.from(new Set([...isUserCartAvailable.productMetaId, ...createCartDto.productMetaId])),
-        user: {
-          id: createCartDto.userId,
-        },
       });
     }
 
-    return this.cartService.createAndSave({
-      productMetaId: createCartDto.productMetaId,
-      user: {
-        id: createCartDto.userId,
-      },
-    });
+    return await this.cartService.saveCart(createCartDto);
   }
 }

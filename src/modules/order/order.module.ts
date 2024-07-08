@@ -8,9 +8,10 @@ import { AdminOrderController } from './controllers/admin-order.controller';
 import { OrderItemService } from './services/order-item.service';
 import { UserModule } from '../user/user.module';
 import { ProductModule } from '../product/product.module';
+import { DiscountModule } from '../discount/discount.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([OrderEntity, OrderItemEntity]), UserModule, ProductModule],
+  imports: [TypeOrmModule.forFeature([OrderEntity, OrderItemEntity]), UserModule, ProductModule, DiscountModule],
   controllers: [ApiOrderController, AdminOrderController],
   providers: [OrderService, OrderItemService],
 })
