@@ -23,16 +23,10 @@ export class ApiUserController {
 
   @Post('login')
   async loginAdmin(@Body() loginUserDto: LoginUserDto, @Res() res: Response) {
-    const user = await this.userService.findOne({ where: { email: loginUserDto.email } });
-    if (!user) throw new BadRequestException('Invalid Credentials');
+    const { id, role } = await this.userService.login({ ...loginUserDto, role: UserRoleEnum.USER });
 
-    if (user.role !== UserRoleEnum.USER) throw new BadRequestException('Invalid Credentials');
-
-    if (!(await this.userService.comparePassword(loginUserDto.password, user.password)))
-      throw new BadRequestException('Invalid Credentials');
-
-    const payload: UserJwtPayload = { id: user.id, role: user.role };
-    const [token, refreshToken] = await this.userService.generateJWTs(payload, user.role);
+    const payload: UserJwtPayload = { id, role };
+    const [token, refreshToken] = await this.userService.generateJWTs(payload);
 
     res.cookie('x-auth-cookie', token, {
       httpOnly: true,

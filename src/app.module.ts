@@ -10,6 +10,7 @@ import { AdminMiddleware, ApiMiddleware } from './common/middlewares';
 import { ProductModule, CategoryModule, ReviewModule, UserModule, CartModule, OrderModule } from '@/modules';
 import { RedisModule } from './libs/redis/redis.module';
 import { ADMIN_PUBLIC_ROUTES, API_PUBLIC_ROUTES } from './app.constants';
+import { DiscountModule } from './modules/discount/discount.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ADMIN_PUBLIC_ROUTES, API_PUBLIC_ROUTES } from './app.constants';
     UserModule,
     CartModule,
     OrderModule,
+    DiscountModule,
   ],
   controllers: [AppController],
   providers: [

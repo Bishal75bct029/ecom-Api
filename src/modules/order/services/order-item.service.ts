@@ -1,12 +1,29 @@
 import { Injectable } from '@nestjs/common';
-import { AbstractService } from '@/libs/service/abstract.service';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { OrderItemEntity } from '../entities/order-item.entity';
+import { ProductMetaEntity } from '@/modules/product/entities';
+import { CreateOrderDto } from '../dto/create-order.dto';
+import { OrderItemRepository } from '../repositories/order-item.repository';
+import { DiscountEntity } from '@/modules/discount/entity/discount.entity';
 
 @Injectable()
-export class OrderItemService extends AbstractService<OrderItemEntity> {
-  constructor(@InjectRepository(OrderItemEntity) private readonly itemRepository: Repository<OrderItemEntity>) {
-    super(itemRepository);
+export class OrderItemService extends OrderItemRepository {
+  calculateTotalPrice(productMetas: ProductMetaEntity[], createOrderDto: CreateOrderDto) {
+    return createOrderDto.productMetaIds.reduce((acc, { quantity, id }) => {
+      const pricePerUnit = productMetas.find((meta) => meta.id === id).price;
+
+      return acc + quantity * pricePerUnit;
+    }, 0);
+  }
+
+  calculateDiscountedPrice(totalPrice: number, discount: DiscountEntity) {
+    if (totalPrice >= discount.minBuyingPrice) {
+      const discountPrice = discount.isPercentage
+        ? Math.floor((totalPrice * parseInt(discount.amount)) / 100)
+        : parseInt(discount.amount);
+
+      totalPrice =
+        discountPrice >= discount.maxDiscountPrice
+          ? totalPrice - discount.maxDiscountPrice
+          : totalPrice - discountPrice;
+    }
   }
 }

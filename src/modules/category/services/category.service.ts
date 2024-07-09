@@ -1,24 +1,24 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { FindTreeOptions, TreeRepository } from 'typeorm';
-import { AbstractService } from '@/libs/service/abstract.service';
-import { CategoryEntity } from '../entities/category.entity';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { CategoryRepository } from '../repositories/category.repository';
+import { CreateCategoryDto, UpdateCategoryDto } from '../dto';
 
 @Injectable()
-export class CategoryService extends AbstractService<CategoryEntity> {
-  constructor(@InjectRepository(CategoryEntity) private readonly itemRepository: TreeRepository<CategoryEntity>) {
-    super(itemRepository);
+export class CategoryService extends CategoryRepository {
+  async saveCategory(category: CreateCategoryDto) {
+    if (!category.parent) {
+      return this.createAndSave({ name: category.name, image: category.image });
+    }
+    const parentCategory = await this.findOne({ where: { parent: { id: category.parent } } });
+    if (!parentCategory) throw new BadRequestException('Category parent not found');
+
+    return this.createAndSave({ name: category.name, parent: parentCategory });
   }
 
-  async findTrees(options: FindTreeOptions = {}) {
-    return this.itemRepository.findTrees(options);
-  }
+  async updateCategory(updateCategory: UpdateCategoryDto, id: string) {
+    const category = await this.findOne({ where: { id } });
+    if (!category) throw new BadRequestException('Category not found');
+    await this.createAndSave({ id, ...updateCategory });
 
-  async findDescendantsTree(entity: CategoryEntity, options: FindTreeOptions = {}) {
-    return this.itemRepository.findDescendantsTree(entity, options);
-  }
-
-  async findAncestorsTree(entity: CategoryEntity, options: FindTreeOptions = {}) {
-    return this.itemRepository.findAncestorsTree(entity, options);
+    return this.findDescendantsTree(category);
   }
 }

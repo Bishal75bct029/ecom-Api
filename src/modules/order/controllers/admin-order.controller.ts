@@ -48,15 +48,15 @@ export class AdminOrderController {
     if (!this.orderService.isValidStatusTransition(order.status, updateOrderStatusDto.status))
       throw new BadRequestException('Invalid status transition');
 
-    // reduce product quantity when status is PACKED
+    // increase product quantity when status is Cancelled
     await this.dataSource.transaction(async (entityManager) => {
-      if (updateOrderStatusDto.status === OrderStatusEnum.PACKED) {
+      if (updateOrderStatusDto.status === OrderStatusEnum.CANCELLED) {
         const productMetas = await this.productMetaService.find({
           where: { id: In(order.orderItems.map((item) => item.productMeta.id)) },
         });
         productMetas.forEach((productMeta) => {
           productMeta.stock =
-            productMeta.stock - order.orderItems.find((item) => item.productMeta.id === productMeta.id).quantity;
+            productMeta.stock + order.orderItems.find((item) => item.productMeta.id === productMeta.id).quantity;
         });
         await entityManager.save(ProductMetaEntity, productMetas);
       }

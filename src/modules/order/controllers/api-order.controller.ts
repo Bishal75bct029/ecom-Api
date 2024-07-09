@@ -1,23 +1,20 @@
-import { Controller, Post, Body, Req, Get, Query, Put } from '@nestjs/common';
+import { Controller, Post, Body, Req } from '@nestjs/common';
 import { Request } from 'express';
-import { DataSource, In } from 'typeorm';
+import { DataSource, In, MoreThan } from 'typeorm';
 import { CreateOrderDto } from '../dto/create-order.dto';
-import { UserService } from '../../user/services/user.service';
 import { ProductMetaService } from '../../product/services/product-meta.service';
 import { OrderItemService } from '../services/order-item.service';
-import { OrderEntity, OrderStatusEnum } from '../entities/order.entity';
+import { OrderEntity } from '../entities/order.entity';
 import { OrderItemEntity } from '../entities/order-item.entity';
-import { UserRoleEnum } from '@/modules/user/entities';
-import { OrderService } from '../services/order.service';
-import { UpdateOrderDto } from '../dto/update-order.dto';
+import { DiscountService } from '@/modules/discount/services/discount.service';
+import { DiscountEntity } from '@/modules/discount/entity/discount.entity';
 
 @Controller('api/orders')
 export class ApiOrderController {
   constructor(
     private readonly dataSource: DataSource,
     private readonly orderItemService: OrderItemService,
-    private readonly orderService: OrderService,
-    private readonly userService: UserService,
+    private readonly discountService: DiscountService,
     private readonly productMetaService: ProductMetaService,
   ) {}
 
@@ -25,21 +22,31 @@ export class ApiOrderController {
   async create(@Body() createOrderDto: CreateOrderDto, @Req() req: Request) {
     return await this.dataSource.transaction(async (entityManager) => {
       const { id: userId } = req.currentUser;
-
       const productMetas = await this.productMetaService.find({
         where: { id: In(createOrderDto.productMetaIds.map(({ id }) => id)) },
       });
 
-      const totalPrice = createOrderDto.productMetaIds.reduce((acc, { quantity, id }) => {
-        const pricePerUnit = productMetas.find((meta) => meta.id === id).price;
+      await this.productMetaService.validateQuantity(productMetas, createOrderDto);
+      await this.productMetaService.updateStock(createOrderDto);
 
-        return acc + quantity * pricePerUnit;
-      }, 0);
+      let discount: DiscountEntity;
+      const totalPrice = this.orderItemService.calculateTotalPrice(productMetas, createOrderDto);
+
+      if (createOrderDto.couponCode) {
+        discount = await this.discountService.findOne({
+          where: { couponCode: createOrderDto.couponCode, expiryTime: MoreThan(new Date(new Date().toISOString())) },
+        });
+
+        this.orderItemService.calculateDiscountedPrice(totalPrice, discount);
+      }
 
       const order = await entityManager.save(OrderEntity, {
         totalPrice,
         user: {
           id: userId,
+        },
+        discount: {
+          id: discount.id,
         },
       });
 

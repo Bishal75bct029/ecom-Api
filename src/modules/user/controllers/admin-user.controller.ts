@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Res, Req, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req, BadRequestException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
@@ -39,14 +39,7 @@ export class AdminUserController {
   @Post('refresh')
   async refreshAdmin(@Req() req: Request, @Res() res: Response) {
     const refreshToken = req.cookies['x-refresh-cookie'];
-
-    const payload = await this.jwtService.verifyAsync<UserJwtPayload>(refreshToken);
-    const user = await this.userService.findOne({ where: { id: payload.id } });
-
-    if (!user) throw new ForbiddenException('Invalid token');
-    if (user.role !== payload.role) throw new BadRequestException('Invalid token');
-
-    const [token, generatedRefreshToken] = await this.userService.generateJWTs(payload, user.role);
+    const [token, generatedRefreshToken] = await this.userService.refreshUser(refreshToken);
 
     res.cookie('x-auth-cookie', token, {
       httpOnly: true,
@@ -60,60 +53,57 @@ export class AdminUserController {
       secure: true,
       sameSite: 'strict',
     });
+
     return res.send();
   }
 
   @Post('authenticate')
-  async authenticate(@Body() authenticateDto: LoginUserDto, @Res() res: Response) {
-    const user = await this.userService.findOne({ where: { email: authenticateDto.email, role: UserRoleEnum.ADMIN } });
-    if (!user) throw new BadRequestException('Invalid credentials');
+  async authenticate(@Body() loginUserDto: LoginUserDto, @Res() res: Response) {
+    const { email, role, name, isOtpEnabled, id } = await this.userService.login({
+      ...loginUserDto,
+      role: UserRoleEnum.ADMIN,
+    });
 
-    const isAuthenticated = await this.userService.comparePassword(authenticateDto.password, user.password);
-    if (!isAuthenticated) throw new BadRequestException('Invalid credentials');
+    if (isOtpEnabled) {
+      const otp = this.userService.generateOtp();
+      console.log(otp);
 
-    if (!user.isOtpEnabled) {
-      const [token, refreshToken] = await this.userService.generateJWTs(
-        {
-          id: user.id,
-          role: user.role,
-        },
-        user.role,
-      );
-      res.cookie('x-auth-cookie', token, {
-        httpOnly: true,
-        maxAge: envConfig.JWT_TTL * 1000,
-        secure: true,
-        sameSite: 'strict',
+      await Promise.all([
+        this.redisService.set(email + '_OTP', otp, 300),
+        this.sqsService.sendToQueue({
+          QueueUrl: envConfig.EMAIL_SQS_URL,
+          MessageBody: JSON.stringify({
+            emailTemplateName: 'OTP',
+            templateData: {
+              fullName: name,
+              OTPCode: otp,
+            },
+            emailFrom: '',
+            toAddress: email,
+          }),
+        }),
+      ]);
+
+      return res.send({
+        message: 'OTP sent successfully.',
       });
-      res.cookie('x-refresh-cookie', refreshToken, {
-        httpOnly: true,
-        maxAge: envConfig.JWT_REFRESH_TOKEN_TTL * 1000,
-        secure: true,
-        sameSite: 'strict',
-      });
-      return res.send();
     }
 
-    const otp = this.userService.generateOtp();
-    await Promise.all([
-      this.redisService.set(user.email + '_OTP', otp, 300),
-      this.sqsService.sendToQueue({
-        QueueUrl: envConfig.EMAIL_SQS_URL,
-        MessageBody: JSON.stringify({
-          emailTemplateName: 'OTP',
-          templateData: {
-            fullName: user.name,
-            OTPCode: otp,
-          },
-          emailFrom: '',
-          toAddress: user.email,
-        }),
-      }),
-    ]);
-
-    return res.send({
-      message: 'OTP sent successfully.',
+    const [token, refreshToken] = await this.userService.generateJWTs({ id, role });
+    res.cookie('x-auth-cookie', token, {
+      httpOnly: true,
+      maxAge: envConfig.JWT_TTL * 1000,
+      secure: true,
+      sameSite: 'strict',
     });
+    res.cookie('x-refresh-cookie', refreshToken, {
+      httpOnly: true,
+      maxAge: envConfig.JWT_REFRESH_TOKEN_TTL * 1000,
+      secure: true,
+      sameSite: 'strict',
+    });
+
+    return res.send();
   }
 
   @Post('validate-otp')
@@ -126,13 +116,7 @@ export class AdminUserController {
 
     await this.redisService.delete(user.email + '_OTP');
 
-    const [token, refreshToken] = await this.userService.generateJWTs(
-      {
-        id: user.id,
-        role: user.role,
-      },
-      user.role,
-    );
+    const [token, refreshToken] = await this.userService.generateJWTs({ id: user.id, role: user.role });
 
     res.cookie('x-auth-cookie', token, {
       httpOnly: true,
