@@ -11,10 +11,6 @@ export class CategoryRepository extends AbstractService<CategoryEntity> {
     super(itemRepository);
   }
 
-  async updateCategory(category: UpdateCategoryDto) {
-    return this.createAndSave(category);
-  }
-
   async findTrees(options: FindTreeOptions = {}) {
     return this.itemRepository.findTrees(options);
   }

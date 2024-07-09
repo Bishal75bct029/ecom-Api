@@ -23,6 +23,7 @@ export class UserService extends AbstractService<UserEntity> {
       issuer: payload.role === 'ADMIN' ? envConfig.ADMIN_JWT_ISSUER : envConfig.API_JWT_ISSUER,
       audience: payload.role === 'ADMIN' ? envConfig.ADMIN_JWT_AUDIENCE : envConfig.API_JWT_AUDIENCE,
     };
+
     return Promise.all([
       await this.jwtService.signAsync(payload, { ...options, expiresIn: envConfig.JWT_TTL }),
       await this.jwtService.signAsync(payload, { ...options, expiresIn: envConfig.JWT_REFRESH_TOKEN_TTL }),
@@ -31,9 +32,8 @@ export class UserService extends AbstractService<UserEntity> {
 
   async login(loginUserDto: LoginUserDto) {
     const user = await this.findOne({ where: { email: loginUserDto.email } });
-
     if (!user) throw new BadRequestException('Invalid Credentials');
-    if (user.role !== UserRoleEnum.USER) throw new BadRequestException('Invalid Credentials');
+    if (user.role !== loginUserDto.role) throw new BadRequestException('Invalid Credentials');
     if (!(await this.comparePassword(loginUserDto.password, user.password)))
       throw new BadRequestException('Invalid Credentials');
 

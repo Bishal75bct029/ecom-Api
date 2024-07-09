@@ -27,10 +27,6 @@ export class AdminCategoryController {
 
   @Put(':id')
   async update(@Param('id') id: string, @Body() updateCategoryDto: UpdateCategoryDto) {
-    const category = await this.categoryService.findOne({ where: { id } });
-    if (!category) throw new BadRequestException('Category not found');
-    await this.categoryService.createAndSave({ id, ...updateCategoryDto });
-
-    return this.categoryService.findDescendantsTree(category);
+    return this.categoryService.updateCategory(updateCategoryDto, id);
   }
 }

@@ -15,7 +15,7 @@ export class ReviewRepository extends AbstractService<ReviewEntity> {
     super(itemRepository);
   }
 
-  async countDeliveredProducts(productMetaIds: string[], userId: string): Promise<boolean> {
+  async hasProductDelivered(productMetaIds: string[], userId: string): Promise<boolean> {
     const count = await this.dataSource
       .createQueryBuilder()
       .select('oi.orderId')
