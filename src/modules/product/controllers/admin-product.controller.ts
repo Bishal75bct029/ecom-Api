@@ -26,9 +26,11 @@ export class AdminProductController {
 
   @Post()
   async create(@Body() createProductDto: CreateProductDto) {
+    const variants = this.productService.generateProductAttibutes(createProductDto.attributeOptions);
+
     const { productMetas: requestProductMetas, categoryIds, ...rest } = createProductDto;
 
-    const newProduct = this.productService.create(rest);
+    const newProduct = this.productService.create({ ...rest, variants });
     const newProductMetas = this.productMetaService.createMany(requestProductMetas);
 
     const categories = await this.categoryService.find({ where: { id: In(categoryIds) } });

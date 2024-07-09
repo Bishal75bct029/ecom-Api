@@ -1,9 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindTreeOptions, In, TreeRepository } from 'typeorm';
 import { AbstractService } from '@/libs/service/abstract.service';
 import { CategoryEntity } from '../entities/category.entity';
-import { CreateCategoryDto, UpdateCategoryDto } from '../dto';
 
 @Injectable()
 export class CategoryRepository extends AbstractService<CategoryEntity> {

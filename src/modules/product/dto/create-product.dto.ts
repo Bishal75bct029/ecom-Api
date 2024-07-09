@@ -1,6 +1,7 @@
 import {
   IsArray,
   IsBoolean,
+  IsJSON,
   IsNotEmpty,
   IsNumber,
   IsObject,
@@ -23,6 +24,15 @@ export class CreateProductDto {
   @IsArray()
   @IsString({ each: true })
   tags: string[];
+
+  @IsArray()
+  @IsOptional()
+  @IsString({ each: true })
+  attributes: string[];
+
+  @IsOptional()
+  @IsObject()
+  attributeOptions: Record<string, any>;
 
   @IsArray()
   @ValidateNested({ each: true })

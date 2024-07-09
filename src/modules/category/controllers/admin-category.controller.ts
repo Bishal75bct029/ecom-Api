@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, BadRequestException, Put } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CategoryService } from '../services/category.service';
 import { CreateCategoryDto, UpdateCategoryDto } from '../dto';

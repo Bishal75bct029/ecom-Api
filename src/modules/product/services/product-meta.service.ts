@@ -20,7 +20,7 @@ export class ProductMetaService extends ProductMetaRepository {
       where: { id: In(createOrderDto.productMetaIds.map(({ id }) => id)) },
     });
 
-    for (const product of productMetas) {
+    for await (const product of productMetas) {
       const productFromOrder = createOrderDto.productMetaIds.find((item) => item.id === product.id);
       this.createAndSave({ ...product, stock: product.stock - productFromOrder.quantity });
     }

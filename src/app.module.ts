@@ -11,6 +11,7 @@ import { ProductModule, CategoryModule, ReviewModule, UserModule, CartModule, Or
 import { RedisModule } from './libs/redis/redis.module';
 import { ADMIN_PUBLIC_ROUTES, API_PUBLIC_ROUTES } from './app.constants';
 import { DiscountModule } from './modules/discount/discount.module';
+import { SchoolDiscountModule } from './modules/school-discount/school-discount.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { DiscountModule } from './modules/discount/discount.module';
     CartModule,
     OrderModule,
     DiscountModule,
+    SchoolDiscountModule,
   ],
   controllers: [AppController],
   providers: [
