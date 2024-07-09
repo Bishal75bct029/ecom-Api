@@ -8,8 +8,11 @@ export class ApiDiscountController {
 
   @Get(':couponCode')
   async show(@Param() params: { couponCode: string }) {
-    return await this.discountService.findOne({
-      where: { couponCode: params.couponCode, expiryTime: MoreThan(new Date(new Date().toISOString())) },
+    return this.discountService.findOne({
+      where: {
+        couponCode: params.couponCode,
+        expiryTime: MoreThan(new Date(new Date().toISOString())),
+      },
     });
   }
 }

@@ -5,6 +5,7 @@ import { ProductService, ProductMetaService } from '../services';
 import { CreateProductDto, UpdateProductDto } from '../dto';
 import { CategoryService } from '../../category/services/category.service';
 import { getRecursiveDataArrayFromObjectOrArray } from '../helpers/getRecursiveDataArray.util';
+import { CategoryEntity } from '@/modules/category/entities/category.entity';
 
 @ApiTags('Admin Product')
 @Controller('admin/products')
@@ -14,6 +15,14 @@ export class AdminProductController {
     private readonly productMetaService: ProductMetaService,
     private readonly categoryService: CategoryService,
   ) {}
+
+  @Get()
+  async getAllProducts(@Query('name') name?: string) {
+    return this.productService.find({
+      where: [{ name: ILike(`%${name}%`) }, { tags: ILike(`%${name}%`) }, { description: ILike(`%${name}%`) }],
+      relations: ['productMeta', 'categories'],
+    });
+  }
 
   @Post()
   async create(@Body() createProductDto: CreateProductDto) {
@@ -39,14 +48,6 @@ export class AdminProductController {
     const productMetas = await this.productMetaService.saveMany(newProductMetas.map((meta) => ({ ...meta, product })));
 
     return { ...product, productMetas };
-  }
-
-  @Get()
-  async getAllProducts(@Query('name') name?: string) {
-    return this.productService.find({
-      where: [{ name: ILike(`%${name}%`) }, { tags: ILike(`%${name}%`) }, { description: ILike(`%${name}%`) }],
-      relations: ['productMeta', 'categories'],
-    });
   }
 
   @Put(':id')

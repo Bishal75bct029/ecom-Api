@@ -1,6 +1,10 @@
-import { IsBoolean, IsDate, IsInt, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsBoolean, IsDate, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreateDiscountDTO {
+  @IsUUID()
+  @IsOptional()
+  id: string;
+
   @IsString()
   @IsNotEmpty()
   couponCode: string;

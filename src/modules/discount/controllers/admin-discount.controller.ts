@@ -15,16 +15,7 @@ export class AdminDiscountController {
 
   @Post()
   async create(@Body() discountDto: CreateDiscountDTO) {
-    const isDiscountExist = await this.discountServices.findOne({ where: { couponCode: discountDto.couponCode } });
-
-    if (isDiscountExist) {
-      return this.discountServices.createAndSave({
-        id: isDiscountExist.id,
-        ...discountDto,
-      });
-    }
-
-    return await this.discountServices.createAndSave(discountDto);
+    return this.discountServices.createAndSave(discountDto);
   }
 
   @Delete(':id')

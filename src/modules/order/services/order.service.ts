@@ -1,15 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { AbstractService } from '@/libs/service/abstract.service';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { OrderEntity, OrderStatusEnum } from '../entities/order.entity';
+import { OrderStatusEnum } from '../entities/order.entity';
+import { OrderRepository } from '../repositories/order.repository';
+import { CreateOrderDto } from '../dto/create-order.dto';
+import { ProductMetaEntity } from '@/modules/product/entities';
 
 @Injectable()
-export class OrderService extends AbstractService<OrderEntity> {
-  constructor(@InjectRepository(OrderEntity) private readonly itemRepository: Repository<OrderEntity>) {
-    super(itemRepository);
-  }
-
+export class OrderService extends OrderRepository {
   private _statusTransitions: Record<OrderStatusEnum, OrderStatusEnum[]> = {
     [OrderStatusEnum.PLACED]: [OrderStatusEnum.PACKED, OrderStatusEnum.CANCELLED],
     [OrderStatusEnum.PACKED]: [OrderStatusEnum.SHIPPED, OrderStatusEnum.CANCELLED],

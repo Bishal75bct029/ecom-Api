@@ -11,20 +11,20 @@ export class CartRepository extends AbstractService<CartEntity> {
     super(itemRepository);
   }
 
-  async getUserCarts(id: string) {
-    return this.findOne({
-      where: {
-        user: { id },
-      },
-    });
-  }
+  // async getUserCarts(id: string) {
+  //   return this.findOne({
+  //     where: {
+  //       user: { id },
+  //     },
+  //   });
+  // }
 
-  async saveCart(cartItems: CreateCartDto) {
-    return this.createAndSave({
-      productMetaId: cartItems.productMetaId,
-      user: {
-        id: cartItems.userId,
-      },
-    });
-  }
+  // async saveCart(cartItems: CreateCartDto) {
+  //   return this.createAndSave({
+  //     productMetaId: cartItems.productMetaId,
+  //     user: {
+  //       id: cartItems.userId,
+  //     },
+  //   });
+  // }
 }
