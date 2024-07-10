@@ -26,11 +26,9 @@ export class AdminProductController {
 
   @Post()
   async create(@Body() createProductDto: CreateProductDto) {
-    const variants = this.productService.generateProductAttibutes(createProductDto.attributeOptions);
-
     const { productMetas: requestProductMetas, categoryIds, ...rest } = createProductDto;
 
-    const newProduct = this.productService.create({ ...rest, variants });
+    const newProduct = this.productService.create({ ...rest });
     const newProductMetas = this.productMetaService.createMany(requestProductMetas);
 
     const categories = await this.categoryService.find({ where: { id: In(categoryIds) } });
@@ -71,15 +69,12 @@ export class AdminProductController {
     });
 
     const tags = [...new Set([...categoryAncestoryList, ...product.tags])];
-
     const newProduct = this.productService.create({ id, ...rest, tags, categories });
-
     const updatedProduct = await this.productService.save(newProduct);
-
     const newProductMetas = this.productMetaService.createMany(productMetas);
 
     const updatedProductMetas = await this.productMetaService.saveMany(
-      newProductMetas.map((meta) => ({ ...meta, product })),
+      newProductMetas.map((meta) => ({ ...meta, price: Number(meta.price), product })),
     );
 
     return { ...updatedProduct, productMetas: updatedProductMetas };

@@ -30,6 +30,10 @@ export class CreateProductDto {
   @IsString({ each: true })
   attributes: string[];
 
+  @IsArray()
+  @IsOptional()
+  variants: Array<{ [key: string]: string }>;
+
   @IsOptional()
   @IsObject()
   attributeOptions: Record<string, any>;

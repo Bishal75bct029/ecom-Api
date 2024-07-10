@@ -14,7 +14,18 @@ export enum OrderStatusEnum {
 
 @Entity('orders')
 export class OrderEntity extends BaseEntity {
-  @Column({ type: 'bigint', nullable: true })
+  @Column({
+    type: 'bigint',
+    nullable: true,
+    transformer: {
+      to(value: any) {
+        BigInt(value);
+      },
+      from(value: any) {
+        BigInt(value);
+      },
+    },
+  })
   totalPrice: number;
 
   @Column({ type: 'enum', nullable: false, enum: OrderStatusEnum, default: OrderStatusEnum.PLACED })

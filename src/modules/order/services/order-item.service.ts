@@ -17,13 +17,13 @@ export class OrderItemService extends OrderItemRepository {
   calculateDiscountedPrice(totalPrice: number, discount: DiscountEntity) {
     if (totalPrice >= discount.minBuyingPrice) {
       const discountPrice = discount.isPercentage
-        ? Math.floor((totalPrice * parseInt(discount.amount)) / 100)
-        : parseInt(discount.amount);
+        ? (totalPrice * Number(discount.amount)) / 100
+        : BigInt(discount.amount);
 
       totalPrice =
         discountPrice >= discount.maxDiscountPrice
-          ? totalPrice - discount.maxDiscountPrice
-          : totalPrice - discountPrice;
+          ? totalPrice - Number(discount.maxDiscountPrice)
+          : totalPrice - Number(discountPrice);
     }
   }
 }
