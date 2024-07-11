@@ -52,7 +52,7 @@ export class CreateProductDto {
 export class CreateProductMetaDto {
   @IsUUID()
   @IsOptional()
-  id: string;
+  id?: string;
 
   @IsString()
   @IsNotEmpty()

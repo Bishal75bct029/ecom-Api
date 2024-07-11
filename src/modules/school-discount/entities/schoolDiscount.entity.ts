@@ -12,6 +12,6 @@ export class SchoolDiscountEntity extends BaseEntity {
   @Column({ type: 'jsonb', default: {} })
   schoolMeta: object;
 
-  @Column({ type: 'varchar', unique: true })
+  @Column({ type: 'uuid', unique: true })
   schoolId: string;
 }

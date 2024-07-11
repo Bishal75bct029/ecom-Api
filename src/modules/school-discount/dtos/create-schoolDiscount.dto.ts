@@ -1,9 +1,9 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, Max } from 'class-validator';
+import { IsInt, IsNotEmpty, IsObject, IsOptional, IsString, IsUUID, Max } from 'class-validator';
 
 export class CreateSchoolDiscountDto {
   @IsUUID()
   @IsOptional()
-  id: string;
+  id?: string;
 
   @IsString()
   @IsNotEmpty()
@@ -12,6 +12,9 @@ export class CreateSchoolDiscountDto {
   @IsUUID()
   @IsNotEmpty()
   schoolId: string;
+
+  @IsObject()
+  schoolMeta: object;
 
   @IsInt()
   @IsNotEmpty()

@@ -1,6 +1,10 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { envConfig } from './envConfig';
 import { join } from 'path';
+import { runSeeders, SeederOptions } from 'typeorm-extension';
+import UserSeeder from '@/seeds/category.seed';
+import MainSeeder from '@/seeds/user.factory';
+import { UsersFactory } from '@/seeds/productMeta.seed';
 
 export const TYPEORM_CONFIG = {
   type: 'postgres',
@@ -14,6 +18,16 @@ export const TYPEORM_CONFIG = {
   migrationsTableName: 'migrations',
   synchronize: envConfig.NODE_ENV === 'local',
   logging: envConfig.NODE_ENV === 'local',
-} as unknown as DataSourceOptions;
+  seeds: [MainSeeder],
+  // factories:[UsersFactory]
+} as DataSourceOptions & SeederOptions;
+
+const dataSource = new DataSource(TYPEORM_CONFIG);
+
+dataSource.initialize().then(async () => {
+  await dataSource.synchronize(true);
+  await runSeeders(dataSource);
+  process.exit();
+});
 
 export default new DataSource(TYPEORM_CONFIG);
