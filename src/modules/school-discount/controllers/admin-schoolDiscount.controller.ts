@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Req } from '@nestjs/common';
 import { SchoolDiscountService } from '../services/schoolDiscount.service';
 import { CreateSchoolDiscountDto } from '../dtos/create-schoolDiscount.dto';
 import { RedisService } from '@/libs/redis/redis.service';
@@ -35,8 +35,11 @@ export class AdminSchoolDiscountController {
     return schoolDiscount;
   }
 
-  @Delete(':id')
-  async delete(@Param('id') id: string) {
-    return this.schoolDiscountService.softDelete(id);
+  @Delete(':schoolId')
+  async delete(@Param('schoolId', ParseUUIDPipe) schoolId: string) {
+    const deleteDB = this.schoolDiscountService.softDelete(schoolId);
+    const deleteRedis = this.redisService.delete(`school_${schoolId}`);
+    await Promise.all([deleteDB, deleteRedis]);
+    return;
   }
 }
