@@ -19,18 +19,4 @@ export const TYPEORM_CONFIG = {
   logging: envConfig.NODE_ENV === 'local',
 } as DataSourceOptions;
 
-const dataSource = new DataSource(TYPEORM_CONFIG);
-
-export function generateUsers(): CreateAdminUserDto {
-  return {
-    email: faker.internet.email(),
-    password: faker.internet.password(),
-    name: faker.internet.userName(),
-    isOtpEnabled: faker.datatype.boolean(),
-  };
-}
-
-const user = dataSource.getRepository(UserEntity);
-user.save(generateUsers());
-
 export default new DataSource(TYPEORM_CONFIG);
