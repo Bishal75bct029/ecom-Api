@@ -1,7 +1,6 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { envConfig } from './envConfig';
 import { join } from 'path';
-import { runSeeders, SeederOptions } from 'typeorm-extension';
 import { UserEntity } from '@/modules/user/entities';
 import { CreateAdminUserDto } from '@/modules/user/dto';
 import { faker } from '@faker-js/faker';
