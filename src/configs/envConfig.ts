@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv';
-import { cleanEnv, num, port, str } from 'envalid';
+import { cleanEnv, num, port, str, url } from 'envalid';
 
 dotenv.config();
 
@@ -31,4 +31,10 @@ export const envConfig = cleanEnv(process.env, {
   AWS_REGION: str(),
 
   ALLOWED_ORIGINS: str(),
+
+  PAYPAL_CLIENT_ID: str(),
+  PAYPAL_CLIENT_SECRET: str(),
+  PAYPAL_RETURN_URL: url(),
+  PAYPAL_CANCEL_URL: url(),
+  PAYPAL_REDIRECTION_URL: url(),
 });
