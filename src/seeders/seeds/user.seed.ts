@@ -1,7 +1,7 @@
 import 'reflect-metadata';
-import { dataSource } from '..';
-import { UserEntity } from '../models/user.entity';
 import { generateUsers } from '../factories/fakeData';
+import { UserEntity } from '@/modules/user/entities';
+import dataSource from '@/configs/typeorm';
 
 export const seedUsers = async () => {
   try {

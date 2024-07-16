@@ -1,9 +1,7 @@
-import { dataSource } from '..';
+import { ProductEntity, ProductMetaEntity } from '@/modules/product/entities';
 import { generateProduct } from '../factories/fakeData';
-import { CategoryEntity } from '../models/category.entity';
-import { ProductEntity } from '../models/product.entity';
-import { ProductMetaEntity } from '../models/productMeta.entity';
-import { UserEntity } from '../models/user.entity';
+import dataSource from '@/configs/typeorm';
+import { CategoryEntity } from '@/modules/category/entities/category.entity';
 
 export async function seedProductsWithMetas() {
   const products = [generateProduct()];

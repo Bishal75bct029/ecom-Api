@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import * as bcrypt from 'bcrypt';
 
 export function generateSchoolDiscount() {
   return {
@@ -14,7 +15,7 @@ export function generateSchoolDiscount() {
 export function generateUsers() {
   return {
     email: faker.internet.email(),
-    password: faker.internet.password(),
+    password: bcrypt.hashSync('password', 10),
     name: faker.internet.userName(),
     isOtpEnabled: faker.datatype.boolean(),
   };

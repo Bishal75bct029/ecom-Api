@@ -1,9 +1,6 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { envConfig } from './envConfig';
 import { join } from 'path';
-import { UserEntity } from '@/modules/user/entities';
-import { CreateAdminUserDto } from '@/modules/user/dto';
-import { faker } from '@faker-js/faker';
 
 export const TYPEORM_CONFIG = {
   type: 'postgres',
@@ -19,4 +16,5 @@ export const TYPEORM_CONFIG = {
   logging: envConfig.NODE_ENV === 'local',
 } as DataSourceOptions;
 
-export default new DataSource(TYPEORM_CONFIG);
+export const dataSource = new DataSource(TYPEORM_CONFIG);
+export default dataSource;

@@ -1,7 +1,8 @@
 import 'reflect-metadata';
-import { dataSource } from '..';
-import { CategoryEntity } from '../models/category.entity';
+
 import { generateCategories } from '../factories/fakeData';
+import { CategoryEntity } from '@/modules/category/entities/category.entity';
+import dataSource from '@/configs/typeorm';
 
 async function insertCategories(categories: any[], parent: CategoryEntity | null = null) {
   for (const categoryData of categories) {

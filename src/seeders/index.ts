@@ -1,5 +1,4 @@
-import 'reflect-metadata';
-import { seedCategories, seedProductsWithMetas, seedSchoolDiscount, seedUsers } from './database/seeds';
+import { seedCategories, seedProductsWithMetas, seedSchoolDiscount, seedUsers } from './seeds';
 
 const seed = {
   user: seedUsers,

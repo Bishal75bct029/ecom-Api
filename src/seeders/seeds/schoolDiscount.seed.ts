@@ -1,7 +1,6 @@
-import 'reflect-metadata';
-import { dataSource } from '..';
-import { SchoolDiscountEntity } from '../models/schoolDiscount.entity';
 import { generateSchoolDiscount } from '../factories/fakeData';
+import { SchoolDiscountEntity } from '@/modules/school-discount/entities/schoolDiscount.entity';
+import dataSource from '@/configs/typeorm';
 
 export const seedSchoolDiscount = async () => {
   try {
