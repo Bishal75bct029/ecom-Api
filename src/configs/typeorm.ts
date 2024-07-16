@@ -14,6 +14,7 @@ export const TYPEORM_CONFIG = {
   migrationsTableName: 'migrations',
   synchronize: envConfig.NODE_ENV === 'local',
   logging: envConfig.NODE_ENV === 'local',
-} as unknown as DataSourceOptions;
+} as DataSourceOptions;
 
-export default new DataSource(TYPEORM_CONFIG);
+export const dataSource = new DataSource(TYPEORM_CONFIG);
+export default dataSource;

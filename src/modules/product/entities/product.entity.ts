@@ -15,6 +15,15 @@ export class ProductEntity extends BaseEntity {
   @Column({ type: 'simple-array' })
   tags: string[];
 
+  @Column({ type: 'simple-array', nullable: true })
+  attributes: string[];
+
+  @Column({ type: 'jsonb', nullable: true })
+  attributesOptions: { [key: string]: string[] };
+
+  @Column({ type: 'jsonb', nullable: true })
+  variants: Array<{ [key: string]: string }>;
+
   @ManyToMany(() => CategoryEntity, (category) => category.products)
   @JoinTable({ name: 'product_categories' })
   categories: CategoryEntity[];

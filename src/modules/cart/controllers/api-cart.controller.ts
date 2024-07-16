@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req, Get } from '@nestjs/common';
+import { Controller, Post, Body, Req, Get, NotFoundException } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CartService } from '../services/cart.service';
 import { CreateCartDto } from '../dto';
@@ -24,7 +24,7 @@ export class ApiCartController {
       },
     });
 
-    if (!userCarts) return 'Cart is empty';
+    if (!userCarts) return new NotFoundException('Cart is empty');
 
     const cartItems = await this.productService.find({
       where: {

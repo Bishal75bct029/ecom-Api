@@ -1,6 +1,7 @@
 import {
   IsArray,
   IsBoolean,
+  IsJSON,
   IsNotEmpty,
   IsNumber,
   IsObject,
@@ -25,6 +26,19 @@ export class CreateProductDto {
   tags: string[];
 
   @IsArray()
+  @IsOptional()
+  @IsString({ each: true })
+  attributes: string[];
+
+  @IsArray()
+  @IsOptional()
+  variants: Array<{ [key: string]: string }>;
+
+  @IsOptional()
+  @IsObject()
+  attributeOptions: Record<string, any>;
+
+  @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateProductMetaDto)
   productMetas: CreateProductMetaDto[];
@@ -38,7 +52,7 @@ export class CreateProductDto {
 export class CreateProductMetaDto {
   @IsUUID()
   @IsOptional()
-  id: string;
+  id?: string;
 
   @IsString()
   @IsNotEmpty()
