@@ -8,6 +8,16 @@ import { swaggerSetup } from './configs/swagger';
 
 (async () => {
   const app = await NestFactory.create(AppModule);
+  app.enableCors({
+    origin: function (origin, callback) {
+      if (envConfig.NODE_ENV === 'local' || JSON.parse(envConfig.ALLOWED_ORIGINS).indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS.'));
+      }
+    },
+    credentials: true,
+  });
   app.use(cookieParser());
   app.useGlobalPipes(
     new ValidationPipe({

@@ -29,4 +29,6 @@ export const envConfig = cleanEnv(process.env, {
   AWS_SECRET_ACCESS_KEY: str(),
   EMAIL_SQS_URL: str(),
   AWS_REGION: str(),
+
+  ALLOWED_ORIGINS: str(),
 });
