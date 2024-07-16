@@ -1,3 +1,4 @@
+import { UserRoleEnum } from '@/modules/user/entities';
 import { faker } from '@faker-js/faker';
 import * as bcrypt from 'bcrypt';
 
@@ -17,6 +18,7 @@ export function generateUsers() {
     email: faker.internet.email(),
     password: bcrypt.hashSync('password', 10),
     name: faker.internet.userName(),
+    role: faker.helpers.arrayElement(Object.values(UserRoleEnum)),
     isOtpEnabled: faker.datatype.boolean(),
   };
 }
