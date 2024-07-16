@@ -16,5 +16,5 @@ export const TYPEORM_CONFIG = {
   logging: envConfig.NODE_ENV === 'local',
 } as DataSourceOptions;
 
-export const dataSource = new DataSource(TYPEORM_CONFIG);
+const dataSource = new DataSource(TYPEORM_CONFIG);
 export default dataSource;

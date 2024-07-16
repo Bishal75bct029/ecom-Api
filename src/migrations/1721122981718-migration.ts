@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class Migration1721109632352 implements MigrationInterface {
-  name = 'Migration1721109632352';
+export class Migration1721122981718 implements MigrationInterface {
+  name = 'Migration1721122981718';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
@@ -42,6 +42,9 @@ export class Migration1721109632352 implements MigrationInterface {
                 "name" character varying NOT NULL,
                 "description" character varying NOT NULL,
                 "tags" text NOT NULL,
+                "attributes" text,
+                "attributesOptions" jsonb,
+                "variants" jsonb,
                 CONSTRAINT "PK_0806c755e0aca124e67c0cf6d7d" PRIMARY KEY ("id")
             )
         `);
@@ -144,6 +147,20 @@ export class Migration1721109632352 implements MigrationInterface {
                 "isOtpEnabled" boolean NOT NULL DEFAULT false,
                 CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email"),
                 CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id")
+            )
+        `);
+    await queryRunner.query(`
+            CREATE TABLE "school_discounts" (
+                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "deletedAt" TIMESTAMP,
+                "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
+                "updatedAt" TIMESTAMP DEFAULT now(),
+                "name" character varying NOT NULL,
+                "discountPercentage" integer NOT NULL,
+                "schoolMeta" jsonb NOT NULL DEFAULT '{}',
+                "schoolId" uuid NOT NULL,
+                CONSTRAINT "UQ_e827d03be6863fe5bafa0a1db9d" UNIQUE ("schoolId"),
+                CONSTRAINT "PK_f24e0afb3267c4e2425d2d52e32" PRIMARY KEY ("id")
             )
         `);
     await queryRunner.query(`
@@ -269,6 +286,9 @@ export class Migration1721109632352 implements MigrationInterface {
         `);
     await queryRunner.query(`
             DROP TABLE "carts"
+        `);
+    await queryRunner.query(`
+            DROP TABLE "school_discounts"
         `);
     await queryRunner.query(`
             DROP TABLE "users"

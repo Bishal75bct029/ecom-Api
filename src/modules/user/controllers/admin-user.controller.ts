@@ -17,8 +17,8 @@ export class AdminUserController {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private redisService: RedisService,
-    private sqsService: SQSService
-  ) { }
+    private sqsService: SQSService,
+  ) {}
 
   @Post('create')
   async createAdmin(@Body() createAdminUserDto: CreateAdminUserDto) {

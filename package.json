@@ -22,6 +22,7 @@
     "migration:generate": "f() { yarn typeorm migration:generate -p -d ./src/configs/typeorm.ts \"./src/migrations/migration/$@\"; }; f",
     "migration:run": "f() { yarn typeorm migration:run -d ./src/configs/typeorm.ts ;}; f",
     "migration:revert": "f() { yarn typeorm migration:revert -d ./src/configs/typeorm.ts ;}; f",
+    "seed": "ts-node -r tsconfig-paths/register ./src/seeders/index.ts",
     "prepare": "husky"
   },
   "dependencies": {
