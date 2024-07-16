@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { OrderStatusEnum } from '../entities/order.entity';
 import { OrderRepository } from '../repositories/order.repository';
-import { CreateOrderDto } from '../dto/create-order.dto';
-import { ProductMetaEntity } from '@/modules/product/entities';
 
 @Injectable()
 export class OrderService extends OrderRepository {

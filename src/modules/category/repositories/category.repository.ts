@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindTreeOptions, In, TreeRepository } from 'typeorm';
+import { FindTreeOptions, TreeRepository } from 'typeorm';
 import { AbstractService } from '@/libs/service/abstract.service';
 import { CategoryEntity } from '../entities/category.entity';
 

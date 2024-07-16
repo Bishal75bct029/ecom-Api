@@ -4,7 +4,6 @@ import { S3Service } from './s3.service';
 
 @Module({
   providers: [SQSService, S3Service],
-  exports: [SQSService, S3Service]
+  exports: [SQSService, S3Service],
 })
-export class AWSModule {
-}
+export class AWSModule {}

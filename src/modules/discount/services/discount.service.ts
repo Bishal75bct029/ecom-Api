@@ -1,8 +1,4 @@
-import { AbstractService } from '@/libs/service/abstract.service';
 import { Injectable } from '@nestjs/common';
-import { DiscountEntity } from '../entity/discount.entity';
-import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
 import { DiscountRepository } from '../repositories/discount.repository';
 import { CreateDiscountDTO } from '../dto/create-discount.dto';
 
@@ -20,5 +16,4 @@ export class DiscountService extends DiscountRepository {
 
     return this.createAndSave(discountDto);
   }
-  I;
 }

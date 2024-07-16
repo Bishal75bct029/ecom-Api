@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AbstractService } from '@/libs/service/abstract.service';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { ProductEntity } from '../entities';
 
 @Injectable()

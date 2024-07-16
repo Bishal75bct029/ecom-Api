@@ -1,6 +1,5 @@
-import { Controller, Post, Body, Get, Req } from '@nestjs/common';
-import { ProductService, ProductMetaService } from '../services';
-import { CreateProductDto } from '../dto';
+import { Controller, Get, Req } from '@nestjs/common';
+import { ProductService } from '../services';
 import { Request } from 'express';
 import { RedisService } from '@/libs/redis/redis.service';
 import { SchoolDiscountService } from '@/modules/school-discount/services/schoolDiscount.service';
@@ -9,7 +8,6 @@ import { SchoolDiscountService } from '@/modules/school-discount/services/school
 export class ApiProductController {
   constructor(
     private readonly productService: ProductService,
-    private readonly productMetaService: ProductMetaService,
     private readonly redisService: RedisService,
     private readonly schoolDiscountService: SchoolDiscountService,
   ) {}

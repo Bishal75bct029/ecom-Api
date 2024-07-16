@@ -1,7 +1,6 @@
 import {
   IsArray,
   IsBoolean,
-  IsJSON,
   IsNotEmpty,
   IsNumber,
   IsObject,

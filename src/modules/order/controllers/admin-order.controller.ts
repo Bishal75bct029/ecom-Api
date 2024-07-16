@@ -1,4 +1,4 @@
-import { Controller, Body, Put, Param, BadRequestException, Get, Req, Query } from '@nestjs/common';
+import { Controller, Body, Put, Param, BadRequestException, Get, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { DataSource, In } from 'typeorm';
 import { OrderService } from '../services/order.service';
@@ -6,7 +6,6 @@ import { UpdateOrderStatusDto } from '../dto/update-order.dto';
 import { OrderEntity, OrderStatusEnum } from '../entities/order.entity';
 import { ProductMetaService } from '../../product/services/product-meta.service';
 import { ProductMetaEntity } from '../../product/entities/productMeta.entity';
-import { Request } from 'express';
 
 @ApiTags('Admin Order')
 @Controller('admin/orders')
@@ -18,7 +17,7 @@ export class AdminOrderController {
   ) {}
 
   @Get()
-  async getOrders(@Query() query: Pagination, @Req() req: Request) {
+  async getOrders(@Query() query: Pagination) {
     const page = query.page || 1;
     const limit = query.limit || 10;
 

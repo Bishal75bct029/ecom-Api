@@ -5,7 +5,6 @@ import { ProductService, ProductMetaService } from '../services';
 import { CreateProductDto, UpdateProductDto } from '../dto';
 import { CategoryService } from '../../category/services/category.service';
 import { getRecursiveDataArrayFromObjectOrArray } from '../helpers/getRecursiveDataArray.util';
-import { CategoryEntity } from '@/modules/category/entities/category.entity';
 
 @ApiTags('Admin Product')
 @Controller('admin/products')

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post } from '@nestjs/common';
 import { SchoolDiscountService } from '../services/schoolDiscount.service';
 import { CreateSchoolDiscountDto } from '../dtos/create-schoolDiscount.dto';
 import { RedisService } from '@/libs/redis/redis.service';

@@ -10,9 +10,9 @@ export class SQSService {
     this.sqsClient = new SQSClient({
       credentials: {
         accessKeyId: envConfig.AWS_ACCESS_KEY_ID,
-        secretAccessKey: envConfig.AWS_SECRET_ACCESS_KEY
-      }
-    })
+        secretAccessKey: envConfig.AWS_SECRET_ACCESS_KEY,
+      },
+    });
   }
 
   public async sendToQueue(messageRequest: SendMessageRequest) {
