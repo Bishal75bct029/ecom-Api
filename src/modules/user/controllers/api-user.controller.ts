@@ -14,7 +14,7 @@ export class ApiUserController {
   constructor(
     private readonly userService: UserService,
     private readonly addressService: AddressService,
-  ) {}
+  ) { }
 
   @Post()
   createUser(@Body() createUserDto: CreateUserDto) {
