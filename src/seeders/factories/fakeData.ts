@@ -25,12 +25,12 @@ export function generateUsers() {
 
 export function generateProductMeta(isDefault: boolean) {
   return {
-    sku: faker.word.sample(),
+    sku: String(Date.now() + Math.floor(Math.random() * 1000)),
     image: faker.image.url(),
     price: faker.number.int({ min: 10, max: 1000 }),
     variants: {
-      color: faker.color.human(),
-      size: faker.helpers.arrayElement(['S', 'M', 'L', 'XL']),
+      storage: faker.helpers.arrayElement(['64GB', '128GB', '256GB', '512GB', '1TB']),
+      RAM: faker.helpers.arrayElement(['2GB', '4GB', '8GB', '16GB', '32GB']),
     },
     isDefault: isDefault,
     stock: faker.number.int({ min: 0, max: 100 }),
@@ -47,10 +47,16 @@ export function generateProduct() {
   }
 
   return {
-    name: faker.commerce.product(),
+    name: faker.helpers.arrayElement([
+      'Brand New Device',
+      '5G Cell Phone',
+      'Tablets',
+      'High Performant Gaming Laptop',
+      'Super Quality Phone',
+    ]),
     description: faker.commerce.productDescription(),
     tags: faker.word.words(5).split(' '),
-    attributes: faker.helpers.arrayElements(['color', 'size']),
+    attributes: faker.helpers.arrayElements(['storage', 'RAM']),
     variants: [
       {
         storage: faker.helpers.arrayElement(['64GB', '128GB', '256GB', '512GB', '1TB']),
