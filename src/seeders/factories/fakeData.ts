@@ -27,7 +27,7 @@ export function generateProductMeta(isDefault: boolean) {
   return {
     sku: String(Date.now() + Math.floor(Math.random() * 1000)),
     image: faker.image.url(),
-    price: faker.number.int({ min: 10, max: 1000 }),
+    price: faker.number.int({ min: 10, max: 10000000 }) * 100,
     variants: {
       storage: faker.helpers.arrayElement(['64GB', '128GB', '256GB', '512GB', '1TB']),
       RAM: faker.helpers.arrayElement(['2GB', '4GB', '8GB', '16GB', '32GB']),

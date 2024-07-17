@@ -19,18 +19,20 @@ export class ApiProductController {
     const { schoolId } = currentUser;
 
     const products = await this.productService.find({ relations: ['productMeta', 'categories'] });
+    console.log(products);
 
     const schoolDiscountCache = (await this.redisService.get(`school_${schoolId}`)) as number;
 
-    if (!schoolDiscountCache) {
-      const { discountPercentage } = await this.schoolDiscountService.findOne({
-        where: { schoolId: schoolId },
+    if (!schoolDiscountCache && schoolId) {
+      const schoolDiscount = await this.schoolDiscountService.findOne({
+        where: { schoolId },
         select: ['discountPercentage'],
       });
-      if (!discountPercentage) return products;
-      await this.redisService.set(`school_${schoolId}`, discountPercentage);
 
-      return this.productService.getDiscountedProducts(products, discountPercentage);
+      if (!schoolDiscount) return products;
+      await this.redisService.set(`school_${schoolId}`, schoolDiscount.discountPercentage);
+
+      return this.productService.getDiscountedProducts(products, schoolDiscount.discountPercentage);
     }
 
     return this.productService.getDiscountedProducts(products, schoolDiscountCache);
