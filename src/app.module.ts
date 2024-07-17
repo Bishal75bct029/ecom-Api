@@ -11,6 +11,7 @@ import { ProductModule, CategoryModule, ReviewModule, UserModule, CartModule, Or
 import { RedisModule } from './libs/redis/redis.module';
 import { ADMIN_PUBLIC_ROUTES, API_PUBLIC_ROUTES } from './app.constants';
 import { DiscountModule } from './modules/discount/discount.module';
+import { ApiAuthorizationMiddleware } from './common/middlewares/api/api-authorization.middleware';
 
 @Module({
   imports: [
@@ -49,5 +50,6 @@ export class AppModule implements NestModule {
       .apply(ApiMiddleware)
       .exclude(...API_PUBLIC_ROUTES)
       .forRoutes({ path: 'api/*', method: RequestMethod.ALL });
+    // consumer.apply(ApiAuthorizationMiddleware).forRoutes(...['api/carts']);
   }
 }

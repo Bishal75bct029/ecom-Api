@@ -8,20 +8,29 @@ export class ProductService extends ProductRepository {
   generateProductAttibutes(attributeOptions: Record<string, any>) {
     return combinate(attributeOptions);
   }
+  getDiscountedProducts<T>(product: T, discountPercentage?: number): T;
+  getDiscountedProducts<T>(product: T[], discountPercentage?: number): T[];
 
-  getDiscountedProducts(products: ProductEntity[], discountPercentage: number) {
-    return products.map((product) => {
-      return {
+  getDiscountedProducts(products: ProductEntity | ProductEntity[], discountPercentage: number = 0) {
+    if (Array.isArray(products)) {
+      return products.map((product) => ({
         ...product,
-        productMeta: product.productMeta.map((meta) => {
-          return {
-            ...meta,
-            price: Number(meta.price) / 100,
-            discountPrice: (Number(meta.price) - (discountPercentage * Number(meta.price)) / 100) / 100,
-            discountPercentage: discountPercentage ?? 0,
-          };
-        }),
-      };
-    });
+        productMeta: product.productMeta.map((meta) => ({
+          ...meta,
+          price: Number(meta.price) / 100,
+          discountPrice: (Number(meta.price) - (discountPercentage * Number(meta.price)) / 100) / 100,
+          discountPercentage: discountPercentage ?? 0,
+        })),
+      }));
+    }
+    return {
+      ...products,
+      productMeta: products.productMeta.map((meta) => ({
+        ...meta,
+        price: Number(meta.price) / 100,
+        discountPrice: (Number(meta.price) - (discountPercentage * Number(meta.price)) / 100) / 100,
+        discountPercentage: discountPercentage ?? 0,
+      })),
+    };
   }
 }

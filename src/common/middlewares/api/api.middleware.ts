@@ -24,7 +24,6 @@ export class ApiMiddleware implements NestMiddleware {
           schoolId: null,
         };
       }
-
       next();
     } catch (error) {
       throw new UnauthorizedException('Unauthorized');
