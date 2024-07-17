@@ -25,24 +25,20 @@ export class AdminProductController {
 
   @Post()
   async create(@Body() createProductDto: CreateProductDto) {
-    const { productMetas: requestProductMetas, categoryIds, ...rest } = createProductDto;
+    const { productMetas: requestProductMetas, categoryId, ...rest } = createProductDto;
 
-    const newProduct = this.productService.create({ ...rest });
-    const newProductMetas = this.productMetaService.createMany(requestProductMetas);
+    const category = await this.categoryService.findOne({ where: { id: categoryId } });
+    if (!category) throw new BadRequestException("Doesn't exists this category.");
 
+    const treeCategory = await this.categoryService.findAncestorsTree(category);
+
+    const categoryIds = this.categoryService.getIdsFromParent(treeCategory);
     const categories = await this.categoryService.find({ where: { id: In(categoryIds) } });
 
-    const ancestors = await Promise.all(categories.map((category) => this.categoryService.findAncestorsTree(category)));
+    const newProduct = this.productService.create({ ...rest, categories });
+    const newProductMetas = this.productMetaService.createMany(requestProductMetas);
 
-    const categoryAncestoryList = getRecursiveDataArrayFromObjectOrArray({
-      recursiveData: ancestors,
-      recursiveObjectKey: 'parent',
-      dataKey: 'name',
-    });
-
-    const tags = [...new Set([...categoryAncestoryList, ...newProduct.tags])];
-
-    const product = await this.productService.save({ ...newProduct, tags });
+    const product = await this.productService.save({ ...newProduct });
 
     const productMetas = await this.productMetaService.saveMany(newProductMetas.map((meta) => ({ ...meta, product })));
 
@@ -51,13 +47,13 @@ export class AdminProductController {
 
   @Put(':id')
   async update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-    const { productMetas, categoryIds, ...rest } = updateProductDto;
+    const { productMetas, categoryId, ...rest } = updateProductDto;
 
     const product = await this.productService.findOne({ where: { id } });
 
     if (!product) throw new BadRequestException('Product not found');
 
-    const categories = await this.categoryService.find({ where: { id: In(categoryIds) } });
+    const categories = await this.categoryService.find({ where: { id: In([...categoryId]) } });
 
     const ancestors = await Promise.all(categories.map((category) => this.categoryService.findAncestorsTree(category)));
 

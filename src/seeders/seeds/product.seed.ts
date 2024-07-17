@@ -12,8 +12,7 @@ export async function seedProductsWithMetas() {
     product.description = productData.description;
     product.tags = productData.tags;
     product.attributes = productData.attributes;
-    product.attributesOptions = productData.attributeOptions;
-    product.variants = productData.variants;
+    product.attributeOptions = productData.attributeOptions;
 
     await dataSource.initialize();
     product.categories = await dataSource

@@ -57,12 +57,10 @@ export function generateProduct() {
     description: faker.commerce.productDescription(),
     tags: faker.word.words(5).split(' '),
     attributes: faker.helpers.arrayElements(['storage', 'RAM']),
-    variants: [
-      {
-        storage: faker.helpers.arrayElement(['64GB', '128GB', '256GB', '512GB', '1TB']),
-        RAM: faker.helpers.arrayElement(['2GB', '4GB', '8GB', '16GB', '32GB']),
-      },
-    ],
+    variants: {
+      storage: faker.helpers.arrayElement(['64GB', '128GB', '256GB', '512GB', '1TB']),
+      RAM: faker.helpers.arrayElement(['2GB', '4GB', '8GB', '16GB', '32GB']),
+    },
     attributeOptions: {
       color: [faker.helpers.arrayElement(['64GB', '128GB', '256GB', '512GB', '1TB'])],
       size: ['2GB', '4GB', '8GB', '16GB', '32GB'],

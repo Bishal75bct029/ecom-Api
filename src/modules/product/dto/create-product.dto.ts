@@ -25,13 +25,7 @@ export class CreateProductDto {
   tags: string[];
 
   @IsArray()
-  @IsOptional()
-  @IsString({ each: true })
   attributes: string[];
-
-  @IsArray()
-  @IsOptional()
-  variants: Array<{ [key: string]: string }>;
 
   @IsOptional()
   @IsObject()
@@ -42,10 +36,9 @@ export class CreateProductDto {
   @Type(() => CreateProductMetaDto)
   productMetas: CreateProductMetaDto[];
 
-  @IsArray()
-  @IsUUID('all', { each: true })
+  @IsUUID()
   @IsNotEmpty()
-  categoryIds: string[];
+  categoryId: string;
 }
 
 export class CreateProductMetaDto {

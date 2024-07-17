@@ -1,8 +1,10 @@
-import { Controller, Get, Param, Req } from '@nestjs/common';
+import { Controller, Get, Param, Query, Req } from '@nestjs/common';
 import { ProductService } from '../services';
 import { Request } from 'express';
 import { RedisService } from '@/libs/redis/redis.service';
 import { SchoolDiscountService } from '@/modules/school-discount/services/schoolDiscount.service';
+import { GetProductsByCategoryDto } from '../dto';
+import { Not } from 'typeorm';
 
 @Controller('api/products')
 export class ApiProductController {
@@ -68,7 +70,6 @@ export class ApiProductController {
         name: true,
         description: true,
         tags: true,
-        variants: true,
         attributes: true,
         productMeta: {
           image: true,
@@ -103,5 +104,31 @@ export class ApiProductController {
 
       return this.productService.getDiscountedProducts(product, schoolDiscount.discountPercentage);
     }
+  }
+
+  @Get()
+  async getProductsByCategory(
+    @Query() getProductByCategoryDto: GetProductsByCategoryDto,
+    @Req() { currentUser }: Request,
+  ) {
+    const { schoolId } = currentUser;
+    const products = await this.productService.find({
+      relations: ['productMeta'],
+      where: {
+        id: Not(getProductByCategoryDto.productId),
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        tags: true,
+        productMeta: {
+          image: true,
+          price: true,
+          id: true,
+        },
+      },
+      take: 10,
+    });
   }
 }
