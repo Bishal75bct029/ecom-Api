@@ -9,7 +9,6 @@ export class AdminDiscountController {
 
   @Get()
   async show(@Req() req: Request) {
-    console.log(req.currentUser);
     return await this.discountServices.find();
   }
 
