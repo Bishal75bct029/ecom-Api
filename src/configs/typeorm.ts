@@ -12,7 +12,7 @@ export const TYPEORM_CONFIG = {
   entities: [join(__dirname, '../**/*.entity{.ts,.js}')],
   migrations: [join(__dirname, '../migrations/*{.ts,.js}')],
   migrationsTableName: 'migrations',
-  synchronize: envConfig.NODE_ENV === 'local',
+  synchronize: false,
   logging: envConfig.NODE_ENV === 'local',
 } as DataSourceOptions;
 
