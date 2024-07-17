@@ -3,6 +3,7 @@ import paypal from '@paypal/checkout-server-sdk';
 import { envConfig } from '@/configs/envConfig';
 import { PayPalHttpClient } from '@paypal/checkout-server-sdk/lib/core/paypal_http_client';
 import { PurchaseUnitRequest } from '@paypal/checkout-server-sdk/lib/orders/lib';
+import paypalhttp from '@paypal/paypalhttp';
 
 @Injectable()
 export class PaypalService {
@@ -16,7 +17,7 @@ export class PaypalService {
     );
   }
 
-  public async createPayment(purchaseUnits: PurchaseUnitRequest[]): Promise<any> {
+  public async createPayment(purchaseUnits: PurchaseUnitRequest[]): Promise<paypalhttp.HttpResponse<any>> {
     try {
       const request = new paypal.orders.OrdersCreateRequest().requestBody({
         intent: 'CAPTURE',
@@ -32,7 +33,7 @@ export class PaypalService {
     }
   }
 
-  public async captureOrder(token: string): Promise<any> {
+  public async captureOrder(token: string): Promise<paypalhttp.HttpResponse<any>> {
     try {
       const request = new paypal.orders.OrdersCaptureRequest(token);
       return await this.paypalClient.execute(request);

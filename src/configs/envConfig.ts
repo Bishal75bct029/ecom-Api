@@ -37,4 +37,8 @@ export const envConfig = cleanEnv(process.env, {
   PAYPAL_RETURN_URL: url(),
   PAYPAL_CANCEL_URL: url(),
   PAYPAL_REDIRECTION_URL: url(),
+
+  STRIPE_PK: str(),
+  STRIPE_SK: str(),
+  STRIPE_WEBHOOK_ENDPOINT_SECRET: str(),
 });

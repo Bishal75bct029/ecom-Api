@@ -126,6 +126,9 @@ importers:
       '@types/paypal__checkout-server-sdk':
         specifier: ^1.0.8
         version: 1.0.8
+      '@types/paypal__paypalhttp':
+        specifier: ^1.0.3
+        version: 1.0.3
       '@types/supertest':
         specifier: ^6.0.0
         version: 6.0.2
