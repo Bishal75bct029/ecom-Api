@@ -39,6 +39,7 @@ export async function seedProductsWithMetas() {
         await dataSource.manager.save(ProductMetaEntity, productMeta);
       }
     }
+    await dataSource.destroy();
   }
 
   console.log(`Products and ProductMetas Inserted Successfully`);

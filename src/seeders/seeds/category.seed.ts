@@ -26,6 +26,7 @@ export const seedCategories = async () => {
 
     const categories = generateCategories();
     await insertCategories(categories);
+    await dataSource.destroy();
 
     console.log('Categories Inserted Successfully');
   } catch (e) {

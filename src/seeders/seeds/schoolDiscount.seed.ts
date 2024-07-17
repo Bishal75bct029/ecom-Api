@@ -11,6 +11,7 @@ export const seedSchoolDiscount = async () => {
 
     await dataSource.createQueryBuilder().insert().into(SchoolDiscountEntity).values(schoolDiscounts).execute();
 
+    await dataSource.destroy();
     console.log('School Discounts Inserted Successfully');
   } catch (e) {
     console.log(`${e} Error occurred while making connection`);

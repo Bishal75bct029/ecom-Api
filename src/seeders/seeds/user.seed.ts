@@ -12,6 +12,7 @@ export const seedUsers = async () => {
 
     await dataSource.createQueryBuilder().insert().into(UserEntity).values(users).execute();
 
+    await dataSource.destroy();
     console.log('Users Inserted Successfully');
   } catch (e) {
     console.log(`${e} Error occurred while making connection`);
