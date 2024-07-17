@@ -16,9 +16,12 @@ export async function seedProductsWithMetas() {
     product.variants = productData.variants;
 
     await dataSource.initialize();
-    const allCategory = await dataSource.getRepository(CategoryEntity).createQueryBuilder('category').getMany();
-
-    product.categories = allCategory;
+    product.categories = await dataSource
+      .getRepository(CategoryEntity)
+      .createQueryBuilder('category')
+      .orderBy('RANDOM()')
+      .limit(1)
+      .getMany();
 
     const savedProduct = await dataSource.manager.save(ProductEntity, product);
 

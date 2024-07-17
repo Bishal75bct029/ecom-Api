@@ -66,7 +66,6 @@ export class AdminUserController {
 
     if (isOtpEnabled) {
       const otp = this.userService.generateOtp();
-      console.log(otp);
 
       await Promise.all([
         this.redisService.set(email + '_OTP', otp, 300),

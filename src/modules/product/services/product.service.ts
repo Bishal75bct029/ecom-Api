@@ -16,8 +16,9 @@ export class ProductService extends ProductRepository {
         productMeta: product.productMeta.map((meta) => {
           return {
             ...meta,
-            price: Number(meta.price),
-            discountPrice: Number(meta.price) - (Number(discountPercentage) * Number(meta.price)) / 100,
+            price: Number(meta.price) / 100,
+            discountPrice: (Number(meta.price) - (discountPercentage * Number(meta.price)) / 100) / 100,
+            discountPercentage: discountPercentage ?? 0,
           };
         }),
       };

@@ -9,14 +9,13 @@ export class ApiMiddleware implements NestMiddleware {
   async use(req: Request, _res: Response, next: NextFunction) {
     try {
       const token: string = req.cookies['x-auth-cookie'];
-      console.log(token);
 
       if (!token) throw new UnauthorizedException('Unauthorized');
 
       const payload = await this.jwtService.verifyAsync<UserJwtPayload>(token, {
         secret: envConfig.API_JWT_SECRET,
-        // issuer: envConfig.API_JWT_ISSUER,
-        // audience: envConfig.API_JWT_AUDIENCE,
+        issuer: envConfig.API_JWT_ISSUER,
+        audience: envConfig.API_JWT_AUDIENCE,
       });
       if (payload.role !== 'USER') throw new UnauthorizedException('Unauthorized');
       req.currentUser = payload;
