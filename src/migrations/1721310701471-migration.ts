@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class Migration1721197709983 implements MigrationInterface {
-  name = 'Migration1721197709983';
+export class Migration1721310701471 implements MigrationInterface {
+  name = 'Migration1721310701471';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
@@ -13,7 +13,7 @@ export class Migration1721197709983 implements MigrationInterface {
                 "sku" character varying(255) NOT NULL,
                 "image" text,
                 "price" bigint NOT NULL,
-                "variants" jsonb DEFAULT '{}',
+                "variant" jsonb DEFAULT '{}',
                 "isDefault" boolean NOT NULL DEFAULT false,
                 "stock" integer NOT NULL,
                 "productId" uuid,
@@ -43,8 +43,7 @@ export class Migration1721197709983 implements MigrationInterface {
                 "description" character varying NOT NULL,
                 "tags" text NOT NULL,
                 "attributes" text,
-                "attributesOptions" jsonb,
-                "variants" jsonb,
+                "attributeOptions" jsonb,
                 CONSTRAINT "PK_0806c755e0aca124e67c0cf6d7d" PRIMARY KEY ("id")
             )
         `);
