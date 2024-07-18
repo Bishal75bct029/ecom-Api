@@ -30,7 +30,7 @@ export async function seedProductsWithMetas() {
         productMeta.sku = productMetaData.sku;
         productMeta.image = productMetaData.image;
         productMeta.price = productMetaData.price;
-        productMeta.variants = productMetaData.variants;
+        productMeta.variant = productMetaData.variants;
         productMeta.isDefault = productMetaData.isDefault;
         productMeta.stock = productMetaData.stock;
         productMeta.product = savedProduct;

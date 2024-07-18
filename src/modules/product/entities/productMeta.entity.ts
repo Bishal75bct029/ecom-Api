@@ -17,7 +17,7 @@ export class ProductMetaEntity extends BaseEntity {
   price: number;
 
   @Column({ type: 'jsonb', nullable: true, default: {} })
-  variants?: object;
+  variant?: object;
 
   @Column({ type: 'bool', default: false, nullable: false })
   isDefault?: boolean;

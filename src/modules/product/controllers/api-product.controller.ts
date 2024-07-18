@@ -107,7 +107,7 @@ export class ApiProductController {
           price: true,
           id: true,
           stock: true,
-          variants: {},
+          variant: {},
           sku: true,
         },
         categories: {
