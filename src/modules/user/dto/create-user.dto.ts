@@ -1,7 +1,6 @@
-import { PickType } from '@nestjs/swagger';
+import { OmitType, PickType } from '@nestjs/swagger';
 import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 
-export class CreateUserDto {}
 export class CreateAdminUserDto {
   @IsNotEmpty()
   @IsEmail()
@@ -21,6 +20,8 @@ export class CreateAdminUserDto {
   @IsNotEmpty()
   isOtpEnabled: boolean;
 }
+
+export class CreateUserDto extends OmitType(CreateAdminUserDto, ['isOtpEnabled']) {}
 
 export class LoginUserDto extends PickType(CreateAdminUserDto, ['email', 'password']) {
   @IsOptional()

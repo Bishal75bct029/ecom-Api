@@ -16,9 +16,10 @@ export class ApiUserController {
     private readonly addressService: AddressService,
   ) {}
 
-  @Post()
-  createUser(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
+  @Post('create')
+  async createUser(@Body() createUserDto: CreateUserDto) {
+    console.log(createUserDto);
+    return this.userService.createAndSave({ ...createUserDto, role: UserRoleEnum.USER });
   }
 
   @Post('login')

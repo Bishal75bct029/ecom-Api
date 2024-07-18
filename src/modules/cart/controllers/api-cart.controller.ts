@@ -1,10 +1,11 @@
-import { Controller, Post, Body, Req, Get, NotFoundException } from '@nestjs/common';
+import { Controller, Post, Body, Req, Get, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CartService } from '../services/cart.service';
 import { CreateCartDto } from '../dto';
 import { Request } from 'express';
 import { In } from 'typeorm';
 import { ProductService } from '@/modules/product/services';
+import { UserService } from '@/modules/user/services';
 
 @ApiTags('API Cart')
 @Controller('api/carts')
@@ -12,6 +13,7 @@ export class ApiCartController {
   constructor(
     private readonly cartService: CartService,
     private readonly productService: ProductService,
+    private readonly userService: UserService,
   ) {}
 
   @Get()
@@ -24,7 +26,7 @@ export class ApiCartController {
       },
     });
 
-    if (!userCarts) return new NotFoundException('Cart is empty');
+    if (!userCarts) throw new NotFoundException('Cart is empty');
 
     const cartItems = await this.productService.find({
       where: {
@@ -39,11 +41,11 @@ export class ApiCartController {
   }
 
   @Post()
-  async addToCart(@Body() createCartDto: CreateCartDto) {
+  async addToCart(@Body() createCartDto: CreateCartDto, @Req() req: Request) {
     const isUserCartAvailable = await this.cartService.findOne({
       where: {
         user: {
-          id: createCartDto.userId,
+          id: req.currentUser.id,
         },
       },
     });
@@ -55,6 +57,6 @@ export class ApiCartController {
       });
     }
 
-    return await this.cartService.createAndSave(createCartDto);
+    return await this.cartService.createAndSave({ ...createCartDto, user: { id: req.currentUser.id } });
   }
 }

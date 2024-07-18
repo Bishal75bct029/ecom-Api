@@ -32,6 +32,7 @@ export class UserService extends AbstractService<UserEntity> {
 
   async login(loginUserDto: LoginUserDto) {
     const user = await this.findOne({ where: { email: loginUserDto.email } });
+    console.log(user, loginUserDto);
     if (!user) throw new BadRequestException('Invalid Credentials');
     if (user.role !== loginUserDto.role) throw new BadRequestException('Invalid Credentials');
     if (!(await this.comparePassword(loginUserDto.password, user.password)))
