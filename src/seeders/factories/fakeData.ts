@@ -15,10 +15,10 @@ export function generateSchoolDiscount() {
 
 export function generateUsers() {
   return {
-    email: faker.internet.email(),
+    email: 'admin@gmail.com',
     password: bcrypt.hashSync('password', 10),
     name: faker.internet.userName(),
-    role: faker.helpers.arrayElement(Object.values(UserRoleEnum)),
+    role: UserRoleEnum.ADMIN,
     isOtpEnabled: faker.datatype.boolean(),
   };
 }

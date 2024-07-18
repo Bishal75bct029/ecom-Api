@@ -5,7 +5,6 @@ import { NextFunction, Response } from 'express';
 export class ApiAuthorizationMiddleware implements NestMiddleware {
   async use(req: Request, _res: Response, next: NextFunction) {
     try {
-      console.log(req);
       next();
     } catch (error) {
       throw new UnauthorizedException('Unauthorized');

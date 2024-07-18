@@ -3,11 +3,10 @@ import { ProductService } from '../services';
 import { Request } from 'express';
 import { RedisService } from '@/libs/redis/redis.service';
 import { SchoolDiscountService } from '@/modules/school-discount/services/schoolDiscount.service';
-import { GetProductsByCategoryDto } from '../dto';
 import { In, Not } from 'typeorm';
-import { SimilarProductsDto } from '../dto/similar-products.dto';
 import { CategoryService } from '@/modules/category/services/category.service';
 import { getAllTreeIds } from '../helpers/flattenTree.util';
+import { SimilarProductsDto } from '../dto/similarProducts.dto';
 
 @Controller('api/products')
 export class ApiProductController {
@@ -64,7 +63,7 @@ export class ApiProductController {
   }
 
   @Get('category')
-  async getProductsByCategory(@Query() dto: { categoryId: string; productId: string }) {
+  async getProductsByCategory(@Query() dto: SimilarProductsDto) {
     if (!dto.categoryId) throw new NotFoundException('Products not found');
 
     const existingCategory = await this.categoryService.findOne({ where: { id: dto.categoryId } });

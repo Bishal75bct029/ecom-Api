@@ -5,10 +5,6 @@ export class CreateCartDto {
   @IsOptional()
   id: string;
 
-  @IsUUID()
-  @IsNotEmpty()
-  userId: string;
-
   @IsUUID('all', { each: true })
   @IsNotEmpty()
   productMetaId: string[];
