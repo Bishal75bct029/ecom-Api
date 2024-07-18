@@ -45,7 +45,7 @@ export class AppModule implements NestModule {
     consumer
       .apply(AdminMiddleware)
       .exclude(...ADMIN_PUBLIC_ROUTES)
-      .forRoutes({ path: 'admin/*', method: RequestMethod.ALL });
+      .forRoutes({ path: 'admins/*', method: RequestMethod.ALL });
     consumer
       .apply(ApiMiddleware)
       .exclude(...API_PUBLIC_ROUTES)

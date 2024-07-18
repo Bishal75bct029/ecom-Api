@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ProductRepository } from '../repositories/product.repository';
 import combinate from 'combinate';
 import { ProductEntity } from '../entities';
+import { CreateProductMetaDto } from '../dto';
 
 @Injectable()
 export class ProductService extends ProductRepository {
@@ -32,5 +33,28 @@ export class ProductService extends ProductRepository {
         discountPercentage: discountPercentage ?? 0,
       })),
     };
+  }
+
+  validateVariant(attributeOptions: { [key: string]: string[] }, productMeta: CreateProductMetaDto[]): boolean {
+    const generatedVariants = combinate(attributeOptions);
+    const attributes = Object.keys(generatedVariants[0]);
+
+    for (const meta of productMeta) {
+      console.log(meta.variant);
+      if (!meta.variant) continue;
+      const isValidVariant = generatedVariants.some((variant) => {
+        return attributes.every((attribute) => {
+          console.log(variant[attribute] === meta.variant[attribute]);
+          return variant[attribute] === meta.variant[attribute];
+        });
+      });
+
+      if (!isValidVariant) {
+        console.log(meta.variant, generatedVariants);
+        return false;
+      }
+    }
+
+    return true;
   }
 }

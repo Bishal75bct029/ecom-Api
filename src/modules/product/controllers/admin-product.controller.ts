@@ -29,7 +29,8 @@ export class AdminProductController {
 
     const category = await this.categoryService.findOne({ where: { id: categoryId } });
     if (!category) throw new BadRequestException("Doesn't exists this category.");
-
+    if (!this.productService.validateVariant(createProductDto.attributeOptions, requestProductMetas))
+      throw new BadRequestException('Invalid product variant');
     const treeCategory = await this.categoryService.findAncestorsTree(category);
 
     const categoryIds = this.categoryService.getIdsFromParent(treeCategory);

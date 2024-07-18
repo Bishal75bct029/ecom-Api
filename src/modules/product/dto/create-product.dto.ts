@@ -50,9 +50,9 @@ export class CreateProductMetaDto {
   @IsNotEmpty()
   sku: string;
 
-  @IsString()
+  @IsArray()
   @IsOptional()
-  image: string;
+  image: string[];
 
   @IsNumber()
   @IsNotEmpty()
@@ -60,7 +60,7 @@ export class CreateProductMetaDto {
 
   @IsObject()
   @IsOptional()
-  variants: Record<string, any>;
+  variant: Record<string, any>;
 
   @IsBoolean()
   @IsOptional()
