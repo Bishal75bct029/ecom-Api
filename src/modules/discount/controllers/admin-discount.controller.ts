@@ -1,14 +1,13 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post } from '@nestjs/common';
 import { DiscountService } from '../services/discount.service';
 import { CreateDiscountDTO } from '../dto/create-discount.dto';
-import { Request } from 'express';
 
 @Controller('admin/discount')
 export class AdminDiscountController {
   constructor(private discountServices: DiscountService) {}
 
   @Get()
-  async show(@Req() req: Request) {
+  async show() {
     return await this.discountServices.find();
   }
 
