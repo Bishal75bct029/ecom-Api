@@ -74,6 +74,7 @@ export class ApiProductController {
     const categoryIds = getAllTreeIds(categoryTrees);
 
     return this.productService.find({
+      relations: ['productMeta', 'categories'],
       where: { categories: { id: In(categoryIds) }, productMeta: { isDefault: true }, id: Not(dto.productId) },
       select: {
         id: true,
