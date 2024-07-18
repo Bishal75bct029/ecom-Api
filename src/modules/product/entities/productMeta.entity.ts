@@ -7,8 +7,8 @@ export class ProductMetaEntity extends BaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: false })
   sku: string;
 
-  @Column({ type: 'text', nullable: true })
-  image: string;
+  @Column({ type: 'simple-array', nullable: true })
+  image: string[];
 
   @Column({
     type: 'bigint',

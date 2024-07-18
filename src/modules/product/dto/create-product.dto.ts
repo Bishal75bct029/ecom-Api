@@ -50,9 +50,9 @@ export class CreateProductMetaDto {
   @IsNotEmpty()
   sku: string;
 
-  @IsString()
+  @IsArray()
   @IsOptional()
-  image: string;
+  image: string[];
 
   @IsNumber()
   @IsNotEmpty()
