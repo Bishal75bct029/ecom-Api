@@ -75,6 +75,7 @@ export class ApiProductController {
           image: true,
           price: true,
           id: true,
+          isDefault: true,
           stock: true,
           variants: {},
           sku: true,
