@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req, Get, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, Req, Get } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CartService } from '../services/cart.service';
 import { CreateCartDto } from '../dto';
