@@ -5,6 +5,7 @@ import { RedisService } from '@/libs/redis/redis.service';
 import { SchoolDiscountService } from '@/modules/school-discount/services/schoolDiscount.service';
 import { GetProductsByCategoryDto } from '../dto';
 import { Not } from 'typeorm';
+import { SimilarProductsDto } from '../dto/similar-products.dto';
 
 @Controller('api/products')
 export class ApiProductController {
@@ -130,5 +131,11 @@ export class ApiProductController {
       },
       take: 10,
     });
+  }
+
+  @Get()
+  async getSimilarProducts(@Query() similarProductsDto: SimilarProductsDto) {
+    const { categoryId } = similarProductsDto;
+    // this.get
   }
 }
