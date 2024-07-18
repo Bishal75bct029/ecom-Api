@@ -5,7 +5,6 @@ import { CreateCartDto } from '../dto';
 import { Request } from 'express';
 import { In } from 'typeorm';
 import { ProductService } from '@/modules/product/services';
-import { UserService } from '@/modules/user/services';
 
 @ApiTags('API Cart')
 @Controller('api/carts')
@@ -13,7 +12,6 @@ export class ApiCartController {
   constructor(
     private readonly cartService: CartService,
     private readonly productService: ProductService,
-    private readonly userService: UserService,
   ) {}
 
   @Get()
@@ -26,7 +24,7 @@ export class ApiCartController {
       },
     });
 
-    if (!userCarts) throw new NotFoundException('Cart is empty');
+    if (!userCarts) return [];
 
     const cartItems = await this.productService.find({
       where: {
