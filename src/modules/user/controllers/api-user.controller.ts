@@ -63,17 +63,27 @@ export class ApiUserController {
     return this.addressService.createAndSave({ ...address, ...createAddressDto });
   }
 
-  @Get('address')
-  async getMyAddress(@Req() req: Request) {
-    const addresses = await this.addressService.find({
+  @Get('whoami')
+  async whoami(@Req() { currentUser }: Request) {
+    if (!currentUser) throw new BadRequestException('User is not loggedin.');
+    const user = await this.userService.find({
       where: {
-        user: {
-          id: req.currentUser.id,
+        id: currentUser.id,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+        addresses: {
+          name: true,
+          type: true,
+          contact: true,
         },
       },
-      select: ['id', 'contact', 'name', 'type'],
+      relations: ['addresses'],
     });
 
-    return addresses;
+    return user;
   }
 }

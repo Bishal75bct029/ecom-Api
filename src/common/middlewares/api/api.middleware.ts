@@ -18,11 +18,7 @@ export class ApiMiddleware implements NestMiddleware {
         });
         req.currentUser = payload;
       } else {
-        req.currentUser = {
-          id: null,
-          role: null,
-          schoolId: null,
-        };
+        req.currentUser = {};
       }
       next();
     } catch (error) {
