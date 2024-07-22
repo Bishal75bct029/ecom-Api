@@ -10,6 +10,9 @@ export class CreateOrderDto {
   @IsString()
   @IsOptional()
   couponCode: string;
+
+  @IsString()
+  paymentMethodId: string;
 }
 
 class CreateOrderProductMetaDto {

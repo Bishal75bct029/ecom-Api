@@ -50,6 +50,6 @@ export class AppModule implements NestModule {
       .apply(ApiMiddleware)
       .exclude(...API_PUBLIC_ROUTES)
       .forRoutes({ path: 'api/*', method: RequestMethod.ALL });
-    consumer.apply(ApiAuthorizationMiddleware).forRoutes(...['api/carts']);
+    consumer.apply(ApiAuthorizationMiddleware).forRoutes(...['api/carts', 'api/orders']);
   }
 }
