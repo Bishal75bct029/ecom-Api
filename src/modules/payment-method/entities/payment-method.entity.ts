@@ -1,9 +1,10 @@
+export class PaymentMethod {}
 import { BaseEntity } from '@/libs/entity/base.entity';
+import { TransactionEntity } from '@/modules/transaction/entities/transaction.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
-import { TransactionEntity } from './transaction.entity';
 
 @Entity('payment_methods')
-export class PaymentMethoEntity extends BaseEntity {
+export class PaymentMethodEntity extends BaseEntity {
   @Column({ name: 'name', nullable: false, unique: true })
   name: string;
 

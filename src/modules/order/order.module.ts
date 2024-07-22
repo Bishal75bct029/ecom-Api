@@ -9,15 +9,15 @@ import { OrderItemService } from './services/order-item.service';
 import { UserModule } from '../user/user.module';
 import { ProductModule } from '../product/product.module';
 import { DiscountModule } from '../discount/discount.module';
-import { TransactionEntity } from './entities/transaction.entity';
-import { PaymentMethoEntity } from './entities/payment-method.entity';
+import { PaymentModule } from '@/common/module/payment/payment.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([OrderEntity, OrderItemEntity, TransactionEntity, PaymentMethoEntity]),
+    TypeOrmModule.forFeature([OrderEntity, OrderItemEntity]),
     UserModule,
     ProductModule,
     DiscountModule,
+    PaymentModule,
   ],
   controllers: [ApiOrderController, AdminOrderController],
   providers: [OrderService, OrderItemService],

@@ -10,11 +10,11 @@ export class PaypalService {
   private paypalClient: PayPalHttpClient;
 
   constructor() {
-    this.paypalClient = new paypal.core.PayPalHttpClient(
-      envConfig.NODE_ENV === 'production'
-        ? new paypal.core.LiveEnvironment(envConfig.PAYPAL_CLIENT_ID, envConfig.PAYPAL_CLIENT_SECRET)
-        : new paypal.core.SandboxEnvironment(envConfig.PAYPAL_CLIENT_ID, envConfig.PAYPAL_CLIENT_SECRET),
-    );
+    // this.paypalClient = new paypal.core.PayPalHttpClient(
+    //   envConfig.NODE_ENV === 'production'
+    //     ? new paypal.core.LiveEnvironment(envConfig.PAYPAL_CLIENT_ID, envConfig.PAYPAL_CLIENT_SECRET)
+    //     : new paypal.core.SandboxEnvironment(envConfig.PAYPAL_CLIENT_ID, envConfig.PAYPAL_CLIENT_SECRET),
+    // );
   }
 
   public async createPayment(purchaseUnits: PurchaseUnitRequest[]): Promise<paypalhttp.HttpResponse<any>> {

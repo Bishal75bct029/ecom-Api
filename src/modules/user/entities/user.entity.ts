@@ -3,7 +3,7 @@ import { ReviewEntity } from '@/modules/review/entities/review.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
 import { AddressEntity } from './address.entity';
 import { OrderEntity } from '@/modules/order/entities/order.entity';
-import { TransactionEntity } from '@/modules/order/entities/transaction.entity';
+import { TransactionEntity } from '@/modules/transaction/entities/transaction.entity';
 
 export enum UserRoleEnum {
   ADMIN = 'ADMIN',

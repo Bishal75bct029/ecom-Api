@@ -1,8 +1,8 @@
 import { BaseEntity } from '@/libs/entity/base.entity';
 import { OrderEntity } from '@/modules/order/entities/order.entity';
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
-import { PaymentMethoEntity } from './payment-method.entity';
 import { UserEntity } from '@/modules/user/entities';
+import { PaymentMethodEntity } from '@/modules/payment-method/entities/payment-method.entity';
 
 @Entity('transcations')
 export class TransactionEntity extends BaseEntity {
@@ -45,8 +45,8 @@ export class TransactionEntity extends BaseEntity {
   @JoinColumn()
   order: OrderEntity | string;
 
-  @ManyToOne(() => PaymentMethoEntity, (paymentMethod) => paymentMethod.transactions)
-  paymentMethod: PaymentMethoEntity;
+  @ManyToOne(() => PaymentMethodEntity, (paymentMethod) => paymentMethod.transactions)
+  paymentMethod: PaymentMethodEntity;
 
   @ManyToOne(() => UserEntity, (user) => user.transactions)
   user: UserEntity;
