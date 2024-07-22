@@ -137,30 +137,4 @@ export class ApiProductController {
       return this.productService.getDiscountedProducts(product, schoolDiscount.discountPercentage);
     }
   }
-
-  // @Get()
-  // async getProductsByCategory(
-  //   @Query() getProductByCategoryDto: GetProductsByCategoryDto,
-  //   @Req() { currentUser }: Request,
-  // ) {
-  //   const { schoolId } = currentUser;
-  //   const products = await this.productService.find({
-  //     relations: ['productMeta'],
-  //     where: {
-  //       id: Not(getProductByCategoryDto.productId),
-  //     },
-  //     select: {
-  //       id: true,
-  //       name: true,
-  //       description: true,
-  //       tags: true,
-  //       productMeta: {
-  //         image: true,
-  //         price: true,
-  //         id: true,
-  //       },
-  //     },
-  //     take: 10,
-  //   });
-  // }
 }
