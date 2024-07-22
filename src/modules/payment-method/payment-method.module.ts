@@ -9,5 +9,6 @@ import { AdminPaymentMethodController } from './controllers/admin-payment-method
   imports: [TypeOrmModule.forFeature([PaymentMethodEntity])],
   controllers: [ApiPaymentMethodController, AdminPaymentMethodController],
   providers: [PaymentMethodService],
+  exports: [PaymentMethodService],
 })
 export class PaymentMethodModule {}

@@ -10,6 +10,8 @@ import { UserModule } from '../user/user.module';
 import { ProductModule } from '../product/product.module';
 import { DiscountModule } from '../discount/discount.module';
 import { PaymentModule } from '@/common/module/payment/payment.module';
+import { TransactionModule } from '../transaction/transaction.module';
+import { PaymentMethodModule } from '../payment-method/payment-method.module';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { PaymentModule } from '@/common/module/payment/payment.module';
     ProductModule,
     DiscountModule,
     PaymentModule,
+    TransactionModule,
+    PaymentMethodModule,
   ],
   controllers: [ApiOrderController, AdminOrderController],
   providers: [OrderService, OrderItemService],

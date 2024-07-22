@@ -9,5 +9,6 @@ import { TransactionService } from './services/transaction.service';
   imports: [TypeOrmModule.forFeature([TransactionEntity])],
   controllers: [ApiTransactionController, AdminTransactionController],
   providers: [TransactionService],
+  exports: [TransactionService],
 })
 export class TransactionModule {}
