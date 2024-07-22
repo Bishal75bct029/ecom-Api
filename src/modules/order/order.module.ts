@@ -22,6 +22,7 @@ import { PaymentMethodModule } from '../payment-method/payment-method.module';
     PaymentModule,
     TransactionModule,
     PaymentMethodModule,
+    PaymentModule,
   ],
   controllers: [ApiOrderController, AdminOrderController],
   providers: [OrderService, OrderItemService],

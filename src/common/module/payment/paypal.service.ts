@@ -9,16 +9,14 @@ import paypalhttp from '@paypal/paypalhttp';
 export class PaypalService {
   private paypalClient: PayPalHttpClient;
 
-  constructor() {
-    // this.paypalClient = new paypal.core.PayPalHttpClient(
-    //   envConfig.NODE_ENV === 'production'
-    //     ? new paypal.core.LiveEnvironment(envConfig.PAYPAL_CLIENT_ID, envConfig.PAYPAL_CLIENT_SECRET)
-    //     : new paypal.core.SandboxEnvironment(envConfig.PAYPAL_CLIENT_ID, envConfig.PAYPAL_CLIENT_SECRET),
-    // );
-  }
-
   public async createPayment(purchaseUnits: PurchaseUnitRequest[]): Promise<paypalhttp.HttpResponse<any>> {
     try {
+      this.paypalClient = new paypal.core.PayPalHttpClient(
+        envConfig.NODE_ENV === 'production'
+          ? new paypal.core.LiveEnvironment(envConfig.PAYPAL_CLIENT_ID, envConfig.PAYPAL_CLIENT_SECRET)
+          : new paypal.core.SandboxEnvironment(envConfig.PAYPAL_CLIENT_ID, envConfig.PAYPAL_CLIENT_SECRET),
+      );
+
       const request = new paypal.orders.OrdersCreateRequest().requestBody({
         intent: 'CAPTURE',
         purchase_units: purchaseUnits,
@@ -35,6 +33,12 @@ export class PaypalService {
 
   public async captureOrder(token: string): Promise<paypalhttp.HttpResponse<any>> {
     try {
+      this.paypalClient = new paypal.core.PayPalHttpClient(
+        envConfig.NODE_ENV === 'production'
+          ? new paypal.core.LiveEnvironment(envConfig.PAYPAL_CLIENT_ID, envConfig.PAYPAL_CLIENT_SECRET)
+          : new paypal.core.SandboxEnvironment(envConfig.PAYPAL_CLIENT_ID, envConfig.PAYPAL_CLIENT_SECRET),
+      );
+
       const request = new paypal.orders.OrdersCaptureRequest(token);
       return await this.paypalClient.execute(request);
     } catch (err) {
