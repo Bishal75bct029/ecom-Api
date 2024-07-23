@@ -105,8 +105,11 @@ export class ApiUserController {
           type: true,
           contact: true,
         },
+        cart: {
+          productMetaId: true,
+        },
       },
-      relations: ['addresses', 'carts'],
+      relations: ['addresses', 'cart'],
     });
 
     return user;
