@@ -41,4 +41,7 @@ export class UserEntity extends BaseEntity {
 
   @OneToMany(() => TransactionEntity, (transaction) => transaction.user)
   transactions: TransactionEntity[];
+
+  @Column({ type: 'uuid', nullable: true })
+  schoolId: string;
 }
