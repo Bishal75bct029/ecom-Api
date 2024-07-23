@@ -2,7 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/com
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, JwtVerifyOptions } from '@nestjs/jwt';
 import { AbstractService } from '@/libs/service/abstract.service';
 import { UserEntity } from '../entities';
 import { envConfig } from '@/configs/envConfig';
@@ -49,8 +49,10 @@ export class UserService extends AbstractService<UserEntity> {
     return Math.floor(Math.random() * 1000000);
   }
 
-  async refreshUser(refreshToken: string) {
-    const payload = await this.jwtService.verifyAsync<UserJwtPayload>(refreshToken);
+  async refreshUser(refreshToken: string, options: JwtVerifyOptions) {
+    const { id, role, schoolId = '' } = await this.jwtService.verifyAsync<UserJwtPayload>(refreshToken, options);
+
+    const payload = { id, role, schoolId };
     const user = await this.findOne({ where: { id: payload.id } });
 
     if (!user) throw new ForbiddenException('Invalid token');

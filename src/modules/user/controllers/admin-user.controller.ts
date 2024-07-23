@@ -33,17 +33,21 @@ export class AdminUserController {
   async logoutAdmin(@Res() res: Response) {
     res.clearCookie('x-auth-cookie');
     res.clearCookie('x-refresh-cookie');
-    return res.send();
+    return res.status(200).send();
   }
 
   @Post('refresh')
   async refreshAdmin(@Req() req: Request, @Res() res: Response) {
     const refreshToken = req.cookies['x-refresh-cookie'];
-    const [token, generatedRefreshToken] = await this.userService.refreshUser(refreshToken);
+    const [token, generatedRefreshToken] = await this.userService.refreshUser(refreshToken, {
+      secret: envConfig.ADMIN_JWT_SECRET,
+      issuer: envConfig.ADMIN_JWT_ISSUER,
+      audience: envConfig.ADMIN_JWT_AUDIENCE,
+    });
 
     res.cookie('x-auth-cookie', token, {
       httpOnly: true,
-      maxAge: envConfig.JWT_TTL * 1000,
+      maxAge: envConfig.JWT_REFRESH_TOKEN_TTL * 1000,
       secure: true,
       sameSite: 'strict',
     });
@@ -54,7 +58,7 @@ export class AdminUserController {
       sameSite: 'strict',
     });
 
-    return res.send();
+    return res.status(200).send();
   }
 
   @Post('authenticate')
@@ -90,7 +94,7 @@ export class AdminUserController {
     const [token, refreshToken] = await this.userService.generateJWTs({ id, role });
     res.cookie('x-auth-cookie', token, {
       httpOnly: true,
-      maxAge: envConfig.JWT_TTL * 1000,
+      maxAge: envConfig.JWT_REFRESH_TOKEN_TTL * 1000,
       secure: true,
       sameSite: 'strict',
     });
@@ -101,7 +105,7 @@ export class AdminUserController {
       sameSite: 'strict',
     });
 
-    return res.send();
+    return res.status(200).send();
   }
 
   @Post('validate-otp')
@@ -118,7 +122,7 @@ export class AdminUserController {
 
     res.cookie('x-auth-cookie', token, {
       httpOnly: true,
-      maxAge: envConfig.JWT_TTL * 1000,
+      maxAge: envConfig.JWT_REFRESH_TOKEN_TTL * 1000,
       secure: true,
       sameSite: 'strict',
     });
@@ -129,6 +133,6 @@ export class AdminUserController {
       sameSite: 'strict',
     });
 
-    return res.send();
+    return res.status(200).send();
   }
 }
