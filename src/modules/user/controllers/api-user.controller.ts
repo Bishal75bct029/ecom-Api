@@ -31,7 +31,7 @@ export class ApiUserController {
 
     res.cookie('x-auth-cookie', token, {
       httpOnly: true,
-      maxAge: envConfig.JWT_TTL * 1000,
+      maxAge: envConfig.JWT_REFRESH_TOKEN_TTL * 1000,
       secure: true,
       sameSite: 'strict',
     });
@@ -42,7 +42,32 @@ export class ApiUserController {
       sameSite: 'strict',
     });
 
-    return res.send();
+    return res.status(200).send();
+  }
+
+  @Post('refresh')
+  async refresh(@Req() req: Request, @Res() res: Response) {
+    const refreshToken = req.cookies['x-refresh-cookie'];
+    const [token, generatedRefreshToken] = await this.userService.refreshUser(refreshToken, {
+      secret: envConfig.API_JWT_SECRET,
+      issuer: envConfig.API_JWT_ISSUER,
+      audience: envConfig.API_JWT_AUDIENCE,
+    });
+
+    res.cookie('x-auth-cookie', token, {
+      httpOnly: true,
+      maxAge: envConfig.JWT_REFRESH_TOKEN_TTL * 1000,
+      secure: true,
+      sameSite: 'strict',
+    });
+    res.cookie('x-refresh-cookie', generatedRefreshToken, {
+      httpOnly: true,
+      maxAge: envConfig.JWT_REFRESH_TOKEN_TTL * 1000,
+      secure: true,
+      sameSite: 'strict',
+    });
+
+    return res.status(200).send();
   }
 
   @Post('address')
@@ -65,8 +90,8 @@ export class ApiUserController {
 
   @Get('whoami')
   async whoami(@Req() { currentUser }: Request) {
-    if (!currentUser) throw new BadRequestException('User is not loggedin.');
-    const user = await this.userService.find({
+    if (!currentUser.id) throw new BadRequestException('User is not loggedin.');
+    const user = await this.userService.findOne({
       where: {
         id: currentUser.id,
       },
