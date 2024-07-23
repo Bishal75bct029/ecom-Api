@@ -50,7 +50,7 @@ export class ApiOrderController {
       });
 
       if (discount) {
-        totalPrice = totalPrice * ((1 - discount.discountPercentage) / 100);
+        totalPrice = totalPrice * (1 - discount.discountPercentage / 100);
       }
 
       const order = await entityManager.save(OrderEntity, {
