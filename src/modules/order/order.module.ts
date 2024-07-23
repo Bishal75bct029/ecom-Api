@@ -12,13 +12,14 @@ import { DiscountModule } from '../discount/discount.module';
 import { PaymentModule } from '@/common/module/payment/payment.module';
 import { TransactionModule } from '../transaction/transaction.module';
 import { PaymentMethodModule } from '../payment-method/payment-method.module';
+import { SchoolDiscountModule } from '../school-discount/school-discount.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([OrderEntity, OrderItemEntity]),
     UserModule,
     ProductModule,
-    DiscountModule,
+    SchoolDiscountModule,
     PaymentModule,
     TransactionModule,
     PaymentMethodModule,

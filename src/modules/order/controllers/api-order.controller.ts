@@ -6,19 +6,20 @@ import { ProductMetaService } from '../../product/services/product-meta.service'
 import { OrderItemService } from '../services/order-item.service';
 import { OrderEntity } from '../entities/order.entity';
 import { OrderItemEntity } from '../entities/order-item.entity';
-import { DiscountService } from '@/modules/discount/services/discount.service';
 import { DiscountEntity } from '@/modules/discount/entity/discount.entity';
 import { PaymentMethodService } from '@/modules/payment-method/services/payment-method.service';
 import { TransactionService } from '@/modules/transaction/services/transaction.service';
 import { faker } from '@faker-js/faker';
 import { PaypalService } from '@/common/module/payment/paypal.service';
+import { SchoolDiscountService } from '@/modules/school-discount/services/schoolDiscount.service';
+import { SchoolDiscountEntity } from '@/modules/school-discount/entities/schoolDiscount.entity';
 
 @Controller('api/orders')
 export class ApiOrderController {
   constructor(
     private readonly dataSource: DataSource,
     private readonly orderItemService: OrderItemService,
-    private readonly discountService: DiscountService,
+    private readonly schoolDiscountService: SchoolDiscountService,
     private readonly productMetaService: ProductMetaService,
     private readonly paymentMethodService: PaymentMethodService,
     private readonly transactionService: TransactionService,
@@ -28,6 +29,7 @@ export class ApiOrderController {
   @Post()
   async create(@Body() createOrderDto: CreateOrderDto, @Req() req: Request) {
     const { paymentMethodId } = createOrderDto;
+    const { schoolId } = req.currentUser;
 
     const paymentMethod = await this.paymentMethodService.findOne({ where: { id: paymentMethodId, isActive: true } });
     if (!paymentMethod) throw new BadRequestException('Sorry, failed to place order. Please try again later.');
@@ -41,24 +43,20 @@ export class ApiOrderController {
       await this.productMetaService.validateQuantity(productMetas, createOrderDto);
       await this.productMetaService.updateStock(createOrderDto);
 
-      let discount: DiscountEntity;
-      const totalPrice = this.orderItemService.calculateTotalPrice(productMetas, createOrderDto);
+      let totalPrice = this.orderItemService.calculateTotalPrice(productMetas, createOrderDto);
 
-      if (createOrderDto.couponCode) {
-        discount = await this.discountService.findOne({
-          where: { couponCode: createOrderDto.couponCode, expiryTime: MoreThan(new Date(new Date().toISOString())) },
-        });
+      const discount = await this.schoolDiscountService.findOne({
+        where: { schoolId },
+      });
 
-        this.orderItemService.calculateDiscountedPrice(totalPrice, discount);
+      if (discount) {
+        totalPrice = totalPrice * ((1 - discount.discountPercentage) / 100);
       }
 
       const order = await entityManager.save(OrderEntity, {
         totalPrice,
         user: {
           id: userId,
-        },
-        discount: {
-          id: discount.id,
         },
       });
 
@@ -83,7 +81,7 @@ export class ApiOrderController {
         {
           amount: {
             currency_code: 'SGD',
-            value: totalPrice.toFixed(2),
+            value: (totalPrice / 100).toFixed(2),
           },
         },
       ]);
