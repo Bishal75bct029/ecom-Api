@@ -24,9 +24,9 @@ export class ApiUserController {
 
   @Post('login')
   async loginAdmin(@Body() loginUserDto: LoginUserDto, @Res() res: Response) {
-    const { id, role } = await this.userService.login({ ...loginUserDto, role: UserRoleEnum.USER });
+    const { id, role, schoolId } = await this.userService.login({ ...loginUserDto, role: UserRoleEnum.USER });
 
-    const payload: UserJwtPayload = { id, role };
+    const payload: UserJwtPayload = { id, role, schoolId };
     const [token, refreshToken] = await this.userService.generateJWTs(payload);
 
     res.cookie('x-auth-cookie', token, {

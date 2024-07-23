@@ -67,7 +67,7 @@ export class ApiOrderController {
           productMeta,
           pricePerUnit: productMeta.price,
           quantity,
-          totalPrice: quantity * productMeta.price,
+          totalPrice,
           order,
         };
       });
