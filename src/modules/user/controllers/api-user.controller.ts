@@ -106,7 +106,7 @@ export class ApiUserController {
           contact: true,
         },
       },
-      relations: ['addresses'],
+      relations: ['addresses', 'carts'],
     });
 
     return user;
