@@ -4,7 +4,7 @@ import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 
 @Entity('carts')
 export class CartEntity extends BaseEntity {
-  @OneToOne(() => UserEntity)
+  @OneToOne(() => UserEntity, (user) => user.cart)
   @JoinColumn()
   user: UserEntity | string;
 
