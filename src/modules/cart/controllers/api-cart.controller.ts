@@ -29,7 +29,6 @@ export class ApiCartController {
     });
 
     if (!userCarts) return [];
-    console.log(userCarts);
 
     const cartItems = await this.productService.find({
       where: {
@@ -41,7 +40,6 @@ export class ApiCartController {
     });
 
     if (discount) {
-      console.log(discount);
       return cartItems.map((product) => {
         return {
           ...product,
