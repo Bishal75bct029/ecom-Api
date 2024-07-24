@@ -6,9 +6,10 @@ import { CartEntity } from './entities/cart.entity';
 import { ProductModule } from '../product/product.module';
 import { CartRepository } from './repositories/cart.repository';
 import { UserModule } from '../user/user.module';
+import { SchoolDiscountModule } from '../school-discount/school-discount.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([CartEntity]), ProductModule, UserModule],
+  imports: [TypeOrmModule.forFeature([CartEntity]), ProductModule, UserModule, SchoolDiscountModule],
   controllers: [ApiCartController, AdminCartController],
   providers: [CartService, CartRepository],
 })
