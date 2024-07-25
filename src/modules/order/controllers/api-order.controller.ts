@@ -1,18 +1,15 @@
 import { Controller, Post, Body, Req, BadRequestException, Get, Query } from '@nestjs/common';
 import { Request } from 'express';
-import { DataSource, In, MoreThan } from 'typeorm';
+import { DataSource, In } from 'typeorm';
 import { CreateOrderDto } from '../dto/create-order.dto';
 import { ProductMetaService } from '../../product/services/product-meta.service';
 import { OrderItemService } from '../services/order-item.service';
 import { OrderEntity } from '../entities/order.entity';
 import { OrderItemEntity } from '../entities/order-item.entity';
-import { DiscountEntity } from '@/modules/discount/entity/discount.entity';
 import { PaymentMethodService } from '@/modules/payment-method/services/payment-method.service';
 import { TransactionService } from '@/modules/transaction/services/transaction.service';
-import { faker } from '@faker-js/faker';
 import { PaypalService } from '@/common/module/payment/paypal.service';
 import { SchoolDiscountService } from '@/modules/school-discount/services/schoolDiscount.service';
-import { SchoolDiscountEntity } from '@/modules/school-discount/entities/schoolDiscount.entity';
 import { OrderService } from '../services/order.service';
 
 @Controller('api/orders')

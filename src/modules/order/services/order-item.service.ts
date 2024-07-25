@@ -3,7 +3,6 @@ import { ProductMetaEntity } from '@/modules/product/entities';
 import { CreateOrderDto } from '../dto/create-order.dto';
 import { OrderItemRepository } from '../repositories/order-item.repository';
 import { DiscountEntity } from '@/modules/discount/entity/discount.entity';
-import { SchoolDiscountEntity } from '@/modules/school-discount/entities/schoolDiscount.entity';
 
 @Injectable()
 export class OrderItemService extends OrderItemRepository {
@@ -27,6 +26,4 @@ export class OrderItemService extends OrderItemRepository {
           : totalPrice - Number(discountPrice);
     }
   }
-
-  calculateSchoolDiscountPrice(totalPrice: number, discount: SchoolDiscountEntity) {}
 }
