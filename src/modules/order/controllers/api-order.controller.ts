@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, Req, BadRequestException, Get, Query } from '@nestjs/common';
 import { Request } from 'express';
 import { DataSource, In, MoreThan } from 'typeorm';
 import { CreateOrderDto } from '../dto/create-order.dto';
@@ -13,12 +13,14 @@ import { faker } from '@faker-js/faker';
 import { PaypalService } from '@/common/module/payment/paypal.service';
 import { SchoolDiscountService } from '@/modules/school-discount/services/schoolDiscount.service';
 import { SchoolDiscountEntity } from '@/modules/school-discount/entities/schoolDiscount.entity';
+import { OrderService } from '../services/order.service';
 
 @Controller('api/orders')
 export class ApiOrderController {
   constructor(
     private readonly dataSource: DataSource,
     private readonly orderItemService: OrderItemService,
+    private readonly orderService: OrderService,
     private readonly schoolDiscountService: SchoolDiscountService,
     private readonly productMetaService: ProductMetaService,
     private readonly paymentMethodService: PaymentMethodService,
@@ -54,7 +56,7 @@ export class ApiOrderController {
       }
 
       const order = await entityManager.save(OrderEntity, {
-        totalPrice,
+        totalPrice: totalPrice,
         user: {
           id: userId,
         },
@@ -85,9 +87,7 @@ export class ApiOrderController {
           },
         },
       ]);
-
-      this.transactionService.create({
-        id: faker.string.uuid(),
+      this.transactionService.createAndSave({
         transactionId: paypalPaymentPayload?.result.id,
         paymentMethod,
         price: totalPrice,
@@ -101,5 +101,16 @@ export class ApiOrderController {
 
       return approvalUrl;
     });
+  }
+
+  @Get('capturePayment')
+  async executePayment(@Query() query: { token: string }) {
+    const { token } = query;
+
+    if (!token) {
+      throw new BadRequestException('Missing token');
+    }
+
+    return await this.paypalService.captureOrder(token);
   }
 }

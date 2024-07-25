@@ -18,7 +18,6 @@ export class ApiUserController {
 
   @Post('create')
   async createUser(@Body() createUserDto: CreateUserDto) {
-    console.log(createUserDto);
     return this.userService.createAndSave({ ...createUserDto, role: UserRoleEnum.USER });
   }
 

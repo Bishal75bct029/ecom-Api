@@ -1,5 +1,5 @@
 import { BaseEntity } from '@/libs/entity/base.entity';
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { BeforeInsert, BeforeUpdate, Column, Entity, ManyToOne } from 'typeorm';
 import { ProductEntity } from './product.entity';
 
 @Entity('product_meta')
@@ -13,6 +13,14 @@ export class ProductMetaEntity extends BaseEntity {
   @Column({
     type: 'bigint',
     nullable: false,
+    transformer: {
+      to(value: any) {
+        return value * 100;
+      },
+      from(value: any) {
+        return value / 100;
+      },
+    },
   })
   price: number;
 
