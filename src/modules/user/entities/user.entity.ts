@@ -1,8 +1,9 @@
 import { BaseEntity } from '@/libs/entity/base.entity';
 import { ReviewEntity } from '@/modules/review/entities/review.entity';
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Column, Entity, OneToMany, OneToOne } from 'typeorm';
 import { AddressEntity } from './address.entity';
 import { OrderEntity } from '@/modules/order/entities/order.entity';
+import { CartEntity } from '@/modules/cart/entities/cart.entity';
 import { TransactionEntity } from '@/modules/transaction/entities/transaction.entity';
 
 export enum UserRoleEnum {
@@ -38,6 +39,9 @@ export class UserEntity extends BaseEntity {
 
   @OneToMany(() => OrderEntity, (order) => order.user)
   orders: OrderEntity[];
+
+  @OneToOne(() => CartEntity, (cart) => cart.user)
+  cart: CartEntity;
 
   @OneToMany(() => TransactionEntity, (transaction) => transaction.user)
   transactions: TransactionEntity[];

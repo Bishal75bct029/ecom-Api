@@ -1,11 +1,8 @@
-import { IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
+import { ArrayMinSize, IsNotEmpty, IsUUID } from 'class-validator';
 
 export class CreateCartDto {
-  @IsUUID()
-  @IsOptional()
-  id: string;
-
   @IsUUID('all', { each: true })
   @IsNotEmpty()
+  @ArrayMinSize(1)
   productMetaId: string[];
 }
