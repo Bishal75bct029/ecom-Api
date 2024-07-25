@@ -19,10 +19,10 @@ export class OrderEntity extends BaseEntity {
     nullable: true,
     transformer: {
       to(value: any) {
-        BigInt(value);
+        return BigInt(value);
       },
       from(value: any) {
-        BigInt(value);
+        return BigInt(value);
       },
     },
   })

@@ -54,12 +54,13 @@ export class ApiProductController {
         where: { schoolId },
         select: ['discountPercentage'],
       });
-
       if (!schoolDiscount) return this.productService.getDiscountedProducts(products);
       await this.redisService.set(`school_${schoolId}`, schoolDiscount.discountPercentage);
 
       return this.productService.getDiscountedProducts(products, schoolDiscount.discountPercentage);
     }
+
+    return this.productService.getDiscountedProducts(products, schoolDiscountCache);
   }
 
   @Get('category')

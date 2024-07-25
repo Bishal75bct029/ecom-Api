@@ -18,8 +18,8 @@ export class ProductService extends ProductRepository {
         ...product,
         productMeta: product.productMeta.map((meta) => ({
           ...meta,
-          price: Number(meta.price) / 100,
-          discountPrice: (Number(meta.price) - (discountPercentage * Number(meta.price)) / 100) / 100,
+          price: Number(meta.price),
+          discountPrice: Number(meta.price) - (discountPercentage * Number(meta.price)) / 100,
           discountPercentage: discountPercentage ?? 0,
         })),
       }));
@@ -40,17 +40,14 @@ export class ProductService extends ProductRepository {
     const attributes = Object.keys(generatedVariants[0]);
 
     for (const meta of productMeta) {
-      console.log(meta.variant);
       if (!meta.variant) continue;
       const isValidVariant = generatedVariants.some((variant) => {
         return attributes.every((attribute) => {
-          console.log(variant[attribute] === meta.variant[attribute]);
           return variant[attribute] === meta.variant[attribute];
         });
       });
 
       if (!isValidVariant) {
-        console.log(meta.variant, generatedVariants);
         return false;
       }
     }

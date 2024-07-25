@@ -9,9 +9,22 @@ import { OrderItemService } from './services/order-item.service';
 import { UserModule } from '../user/user.module';
 import { ProductModule } from '../product/product.module';
 import { DiscountModule } from '../discount/discount.module';
+import { PaymentModule } from '@/common/module/payment/payment.module';
+import { TransactionModule } from '../transaction/transaction.module';
+import { PaymentMethodModule } from '../payment-method/payment-method.module';
+import { SchoolDiscountModule } from '../school-discount/school-discount.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([OrderEntity, OrderItemEntity]), UserModule, ProductModule, DiscountModule],
+  imports: [
+    TypeOrmModule.forFeature([OrderEntity, OrderItemEntity]),
+    UserModule,
+    ProductModule,
+    SchoolDiscountModule,
+    PaymentModule,
+    TransactionModule,
+    PaymentMethodModule,
+    PaymentModule,
+  ],
   controllers: [ApiOrderController, AdminOrderController],
   providers: [OrderService, OrderItemService],
 })

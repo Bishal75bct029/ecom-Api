@@ -5,6 +5,7 @@ import { CreateCartDto } from '../dto';
 import { Request } from 'express';
 import { In } from 'typeorm';
 import { ProductService } from '@/modules/product/services';
+import { SchoolDiscountService } from '@/modules/school-discount/services/schoolDiscount.service';
 
 @ApiTags('API Cart')
 @Controller('api/carts')
@@ -12,10 +13,13 @@ export class ApiCartController {
   constructor(
     private readonly cartService: CartService,
     private readonly productService: ProductService,
+    private readonly schoolDiscount: SchoolDiscountService,
   ) {}
 
   @Get()
   async getAllCartItems(@Req() req: Request) {
+    const { schoolId } = req.currentUser;
+    const discount = await this.schoolDiscount.findOne({ where: { schoolId } });
     const userCarts = await this.cartService.findOne({
       where: {
         user: {
@@ -34,6 +38,20 @@ export class ApiCartController {
       },
       relations: ['productMeta'],
     });
+
+    if (discount) {
+      return cartItems.map((product) => {
+        return {
+          ...product,
+          productMeta: product.productMeta.map((meta) => {
+            return {
+              ...meta,
+              price: meta.price * (1 - discount.discountPercentage / 100),
+            };
+          }),
+        };
+      });
+    }
 
     return cartItems;
   }

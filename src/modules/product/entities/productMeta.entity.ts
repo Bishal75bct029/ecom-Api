@@ -13,6 +13,14 @@ export class ProductMetaEntity extends BaseEntity {
   @Column({
     type: 'bigint',
     nullable: false,
+    transformer: {
+      to(value: any) {
+        return value * 100;
+      },
+      from(value: any) {
+        return value / 100;
+      },
+    },
   })
   price: number;
 

@@ -4,6 +4,7 @@ import { Column, Entity, OneToMany, OneToOne } from 'typeorm';
 import { AddressEntity } from './address.entity';
 import { OrderEntity } from '@/modules/order/entities/order.entity';
 import { CartEntity } from '@/modules/cart/entities/cart.entity';
+import { TransactionEntity } from '@/modules/transaction/entities/transaction.entity';
 
 export enum UserRoleEnum {
   ADMIN = 'ADMIN',
@@ -41,4 +42,10 @@ export class UserEntity extends BaseEntity {
 
   @OneToOne(() => CartEntity, (cart) => cart.user)
   cart: CartEntity;
+
+  @OneToMany(() => TransactionEntity, (transaction) => transaction.user)
+  transactions: TransactionEntity[];
+
+  @Column({ type: 'uuid', nullable: true })
+  schoolId: string;
 }

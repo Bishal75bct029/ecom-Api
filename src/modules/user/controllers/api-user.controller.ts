@@ -18,15 +18,14 @@ export class ApiUserController {
 
   @Post('create')
   async createUser(@Body() createUserDto: CreateUserDto) {
-    console.log(createUserDto);
     return this.userService.createAndSave({ ...createUserDto, role: UserRoleEnum.USER });
   }
 
   @Post('login')
   async loginAdmin(@Body() loginUserDto: LoginUserDto, @Res() res: Response) {
-    const { id, role } = await this.userService.login({ ...loginUserDto, role: UserRoleEnum.USER });
+    const { id, role, schoolId } = await this.userService.login({ ...loginUserDto, role: UserRoleEnum.USER });
 
-    const payload: UserJwtPayload = { id, role };
+    const payload: UserJwtPayload = { id, role, schoolId };
     const [token, refreshToken] = await this.userService.generateJWTs(payload);
 
     res.cookie('x-auth-cookie', token, {

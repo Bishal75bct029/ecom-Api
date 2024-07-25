@@ -8,8 +8,7 @@ export class CreateOrderDto {
   productMetaIds: CreateOrderProductMetaDto[];
 
   @IsString()
-  @IsOptional()
-  couponCode: string;
+  paymentMethodId: string;
 }
 
 class CreateOrderProductMetaDto {

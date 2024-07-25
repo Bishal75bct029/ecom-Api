@@ -12,6 +12,8 @@ import { RedisModule } from './libs/redis/redis.module';
 import { ADMIN_PUBLIC_ROUTES, API_PUBLIC_ROUTES } from './app.constants';
 import { DiscountModule } from './modules/discount/discount.module';
 import { ApiAuthorizationMiddleware } from './common/middlewares/api/api-authorization.middleware';
+import { PaymentMethodModule } from './modules/payment-method/payment-method.module';
+import { TransactionModule } from './modules/transaction/transaction.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { ApiAuthorizationMiddleware } from './common/middlewares/api/api-authori
     CartModule,
     OrderModule,
     DiscountModule,
+    PaymentMethodModule,
+    TransactionModule,
   ],
   controllers: [AppController],
   providers: [
@@ -50,6 +54,6 @@ export class AppModule implements NestModule {
       .apply(ApiMiddleware)
       .exclude(...API_PUBLIC_ROUTES)
       .forRoutes({ path: 'api/*', method: RequestMethod.ALL });
-    consumer.apply(ApiAuthorizationMiddleware).forRoutes(...['api/carts']);
+    consumer.apply(ApiAuthorizationMiddleware).forRoutes(...['api/carts', 'api/orders']);
   }
 }
