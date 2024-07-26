@@ -85,7 +85,6 @@ export class ApiCartController {
 
   @Put()
   async removeFromCart(@Body() createCartDto: CreateCartDto, @Req() req: Request) {
-    console.log(createCartDto);
     const isUserCartAvailable = await this.cartService.findOne({
       where: {
         user: {

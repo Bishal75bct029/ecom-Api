@@ -3,7 +3,7 @@ import { ProductService } from '../services';
 import { Request } from 'express';
 import { RedisService } from '@/libs/redis/redis.service';
 import { SchoolDiscountService } from '@/modules/school-discount/services/schoolDiscount.service';
-import { In, Not } from 'typeorm';
+import { In, IsNull, Not } from 'typeorm';
 import { CategoryService } from '@/modules/category/services/category.service';
 import { getAllTreeIds } from '../helpers/flattenTree.util';
 import { SimilarProductsDto } from '../dto/similarProducts.dto';
@@ -64,8 +64,9 @@ export class ApiProductController {
   }
 
   @Get('category')
-  async getProductsByCategory(@Query() dto: SimilarProductsDto) {
+  async getProductsByCategory(@Req() { currentUser }: Request, @Query() dto: SimilarProductsDto) {
     if (!dto.categoryId) throw new NotFoundException('Products not found');
+    const { schoolId } = currentUser;
 
     const existingCategory = await this.categoryService.findOne({ where: { id: dto.categoryId } });
     if (!existingCategory) throw new NotFoundException('Category not found');
@@ -73,9 +74,13 @@ export class ApiProductController {
     const categoryTrees = await this.categoryService.findDescendantsTree(existingCategory);
     const categoryIds = getAllTreeIds(categoryTrees);
 
-    return this.productService.find({
+    const relatedProducts = await this.productService.find({
       relations: ['productMeta', 'categories'],
-      where: { categories: { id: In(categoryIds) }, productMeta: { isDefault: true }, id: Not(dto.productId) },
+      where: {
+        categories: { id: In(categoryIds) },
+        productMeta: { isDefault: true },
+        id: dto.productId ? Not(dto.productId) : Not(IsNull()),
+      },
       select: {
         id: true,
         name: true,
@@ -89,6 +94,23 @@ export class ApiProductController {
       },
       take: 10,
     });
+    if (!schoolId) return this.productService.getDiscountedProducts(relatedProducts);
+
+    const schoolDiscountCache = (await this.redisService.get(`school_${schoolId}`)) as number | null;
+
+    if (!schoolDiscountCache) {
+      const schoolDiscount = await this.schoolDiscountService.findOne({
+        where: { schoolId },
+        select: ['discountPercentage'],
+      });
+
+      if (!schoolDiscount) return this.productService.getDiscountedProducts(relatedProducts);
+      await this.redisService.set(`school_${schoolId}`, schoolDiscount.discountPercentage);
+
+      return this.productService.getDiscountedProducts(relatedProducts, schoolDiscount.discountPercentage);
+    }
+
+    return this.productService.getDiscountedProducts(relatedProducts, schoolDiscountCache);
   }
 
   @Get(':id')
@@ -126,18 +148,18 @@ export class ApiProductController {
 
     const schoolDiscountCache = (await this.redisService.get(`school_${schoolId}`)) as number | null;
 
-    if (schoolDiscountCache) {
-      return this.productService.getDiscountedProducts(product, schoolDiscountCache);
+    if (!schoolDiscountCache) {
+      const schoolDiscount = await this.schoolDiscountService.findOne({
+        where: { schoolId },
+        select: ['discountPercentage'],
+      });
+
+      if (!schoolDiscount) return this.productService.getDiscountedProducts(product);
+      await this.redisService.set(`school_${schoolId}`, schoolDiscount.discountPercentage);
+
+      return this.productService.getDiscountedProducts(product, schoolDiscount.discountPercentage);
     }
 
-    const schoolDiscount = await this.schoolDiscountService.findOne({
-      where: { schoolId },
-      select: ['discountPercentage'],
-    });
-
-    if (!schoolDiscount) return this.productService.getDiscountedProducts(product);
-    await this.redisService.set(`school_${schoolId}`, schoolDiscount.discountPercentage);
-
-    return this.productService.getDiscountedProducts(product, schoolDiscount.discountPercentage);
+    return this.productService.getDiscountedProducts(product, schoolDiscountCache);
   }
 }
