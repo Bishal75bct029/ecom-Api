@@ -8,7 +8,6 @@ import { AdminOrderController } from './controllers/admin-order.controller';
 import { OrderItemService } from './services/order-item.service';
 import { UserModule } from '../user/user.module';
 import { ProductModule } from '../product/product.module';
-import { DiscountModule } from '../discount/discount.module';
 import { PaymentModule } from '@/common/module/payment/payment.module';
 import { TransactionModule } from '../transaction/transaction.module';
 import { PaymentMethodModule } from '../payment-method/payment-method.module';

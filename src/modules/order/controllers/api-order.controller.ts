@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req, BadRequestException, Get, Query } from '@nestjs/common';
+import { Controller, Post, Body, Req, BadRequestException } from '@nestjs/common';
 import { Request } from 'express';
 import { DataSource, In } from 'typeorm';
 import { CreateOrderDto } from '../dto/create-order.dto';
@@ -98,16 +98,5 @@ export class ApiOrderController {
 
       return approvalUrl;
     });
-  }
-
-  @Get('capturePayment')
-  async executePayment(@Query() query: { token: string }) {
-    const { token } = query;
-
-    if (!token) {
-      throw new BadRequestException('Missing token');
-    }
-
-    return await this.paypalService.captureOrder(token);
   }
 }
