@@ -1,7 +1,5 @@
-import { Controller, Post, Body, Res, Req, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, BadRequestException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { Request, Response } from 'express';
-import { JwtService } from '@nestjs/jwt';
 import { ApiTags } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
 import { CreateAdminUserDto, LoginUserDto, ValidateOtpDto } from '../dto/create-user.dto';
@@ -15,7 +13,6 @@ import { SQSService } from '@/common/module/aws/sqs.service';
 export class AdminUserController {
   constructor(
     private readonly userService: UserService,
-    private readonly jwtService: JwtService,
     private redisService: RedisService,
     private sqsService: SQSService,
   ) {}
@@ -29,40 +26,23 @@ export class AdminUserController {
     return user;
   }
 
-  @Post('logout')
-  async logoutAdmin(@Res() res: Response) {
-    res.clearCookie('x-auth-cookie');
-    res.clearCookie('x-refresh-cookie');
-    return res.status(200).send();
-  }
+  // @Post('logout')
+  // async logoutAdmin(@Res() res: Response) {
+  //   return res.status(200).send();
+  // }
 
   @Post('refresh')
-  async refreshAdmin(@Req() req: Request, @Res() res: Response) {
-    const refreshToken = req.cookies['x-refresh-cookie'];
+  async refreshAdmin(@Body('refreshToken') refreshToken: string) {
     const [token, generatedRefreshToken] = await this.userService.refreshUser(refreshToken, {
       secret: envConfig.ADMIN_JWT_SECRET,
       issuer: envConfig.ADMIN_JWT_ISSUER,
       audience: envConfig.ADMIN_JWT_AUDIENCE,
     });
-
-    res.cookie('x-auth-cookie', token, {
-      httpOnly: true,
-      maxAge: envConfig.JWT_REFRESH_TOKEN_TTL * 1000,
-      secure: true,
-      sameSite: 'strict',
-    });
-    res.cookie('x-refresh-cookie', generatedRefreshToken, {
-      httpOnly: true,
-      maxAge: envConfig.JWT_REFRESH_TOKEN_TTL * 1000,
-      secure: true,
-      sameSite: 'strict',
-    });
-
-    return res.status(200).send();
+    return { token, refreshToken: generatedRefreshToken };
   }
 
   @Post('authenticate')
-  async authenticate(@Body() loginUserDto: LoginUserDto, @Res() res: Response) {
+  async authenticate(@Body() loginUserDto: LoginUserDto) {
     const { email, role, name, isOtpEnabled, id } = await this.userService.login({
       ...loginUserDto,
       role: UserRoleEnum.ADMIN,
@@ -86,30 +66,15 @@ export class AdminUserController {
           }),
         }),
       ]);
-      return res.send({
-        message: 'OTP sent successfully.',
-      });
+      return { message: 'OTP sent successfully.' };
     }
 
     const [token, refreshToken] = await this.userService.generateJWTs({ id, role });
-    res.cookie('x-auth-cookie', token, {
-      httpOnly: true,
-      maxAge: envConfig.JWT_REFRESH_TOKEN_TTL * 1000,
-      secure: true,
-      sameSite: 'strict',
-    });
-    res.cookie('x-refresh-cookie', refreshToken, {
-      httpOnly: true,
-      maxAge: envConfig.JWT_REFRESH_TOKEN_TTL * 1000,
-      secure: true,
-      sameSite: 'strict',
-    });
-
-    return res.status(200).send();
+    return { token, refreshToken };
   }
 
   @Post('validate-otp')
-  async validateOtp(@Body() otpDto: ValidateOtpDto, @Res() res: Response) {
+  async validateOtp(@Body() otpDto: ValidateOtpDto) {
     const user = await this.userService.findOne({ where: { email: otpDto.email, role: UserRoleEnum.ADMIN } });
     if (!user) throw new BadRequestException('Invalid credentials');
 
@@ -120,19 +85,6 @@ export class AdminUserController {
 
     const [token, refreshToken] = await this.userService.generateJWTs({ id: user.id, role: user.role });
 
-    res.cookie('x-auth-cookie', token, {
-      httpOnly: true,
-      maxAge: envConfig.JWT_REFRESH_TOKEN_TTL * 1000,
-      secure: true,
-      sameSite: 'strict',
-    });
-    res.cookie('x-refresh-cookie', refreshToken, {
-      httpOnly: true,
-      maxAge: envConfig.JWT_REFRESH_TOKEN_TTL * 1000,
-      secure: true,
-      sameSite: 'strict',
-    });
-
-    return res.status(200).send();
+    return { token, refreshToken };
   }
 }
