@@ -8,7 +8,7 @@ export class ApiMiddleware implements NestMiddleware {
   constructor(private readonly jwtService: JwtService) {}
   async use(req: Request, _res: Response, next: NextFunction) {
     try {
-      const token: string = req.cookies['x-auth-cookie'];
+      const [, token] = req.headers['authorization']?.split(' ') || [];
 
       if (token) {
         const payload = await this.jwtService.verifyAsync<UserJwtPayload>(token, {
@@ -22,6 +22,7 @@ export class ApiMiddleware implements NestMiddleware {
       }
       next();
     } catch (error) {
+      console.log(error);
       throw new UnauthorizedException('Unauthorized');
     }
   }

@@ -1,6 +1,6 @@
 interface UserJwtPayload {
   id?: string;
-  role?: string;
+  role?: UserRole;
   schoolId?: string;
 }
 

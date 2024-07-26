@@ -16,7 +16,7 @@ export class AdminMiddleware implements NestMiddleware {
   constructor(private readonly jwtService: JwtService) {}
   async use(req: Request, _res: Response, next: NextFunction) {
     try {
-      const token: string = req.cookies['x-auth-cookie'];
+      const [, token] = req.headers['authorization']?.split(' ') || [];
 
       if (!token) throw new UnauthorizedException('Unauthorized');
 
