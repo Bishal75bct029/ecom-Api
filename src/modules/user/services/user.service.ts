@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { JwtService, JwtVerifyOptions } from '@nestjs/jwt';
 import { AbstractService } from '@/libs/service/abstract.service';
-import { UserEntity } from '../entities';
+import { UserEntity, UserRoleEnum } from '../entities';
 import { envConfig } from '@/configs/envConfig';
 import { LoginUserDto } from '../dto';
 
@@ -50,13 +50,14 @@ export class UserService extends AbstractService<UserEntity> {
   }
 
   async refreshUser(refreshToken: string, options: JwtVerifyOptions) {
+    if (!refreshToken) throw new ForbiddenException('Invalid token');
+
     const { id, role, schoolId = '' } = await this.jwtService.verifyAsync<UserJwtPayload>(refreshToken, options);
 
     const payload = { id, role, schoolId };
-    const user = await this.findOne({ where: { id: payload.id } });
+    const user = await this.findOne({ where: { id: payload.id, role: payload.role as UserRoleEnum } });
 
     if (!user) throw new ForbiddenException('Invalid token');
-    if (user.role !== payload.role) throw new BadRequestException('Invalid token');
 
     return this.generateJWTs(payload);
   }

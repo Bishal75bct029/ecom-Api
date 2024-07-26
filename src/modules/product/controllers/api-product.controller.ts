@@ -126,16 +126,18 @@ export class ApiProductController {
 
     const schoolDiscountCache = (await this.redisService.get(`school_${schoolId}`)) as number | null;
 
-    if (!schoolDiscountCache) {
-      const schoolDiscount = await this.schoolDiscountService.findOne({
-        where: { schoolId },
-        select: ['discountPercentage'],
-      });
-
-      if (!schoolDiscount) return this.productService.getDiscountedProducts(product);
-      await this.redisService.set(`school_${schoolId}`, schoolDiscount.discountPercentage);
-
-      return this.productService.getDiscountedProducts(product, schoolDiscount.discountPercentage);
+    if (schoolDiscountCache) {
+      return this.productService.getDiscountedProducts(product, schoolDiscountCache);
     }
+
+    const schoolDiscount = await this.schoolDiscountService.findOne({
+      where: { schoolId },
+      select: ['discountPercentage'],
+    });
+
+    if (!schoolDiscount) return this.productService.getDiscountedProducts(product);
+    await this.redisService.set(`school_${schoolId}`, schoolDiscount.discountPercentage);
+
+    return this.productService.getDiscountedProducts(product, schoolDiscount.discountPercentage);
   }
 }

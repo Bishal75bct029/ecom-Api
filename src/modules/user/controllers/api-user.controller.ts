@@ -1,5 +1,5 @@
-import { Controller, Post, Body, Res, Req, BadRequestException, Put, Param, Get } from '@nestjs/common';
-import { Request, Response } from 'express';
+import { Controller, Post, Body, Req, BadRequestException, Put, Param, Get } from '@nestjs/common';
+import { Request } from 'express';
 import { ApiTags } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
 import { CreateUserDto, LoginUserDto } from '../dto/create-user.dto';
@@ -22,51 +22,28 @@ export class ApiUserController {
   }
 
   @Post('login')
-  async loginAdmin(@Body() loginUserDto: LoginUserDto, @Res() res: Response) {
+  async login(@Body() loginUserDto: LoginUserDto) {
     const { id, role, schoolId } = await this.userService.login({ ...loginUserDto, role: UserRoleEnum.USER });
 
     const payload: UserJwtPayload = { id, role, schoolId };
     const [token, refreshToken] = await this.userService.generateJWTs(payload);
 
-    res.cookie('x-auth-cookie', token, {
-      httpOnly: true,
-      maxAge: envConfig.JWT_REFRESH_TOKEN_TTL * 1000,
-      secure: true,
-      sameSite: 'strict',
-    });
-    res.cookie('x-refresh-cookie', refreshToken, {
-      httpOnly: true,
-      maxAge: envConfig.JWT_REFRESH_TOKEN_TTL * 1000,
-      secure: true,
-      sameSite: 'strict',
-    });
-
-    return res.status(200).send();
+    return { token, refreshToken };
   }
 
   @Post('refresh')
-  async refresh(@Req() req: Request, @Res() res: Response) {
-    const refreshToken = req.cookies['x-refresh-cookie'];
+  async refresh(@Body('refreshToken') refreshToken: string) {
     const [token, generatedRefreshToken] = await this.userService.refreshUser(refreshToken, {
       secret: envConfig.API_JWT_SECRET,
       issuer: envConfig.API_JWT_ISSUER,
       audience: envConfig.API_JWT_AUDIENCE,
     });
+    return { token, refreshToken: generatedRefreshToken };
+  }
 
-    res.cookie('x-auth-cookie', token, {
-      httpOnly: true,
-      maxAge: envConfig.JWT_REFRESH_TOKEN_TTL * 1000,
-      secure: true,
-      sameSite: 'strict',
-    });
-    res.cookie('x-refresh-cookie', generatedRefreshToken, {
-      httpOnly: true,
-      maxAge: envConfig.JWT_REFRESH_TOKEN_TTL * 1000,
-      secure: true,
-      sameSite: 'strict',
-    });
-
-    return res.status(200).send();
+  @Get('address')
+  async getUserAddresses(@Req() { currentUser }: Request) {
+    return this.addressService.find({ where: { user: { id: currentUser.id } } });
   }
 
   @Post('address')
