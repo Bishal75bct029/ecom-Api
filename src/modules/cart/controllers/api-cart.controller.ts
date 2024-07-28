@@ -39,15 +39,17 @@ export class ApiCartController {
         id: true,
         name: true,
         productMeta: {
-          sku: false,
-          isDefault: false,
-          createdAt: false,
-          deletedAt: false,
-          updatedAt: false,
+          id: true,
+          image: true,
+          price: true,
+          stock: true,
+          variant: {},
         },
       },
       relations: ['productMeta'],
     });
+
+    console.log(cartItems);
 
     const schoolDiscount = await this.schoolDiscount.findOne({
       where: { schoolId },
