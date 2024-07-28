@@ -18,7 +18,7 @@ export class OrderItemService extends OrderItemRepository {
     if (totalPrice >= discount.minBuyingPrice) {
       const discountPrice = discount.isPercentage
         ? (totalPrice * Number(discount.amount)) / 100
-        : BigInt(discount.amount);
+        : Number(discount.amount);
 
       totalPrice =
         discountPrice >= discount.maxDiscountPrice

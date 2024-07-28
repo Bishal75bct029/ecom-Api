@@ -4,7 +4,7 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 import { UserEntity } from '@/modules/user/entities';
 import { PaymentMethodEntity } from '@/modules/payment-method/entities/payment-method.entity';
 
-@Entity('transcations')
+@Entity('transactions')
 export class TransactionEntity extends BaseEntity {
   @Column({ name: 'isSuccess', default: false, type: 'bool' })
   isSuccess: boolean;
@@ -43,7 +43,7 @@ export class TransactionEntity extends BaseEntity {
 
   @OneToOne(() => OrderEntity)
   @JoinColumn()
-  order: OrderEntity | string;
+  order: OrderEntity;
 
   @ManyToOne(() => PaymentMethodEntity, (paymentMethod) => paymentMethod.transactions)
   paymentMethod: PaymentMethodEntity;

@@ -12,5 +12,6 @@ import { SchoolDiscountModule } from '../school-discount/school-discount.module'
   imports: [TypeOrmModule.forFeature([CartEntity]), ProductModule, UserModule, SchoolDiscountModule],
   controllers: [ApiCartController, AdminCartController],
   providers: [CartService, CartRepository],
+  exports: [CartService],
 })
 export class CartModule {}

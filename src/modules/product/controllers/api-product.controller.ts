@@ -32,6 +32,7 @@ export class ApiProductController {
           image: true,
           price: true,
           id: true,
+          variant: {},
         },
         categories: {
           id: true,
@@ -47,20 +48,15 @@ export class ApiProductController {
 
     if (!schoolId) return this.productService.getDiscountedProducts(products);
 
-    const schoolDiscountCache = (await this.redisService.get(`school_${schoolId}`)) as number | null;
+    const schoolDiscount = await this.schoolDiscountService.findOne({
+      where: { schoolId },
+      select: ['discountPercentage'],
+      cache: true,
+    });
 
-    if (!schoolDiscountCache) {
-      const schoolDiscount = await this.schoolDiscountService.findOne({
-        where: { schoolId },
-        select: ['discountPercentage'],
-      });
-      if (!schoolDiscount) return this.productService.getDiscountedProducts(products);
-      await this.redisService.set(`school_${schoolId}`, schoolDiscount.discountPercentage);
-
-      return this.productService.getDiscountedProducts(products, schoolDiscount.discountPercentage);
-    }
-
-    return this.productService.getDiscountedProducts(products, schoolDiscountCache);
+    return schoolDiscount
+      ? this.productService.getDiscountedProducts(products, schoolDiscount.discountPercentage)
+      : this.productService.getDiscountedProducts(products);
   }
 
   @Get('category')
@@ -74,7 +70,7 @@ export class ApiProductController {
     const categoryTrees = await this.categoryService.findDescendantsTree(existingCategory);
     const categoryIds = getAllTreeIds(categoryTrees);
 
-    const relatedProducts = await this.productService.find({
+    const products = await this.productService.find({
       relations: ['productMeta', 'categories'],
       where: {
         categories: { id: In(categoryIds) },
@@ -90,27 +86,23 @@ export class ApiProductController {
           image: true,
           price: true,
           id: true,
+          variant: {},
         },
       },
       take: 10,
     });
-    if (!schoolId) return this.productService.getDiscountedProducts(relatedProducts);
 
-    const schoolDiscountCache = (await this.redisService.get(`school_${schoolId}`)) as number | null;
+    if (!schoolId) return this.productService.getDiscountedProducts(products);
 
-    if (!schoolDiscountCache) {
-      const schoolDiscount = await this.schoolDiscountService.findOne({
-        where: { schoolId },
-        select: ['discountPercentage'],
-      });
+    const schoolDiscount = await this.schoolDiscountService.findOne({
+      where: { schoolId },
+      select: ['discountPercentage'],
+      cache: true,
+    });
 
-      if (!schoolDiscount) return this.productService.getDiscountedProducts(relatedProducts);
-      await this.redisService.set(`school_${schoolId}`, schoolDiscount.discountPercentage);
-
-      return this.productService.getDiscountedProducts(relatedProducts, schoolDiscount.discountPercentage);
-    }
-
-    return this.productService.getDiscountedProducts(relatedProducts, schoolDiscountCache);
+    return schoolDiscount
+      ? this.productService.getDiscountedProducts(products, schoolDiscount.discountPercentage)
+      : this.productService.getDiscountedProducts(products);
   }
 
   @Get(':id')
@@ -146,20 +138,14 @@ export class ApiProductController {
 
     if (!schoolId) return this.productService.getDiscountedProducts(product);
 
-    const schoolDiscountCache = (await this.redisService.get(`school_${schoolId}`)) as number | null;
+    const schoolDiscount = await this.schoolDiscountService.findOne({
+      where: { schoolId },
+      select: ['discountPercentage'],
+      cache: true,
+    });
 
-    if (!schoolDiscountCache) {
-      const schoolDiscount = await this.schoolDiscountService.findOne({
-        where: { schoolId },
-        select: ['discountPercentage'],
-      });
-
-      if (!schoolDiscount) return this.productService.getDiscountedProducts(product);
-      await this.redisService.set(`school_${schoolId}`, schoolDiscount.discountPercentage);
-
-      return this.productService.getDiscountedProducts(product, schoolDiscount.discountPercentage);
-    }
-
-    return this.productService.getDiscountedProducts(product, schoolDiscountCache);
+    return schoolDiscount
+      ? this.productService.getDiscountedProducts(product, schoolDiscount.discountPercentage)
+      : this.productService.getDiscountedProducts(product);
   }
 }

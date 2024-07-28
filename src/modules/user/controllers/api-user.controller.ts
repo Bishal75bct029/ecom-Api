@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req, BadRequestException, Put, Param, Get } from '@nestjs/common';
+import { Controller, Post, Body, Req, BadRequestException, Put, Param, Get, HttpCode } from '@nestjs/common';
 import { Request } from 'express';
 import { ApiTags } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
@@ -32,6 +32,7 @@ export class ApiUserController {
   }
 
   @Post('refresh')
+  @HttpCode(200)
   async refresh(@Body('refreshToken') refreshToken: string) {
     const [token, generatedRefreshToken] = await this.userService.refreshUser(refreshToken, {
       secret: envConfig.API_JWT_SECRET,
