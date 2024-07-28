@@ -48,20 +48,15 @@ export class ApiProductController {
 
     if (!schoolId) return this.productService.getDiscountedProducts(products);
 
-    const schoolDiscountCache = (await this.redisService.get(`school_${schoolId}`)) as number | null;
+    const schoolDiscount = await this.schoolDiscountService.findOne({
+      where: { schoolId },
+      select: ['discountPercentage'],
+      cache: true,
+    });
 
-    if (!schoolDiscountCache) {
-      const schoolDiscount = await this.schoolDiscountService.findOne({
-        where: { schoolId },
-        select: ['discountPercentage'],
-      });
-      if (!schoolDiscount) return this.productService.getDiscountedProducts(products);
-      await this.redisService.set(`school_${schoolId}`, schoolDiscount.discountPercentage);
-
-      return this.productService.getDiscountedProducts(products, schoolDiscount.discountPercentage);
-    }
-
-    return this.productService.getDiscountedProducts(products, schoolDiscountCache);
+    return schoolDiscount
+      ? this.productService.getDiscountedProducts(products, schoolDiscount.discountPercentage)
+      : this.productService.getDiscountedProducts(products);
   }
 
   @Get('category')

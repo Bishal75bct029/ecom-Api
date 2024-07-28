@@ -14,6 +14,10 @@ export const TYPEORM_CONFIG = {
   migrationsTableName: 'migrations',
   synchronize: false,
   logging: envConfig.NODE_ENV === 'local',
+  cache: {
+    duration: 86400 * 1000,
+    type: 'ioredis',
+  },
 } as DataSourceOptions;
 
 const dataSource = new DataSource(TYPEORM_CONFIG);
