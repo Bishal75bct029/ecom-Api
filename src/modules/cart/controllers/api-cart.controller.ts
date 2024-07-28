@@ -35,6 +35,17 @@ export class ApiCartController {
           id: In(userCarts.productMetaId),
         },
       },
+      select: {
+        id: true,
+        name: true,
+        productMeta: {
+          sku: false,
+          isDefault: false,
+          createdAt: false,
+          deletedAt: false,
+          updatedAt: false,
+        },
+      },
       relations: ['productMeta'],
     });
 
