@@ -4,7 +4,7 @@ import { CartService } from '../services/cart.service';
 import { CreateCartDto } from '../dto';
 import { Request } from 'express';
 import { In } from 'typeorm';
-import { ProductService } from '@/modules/product/services';
+import { ProductMetaService, ProductService } from '@/modules/product/services';
 import { SchoolDiscountService } from '@/modules/school-discount/services/schoolDiscount.service';
 
 @ApiTags('API Cart')
@@ -13,6 +13,7 @@ export class ApiCartController {
   constructor(
     private readonly cartService: CartService,
     private readonly productService: ProductService,
+    private readonly productMetaService: ProductMetaService,
     private readonly schoolDiscount: SchoolDiscountService,
   ) {}
 
@@ -64,6 +65,12 @@ export class ApiCartController {
 
   @Post()
   async addToCart(@Body() createCartDto: CreateCartDto, @Req() req: Request) {
+    const products = await this.productMetaService.find({ where: { id: In(createCartDto.productMetaId) } });
+
+    if (products.length !== createCartDto.productMetaId.length) {
+      throw new BadRequestException('Provide correct product meta ids!');
+    }
+
     const isUserCartAvailable = await this.cartService.findOne({
       where: {
         user: {
@@ -72,21 +79,21 @@ export class ApiCartController {
       },
     });
 
-    if (isUserCartAvailable) {
-      if (
-        isUserCartAvailable.productMetaId.filter((meta) => createCartDto.productMetaId.some((pMeta) => pMeta === meta))
-          .length > 0
-      ) {
-        throw new BadRequestException('Product already added to cart!');
-      }
-      return await this.cartService.createAndSave({
-        ...createCartDto,
-        productMetaId: [...isUserCartAvailable.productMetaId, ...createCartDto.productMetaId],
-        id: isUserCartAvailable.id,
-      });
+    if (
+      isUserCartAvailable &&
+      isUserCartAvailable.productMetaId.some((meta) => createCartDto.productMetaId.includes(meta))
+    ) {
+      throw new BadRequestException('Product already in cart!');
     }
 
-    return await this.cartService.createAndSave({ ...createCartDto, user: { id: req.currentUser.id } });
+    return await this.cartService.createAndSave({
+      id: isUserCartAvailable ? isUserCartAvailable.id : undefined,
+      productMetaId:
+        isUserCartAvailable && isUserCartAvailable.productMetaId?.length
+          ? [...new Set([...isUserCartAvailable.productMetaId, ...createCartDto.productMetaId])]
+          : createCartDto.productMetaId,
+      user: { id: req.currentUser.id },
+    });
   }
 
   @Put()
@@ -96,17 +103,11 @@ export class ApiCartController {
         user: {
           id: req.currentUser.id,
         },
+        productMetaId: In(createCartDto.productMetaId),
       },
     });
 
     if (!isUserCartAvailable) throw new BadRequestException('Product not found in cart!');
-
-    if (
-      isUserCartAvailable.productMetaId.filter((meta) => createCartDto.productMetaId.some((pMeta) => pMeta === meta))
-        .length === 0
-    ) {
-      throw new BadRequestException('Product not found in cart!');
-    }
 
     return await this.cartService.createAndSave({
       ...createCartDto,
