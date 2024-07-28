@@ -101,7 +101,7 @@ export class ApiOrderController {
 
       //cart query
       let promisifiedCart: Promise<CartEntity>;
-      if (userCart) {
+      if (userCart && userCart.productMetaId.some((metaId) => productMetas.map(({ id }) => id).includes(metaId))) {
         promisifiedCart = entityManager.save(CartEntity, {
           ...userCart,
           productMetaId: userCart.productMetaId.filter((metaId) => !productMetas.map(({ id }) => id).includes(metaId)),
