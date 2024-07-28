@@ -50,8 +50,6 @@ export class ApiCartController {
       relations: ['productMeta'],
     });
 
-    console.log(cartItems);
-
     const schoolDiscount = await this.schoolDiscount.findOne({
       where: { schoolId },
       select: ['discountPercentage'],

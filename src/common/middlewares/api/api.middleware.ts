@@ -22,7 +22,6 @@ export class ApiMiddleware implements NestMiddleware {
       }
       next();
     } catch (error) {
-      console.log(error);
       throw new UnauthorizedException('Unauthorized');
     }
   }
