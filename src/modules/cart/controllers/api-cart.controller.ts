@@ -46,7 +46,8 @@ export class ApiCartController {
           productMeta: product.productMeta.map((meta) => {
             return {
               ...meta,
-              price: meta.price * (1 - discount.discountPercentage / 100),
+              price: Number(meta.price),
+              discountPrice: Number(meta.price) * (1 - discount.discountPercentage / 100),
             };
           }),
         };

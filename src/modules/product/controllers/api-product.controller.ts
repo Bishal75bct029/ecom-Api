@@ -32,6 +32,7 @@ export class ApiProductController {
           image: true,
           price: true,
           id: true,
+          variant: {},
         },
         categories: {
           id: true,
@@ -90,6 +91,7 @@ export class ApiProductController {
           image: true,
           price: true,
           id: true,
+          variant: {},
         },
       },
       take: 10,

@@ -6,7 +6,7 @@ import { ProductMetaEntity } from '../entities';
 
 @Injectable()
 export class ProductMetaService extends ProductMetaRepository {
-  async validateQuantity(productMetas: ProductMetaEntity[], createOrderDto: CreateOrderDto) {
+  validateQuantity(productMetas: ProductMetaEntity[], createOrderDto: CreateOrderDto) {
     for (const product of productMetas) {
       const productFromOrder = createOrderDto.productMetaIds.find((item) => item.id === product.id);
 
