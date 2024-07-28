@@ -19,7 +19,6 @@ export class ApiCartController {
   @Get()
   async getAllCartItems(@Req() req: Request) {
     const { schoolId } = req.currentUser;
-    const discount = await this.schoolDiscount.findOne({ where: { schoolId } });
     const userCarts = await this.cartService.findOne({
       where: {
         user: {
@@ -39,22 +38,15 @@ export class ApiCartController {
       relations: ['productMeta'],
     });
 
-    if (discount) {
-      return cartItems.map((product) => {
-        return {
-          ...product,
-          productMeta: product.productMeta.map((meta) => {
-            return {
-              ...meta,
-              price: Number(meta.price),
-              discountPrice: Number(meta.price) * (1 - discount.discountPercentage / 100),
-            };
-          }),
-        };
-      });
-    }
+    const schoolDiscount = await this.schoolDiscount.findOne({
+      where: { schoolId },
+      select: ['discountPercentage'],
+      cache: true,
+    });
 
-    return cartItems;
+    return schoolDiscount
+      ? this.productService.getDiscountedProducts(cartItems, schoolDiscount.discountPercentage)
+      : this.productService.getDiscountedProducts(cartItems);
   }
 
   @Post()
