@@ -1,4 +1,10 @@
+<<<<<<< HEAD
 import { Controller, Post, Body, Req, BadRequestException, Query, Get } from '@nestjs/common';
+||||||| parent of a03c4f2 (order api)
+import { Controller, Post, Body, Req, BadRequestException } from '@nestjs/common';
+=======
+import { Controller, Post, Body, Req, BadRequestException, Get } from '@nestjs/common';
+>>>>>>> a03c4f2 (order api)
 import { Request } from 'express';
 import { DataSource, In } from 'typeorm';
 import { CreateOrderDto } from '../dto/create-order.dto';
@@ -14,7 +20,12 @@ import { ProductMetaEntity } from '@/modules/product/entities';
 import { TransactionEntity } from '@/modules/transaction/entities/transaction.entity';
 import { CartService } from '@/modules/cart/services/cart.service';
 import { CartEntity } from '@/modules/cart/entities/cart.entity';
+<<<<<<< HEAD
 import { CapturePaymentDto } from '@/modules/transaction/dto/capture-payment.dto';
+||||||| parent of a03c4f2 (order api)
+=======
+import { OrderService } from '../services/order.service';
+>>>>>>> a03c4f2 (order api)
 
 @Controller('api/orders')
 export class ApiOrderController {
@@ -27,6 +38,7 @@ export class ApiOrderController {
     private readonly transactionService: TransactionService,
     private readonly paypalService: PaypalService,
     private readonly cartService: CartService,
+    private readonly orderService: OrderService,
   ) {}
 
   @Post()
@@ -126,6 +138,7 @@ export class ApiOrderController {
       return { approvalUrl };
     });
   }
+<<<<<<< HEAD
 
   @Get('confirm')
   async confirmOrder(@Query() query: CapturePaymentDto) {
@@ -145,4 +158,33 @@ export class ApiOrderController {
       paymentGatewayCharge: parseFloat((paypalFee * 100).toFixed(2)),
     });
   }
+||||||| parent of a03c4f2 (order api)
+=======
+
+  @Get()
+  listOrders(@Req() { currentUser }: Request) {
+    return this.orderService.find({
+      where: { user: { id: currentUser.id } },
+      relations: ['orderItems', 'orderItems.productMeta', 'orderItems.productMeta.product'],
+      select: {
+        orderItems: {
+          id: true,
+          pricePerUnit: true,
+          quantity: true,
+          totalPrice: true,
+          productMeta: {
+            id: true,
+            image: true,
+            price: true,
+            variant: {},
+            product: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    });
+  }
+>>>>>>> a03c4f2 (order api)
 }

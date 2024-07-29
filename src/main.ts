@@ -5,6 +5,15 @@ import { AppModule } from './app.module';
 import { AllExceptionFilter } from './common/filters';
 import { envConfig } from './configs/envConfig';
 import { swaggerSetup } from './configs/swagger';
+declare global {
+  interface BigInt {
+    toJSON(): number;
+  }
+}
+
+BigInt.prototype.toJSON = function () {
+  return Number(this);
+};
 
 (async () => {
   const app = await NestFactory.create(AppModule);

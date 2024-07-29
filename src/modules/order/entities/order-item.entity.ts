@@ -8,10 +8,30 @@ export class OrderItemEntity extends BaseEntity {
   @Column({ type: 'bigint' })
   quantity: number;
 
-  @Column({ type: 'bigint' })
+  @Column({
+    type: 'bigint',
+    transformer: {
+      to(value: any) {
+        return BigInt(value);
+      },
+      from(value: any) {
+        return BigInt(value);
+      },
+    },
+  })
   pricePerUnit: number;
 
-  @Column({ type: 'bigint' })
+  @Column({
+    type: 'bigint',
+    transformer: {
+      to(value: any) {
+        return BigInt(value);
+      },
+      from(value: any) {
+        return BigInt(value);
+      },
+    },
+  })
   totalPrice: number;
 
   @ManyToOne(() => ProductMetaEntity, (productMeta) => productMeta.id)
