@@ -2,7 +2,7 @@ import { Controller, Get, NotFoundException, Param, Query, Req } from '@nestjs/c
 import { ProductService } from '../services';
 import { Request } from 'express';
 import { ApiTags } from '@nestjs/swagger';
-import { FindManyOptions, ILike, In, IsNull, Like, Not } from 'typeorm';
+import { FindManyOptions, ILike, In, IsNull, Not } from 'typeorm';
 import { SchoolDiscountService } from '@/modules/school-discount/services/schoolDiscount.service';
 import { CategoryService } from '@/modules/category/services/category.service';
 import { getAllTreeIds } from '../helpers/flattenTree.util';

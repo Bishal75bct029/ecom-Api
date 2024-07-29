@@ -5,6 +5,7 @@ import { ProductService, ProductMetaService } from '../services';
 import { CreateProductDto, UpdateProductDto } from '../dto';
 import { CategoryService } from '../../category/services/category.service';
 import { getRecursiveDataArrayFromObjectOrArray } from '../helpers/getRecursiveDataArray.util';
+import { getRoundedOffValue } from '@/common/utils';
 
 @ApiTags('Admin Product')
 @Controller('admin/products')
@@ -17,9 +18,18 @@ export class AdminProductController {
 
   @Get()
   async getAllProducts(@Query('name') name?: string) {
-    return this.productService.find({
+    const products = await this.productService.find({
       where: [{ name: ILike(`%${name}%`) }, { tags: ILike(`%${name}%`) }, { description: ILike(`%${name}%`) }],
       relations: ['productMeta', 'categories'],
+    });
+
+    return products.map((product) => {
+      product.productMeta.map((meta) => {
+        return {
+          ...meta,
+          price: getRoundedOffValue(meta.price / 10000),
+        };
+      });
     });
   }
 
@@ -41,7 +51,9 @@ export class AdminProductController {
 
     const product = await this.productService.save({ ...newProduct });
 
-    const productMetas = await this.productMetaService.saveMany(newProductMetas.map((meta) => ({ ...meta, product })));
+    const productMetas = await this.productMetaService.saveMany(
+      newProductMetas.map((meta) => ({ ...meta, product, price: meta.price * 100 })),
+    );
 
     return { ...product, productMetas };
   }
