@@ -38,6 +38,14 @@ export class TransactionEntity extends BaseEntity {
     type: 'bigint',
     nullable: false,
     comment: 'price is in rs or cents depending on currency type',
+    transformer: {
+      to(value: any) {
+        return BigInt(value);
+      },
+      from(value: any) {
+        return BigInt(value);
+      },
+    },
   })
   price: number;
 
