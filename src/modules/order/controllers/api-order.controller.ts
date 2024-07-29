@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, Req, BadRequestException, Query, Get } from '@nestjs/common';
 import { Request } from 'express';
 import { DataSource, In } from 'typeorm';
 import { CreateOrderDto } from '../dto/create-order.dto';
@@ -14,6 +14,7 @@ import { ProductMetaEntity } from '@/modules/product/entities';
 import { TransactionEntity } from '@/modules/transaction/entities/transaction.entity';
 import { CartService } from '@/modules/cart/services/cart.service';
 import { CartEntity } from '@/modules/cart/entities/cart.entity';
+import { CapturePaymentDto } from '@/modules/transaction/dto/capture-payment.dto';
 
 @Controller('api/orders')
 export class ApiOrderController {
@@ -117,13 +118,31 @@ export class ApiOrderController {
           order,
           transactionCode: this.transactionService.genTransactionCode(),
           user: { id: userId },
-          responseJson: paypalPaymentPayload,
         }),
         promisifiedCart,
       ]);
 
       const approvalUrl = paypalPaymentPayload?.result.links.find((item: any) => item.rel === 'approve').href;
       return { approvalUrl };
+    });
+  }
+
+  @Get('confirm')
+  async confirmOrder(@Query() query: CapturePaymentDto) {
+    const { token } = query;
+
+    const transaction = await this.transactionService.findOne({ where: { transactionId: token, isSuccess: false } });
+    if (!transaction) throw new BadRequestException('Sorry, failed to place order. Please try again later.');
+
+    const paypalResponse = await this.paypalService.captureOrder(token);
+    const paypalFee =
+      paypalResponse.result.purchase_units[0].payments.captures[0].seller_receivable_breakdown?.paypal_fee.value || 0;
+
+    return await this.transactionService.save({
+      ...transaction,
+      isSuccess: true,
+      responseJson: paypalResponse,
+      paymentGatewayCharge: parseFloat((paypalFee * 100).toFixed(2)),
     });
   }
 }
