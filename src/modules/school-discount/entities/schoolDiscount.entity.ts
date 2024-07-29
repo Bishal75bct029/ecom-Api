@@ -6,7 +6,19 @@ export class SchoolDiscountEntity extends BaseEntity {
   @Column({ type: 'varchar' })
   name: string;
 
-  @Column({ type: 'int' })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    transformer: {
+      to(value: any) {
+        return Number(value);
+      },
+      from(value: any) {
+        return Number(value);
+      },
+    },
+  })
   discountPercentage: number;
 
   @Column({ type: 'jsonb', default: {} })
