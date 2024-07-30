@@ -206,8 +206,10 @@ export class ApiOrderController {
               name: true,
             },
           },
+          createdAt: true,
         },
         transaction: { isSuccess: true },
+        updatedAt: true,
       },
     });
   }
