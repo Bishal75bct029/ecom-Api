@@ -9,6 +9,9 @@ stages:
   - test
   - build
   - deploy-dev
+  - deploy-stage
+  - deploy-prod
+  - rollback-prod
 
 include:
   - project: 'innovate-tech/infrasturcture/templates'
