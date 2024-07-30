@@ -85,7 +85,13 @@ export class ApiProductController {
       take: limit,
     });
 
-    if (!schoolId) return this.productService.getDiscountedProducts(products);
+    if (!schoolId) {
+      const discountedProducts = this.productService.getDiscountedProducts(products);
+      return {
+        items: discountedProducts,
+        ...getPaginatedResponse({ count, limit, page }),
+      };
+    }
 
     const schoolDiscount = await this.schoolDiscountService.findOne({
       where: { schoolId },
