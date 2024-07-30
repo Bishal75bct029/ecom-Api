@@ -23,6 +23,7 @@ export const envConfig = cleanEnv(process.env, {
   API_JWT_AUDIENCE: str(),
 
   REDIS_URL: str(),
+  REDIS_HOST: str(),
   REDIS_PREFIX: str(),
 
   AWS_ACCESS_KEY_ID: str(),
