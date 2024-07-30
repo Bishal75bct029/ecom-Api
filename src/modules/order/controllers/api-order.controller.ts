@@ -16,6 +16,7 @@ import { CartService } from '@/modules/cart/services/cart.service';
 import { CartEntity } from '@/modules/cart/entities/cart.entity';
 import { CapturePaymentDto } from '@/modules/transaction/dto/capture-payment.dto';
 import { OrderService } from '../services/order.service';
+import { getRoundedOffValue } from '@/common/utils';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('API Order')
@@ -71,7 +72,7 @@ export class ApiOrderController {
       let totalPrice = this.orderItemService.calculateTotalPrice(productMetas, createOrderDto) * 100;
       const discount = await this.schoolDiscountService.findOne({ where: { schoolId } });
       if (discount) {
-        totalPrice = totalPrice * (1 - discount.discountPercentage / 100);
+        totalPrice = getRoundedOffValue((totalPrice * (1 - discount.discountPercentage / 100)) / 10000);
       }
 
       //save order and order items
@@ -152,7 +153,7 @@ export class ApiOrderController {
   }
 
   @Get()
-  listOrders(@Req() { currentUser }: Request) {
+  getOrders(@Req() { currentUser }: Request) {
     return this.orderService.find({
       where: { user: { id: currentUser.id }, transaction: { isSuccess: true } },
       relations: ['orderItems', 'orderItems.productMeta', 'orderItems.productMeta.product', 'transaction'],
@@ -194,7 +195,6 @@ export class ApiOrderController {
           productMeta: {
             id: true,
             image: true,
-            price: true,
             variant: {},
             product: {
               id: true,

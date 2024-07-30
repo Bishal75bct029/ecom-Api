@@ -3,6 +3,7 @@ import { ProductRepository } from '../repositories/product.repository';
 import combinate from 'combinate';
 import { ProductEntity } from '../entities';
 import { CreateProductMetaDto } from '../dto';
+import { getRoundedOffValue } from '@/common/utils';
 
 @Injectable()
 export class ProductService extends ProductRepository {
@@ -18,8 +19,8 @@ export class ProductService extends ProductRepository {
         ...product,
         productMeta: product.productMeta.map((meta) => ({
           ...meta,
-          price: Number(meta.price) / 100,
-          discountPrice: (Number(meta.price) * (1 - discountPercentage / 100)) / 100,
+          price: getRoundedOffValue(Number(meta.price) / 10000),
+          discountPrice: getRoundedOffValue((Number(meta.price) * (1 - discountPercentage / 100)) / 10000),
           discountPercentage: discountPercentage ?? 0,
         })),
       }));
@@ -29,8 +30,8 @@ export class ProductService extends ProductRepository {
       ...products,
       productMeta: products.productMeta.map((meta) => ({
         ...meta,
-        price: Number(meta.price),
-        discountPrice: Number(meta.price) * (1 - discountPercentage / 100),
+        price: getRoundedOffValue(Number(meta.price)),
+        discountPrice: getRoundedOffValue(Number(meta.price) * (1 - discountPercentage / 100)),
         discountPercentage: discountPercentage ?? 0,
       })),
     };
