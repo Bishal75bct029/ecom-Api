@@ -9,6 +9,6 @@ RUN pnpm i
 
 RUN pnpm run build
 
-EXPOSE 3000
+EXPOSE 4000
 
-CMD ["pnpm", "start"]
+ENTRYPOINT [ "/sbin/tini", "--", "node", "dist/main.js" ]
