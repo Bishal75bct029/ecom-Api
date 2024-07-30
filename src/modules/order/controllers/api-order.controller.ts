@@ -99,7 +99,7 @@ export class ApiOrderController {
           {
             amount: {
               currency_code: 'SGD',
-              value: (totalPrice / 100).toFixed(2),
+              value: (totalPrice / 10000).toFixed(2),
             },
           },
         ]),
@@ -152,7 +152,7 @@ export class ApiOrderController {
       ...transaction,
       isSuccess: true,
       responseJson: paypalResponse,
-      paymentGatewayCharge: parseFloat((paypalFee * 100).toFixed(2)),
+      paymentGatewayCharge: getRoundedOffValue(paypalFee * 100),
     });
     return { orderId: savedTransaction.order.id };
   }

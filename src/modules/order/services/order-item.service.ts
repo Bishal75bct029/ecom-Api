@@ -10,7 +10,7 @@ export class OrderItemService extends OrderItemRepository {
     return createOrderDto.productMetaIds.reduce((acc, { quantity, id }) => {
       const pricePerUnit = productMetas.find((meta) => meta.id === id).price;
 
-      return acc + quantity * pricePerUnit;
+      return acc + quantity * Number(pricePerUnit);
     }, 0);
   }
 
