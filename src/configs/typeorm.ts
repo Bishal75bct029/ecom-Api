@@ -18,10 +18,8 @@ export const TYPEORM_CONFIG = {
     duration: 86400 * 1000,
     type: 'ioredis',
     options: {
-      socket: {
-        host: envConfig.REDIS_HOST,
-        port: 6379,
-      },
+      host: envConfig.REDIS_HOST,
+      port: 6379,
     },
   },
 } as DataSourceOptions;
