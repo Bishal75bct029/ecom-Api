@@ -72,7 +72,7 @@ export class ApiOrderController {
       let totalPrice = this.orderItemService.calculateTotalPrice(productMetas, createOrderDto) * 100;
       const discount = await this.schoolDiscountService.findOne({ where: { schoolId } });
       if (discount) {
-        totalPrice = getRoundedOffValue((totalPrice * (1 - discount.discountPercentage / 100)) / 10000);
+        totalPrice = Math.floor(getRoundedOffValue((totalPrice * (1 - discount.discountPercentage / 100)) / 10000));
       }
 
       //save order and order items
