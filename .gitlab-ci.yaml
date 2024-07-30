@@ -1,0 +1,25 @@
+variables:
+  APPLICATION_NAME: ecom-api
+  DOCKER_DRIVER: overlay2
+  FF_USE_FASTZIP: 1
+  FF_SCRIPT_SECTIONS: 1
+  DOCKERFILE_LOCATION: 'Dockerfile'
+
+stages:
+  - test
+  - build
+  - deploy-dev
+  # - deploy-stage
+  # - deploy-prod
+  # - rollback-prod
+  #
+include:
+  - project: 'innovate-tech/infrasturcture/templates'
+    ref: main
+    file: 'backend/build.yaml'
+  - project: 'innovate-tech/infrasturcture/templates'
+    ref: main
+    file: 'backend/deploy-hsa.yaml'
+  - project: 'innovate-tech/infrasturcture/templates'
+    ref: main
+    file: 'security/trivy-backend.yaml'
