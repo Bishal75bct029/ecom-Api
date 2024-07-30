@@ -4,6 +4,7 @@ WORKDIR /usr/src/app
 
 COPY . .
 
+RUN apk add --no-cache tini
 RUN npm install -g pnpm
 RUN pnpm i
 
