@@ -1,7 +1,7 @@
 import { Controller, Get, NotFoundException, Param, Query, Req } from '@nestjs/common';
 import { ProductService } from '../services';
 import { Request } from 'express';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FindManyOptions, ILike, In, IsNull, Not } from 'typeorm';
 import { SchoolDiscountService } from '@/modules/school-discount/services/schoolDiscount.service';
 import { CategoryService } from '@/modules/category/services/category.service';
@@ -12,6 +12,7 @@ import { getPaginatedResponse } from '@/common/utils';
 import { SimilarProductsDto } from '../dto/similarProducts.dto';
 
 @ApiTags('Api Product')
+@ApiBearerAuth()
 @Controller('api/products')
 export class ApiProductController {
   constructor(

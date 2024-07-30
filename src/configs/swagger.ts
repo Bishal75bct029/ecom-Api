@@ -6,14 +6,14 @@ export const swaggerSetup = (app: INestApplication) => {
     .setTitle('Ecommerce API')
     .setDescription('API routes for Ecommerce Application')
     .setVersion('1.0')
-    .addCookieAuth('accessCookie')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
 
   const swaggerOptions: SwaggerCustomOptions = {
     swaggerOptions: {
-      withCredentials: true,
+      persistAuthorization: true,
     },
   };
 
