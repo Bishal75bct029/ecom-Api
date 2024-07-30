@@ -49,7 +49,7 @@ export class TransactionEntity extends BaseEntity {
   })
   price: number;
 
-  @OneToOne(() => OrderEntity)
+  @OneToOne(() => OrderEntity, (order) => order.transaction)
   @JoinColumn()
   order: OrderEntity;
 

@@ -1,8 +1,9 @@
 import { BaseEntity } from '@/libs/entity/base.entity';
 import { UserEntity } from '@/modules/user/entities/user.entity';
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 import { OrderItemEntity } from './order-item.entity';
 import { DiscountEntity } from '@/modules/discount/entity/discount.entity';
+import { TransactionEntity } from '@/modules/transaction/entities/transaction.entity';
 
 export enum OrderStatusEnum {
   PLACED = 'PLACED',
@@ -39,4 +40,7 @@ export class OrderEntity extends BaseEntity {
 
   @ManyToOne(() => DiscountEntity, (discount) => discount.orders)
   discount: DiscountEntity;
+
+  @OneToOne(() => TransactionEntity, (transaction) => transaction.order)
+  transaction: TransactionEntity;
 }
