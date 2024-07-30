@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req, BadRequestException, Query, Get } from '@nestjs/common';
+import { Controller, Post, Body, Req, BadRequestException, Query, Get, Param } from '@nestjs/common';
 import { Request } from 'express';
 import { DataSource, In } from 'typeorm';
 import { CreateOrderDto } from '../dto/create-order.dto';
@@ -16,7 +16,10 @@ import { CartService } from '@/modules/cart/services/cart.service';
 import { CartEntity } from '@/modules/cart/entities/cart.entity';
 import { CapturePaymentDto } from '@/modules/transaction/dto/capture-payment.dto';
 import { OrderService } from '../services/order.service';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('API Order')
+@ApiBearerAuth()
 @Controller('api/orders')
 export class ApiOrderController {
   constructor(
@@ -125,7 +128,7 @@ export class ApiOrderController {
       ]);
 
       const approvalUrl = paypalPaymentPayload?.result.links.find((item: any) => item.rel === 'approve').href;
-      return { approvalUrl };
+      return { approvalUrl, orderId: order.id };
     });
   }
 
@@ -151,7 +154,36 @@ export class ApiOrderController {
   @Get()
   listOrders(@Req() { currentUser }: Request) {
     return this.orderService.find({
-      where: { user: { id: currentUser.id } },
+      where: { user: { id: currentUser.id }, transaction: { isSuccess: true } },
+      relations: ['orderItems', 'orderItems.productMeta', 'orderItems.productMeta.product', 'transaction'],
+      select: {
+        orderItems: {
+          id: true,
+          pricePerUnit: true,
+          quantity: true,
+          totalPrice: true,
+          productMeta: {
+            id: true,
+            image: true,
+            price: true,
+            variant: {},
+            product: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        transaction: {
+          isSuccess: true,
+        },
+      },
+    });
+  }
+
+  @Get(':id')
+  getOrderById(@Req() { currentUser }: Request, @Param('id') id: string) {
+    return this.orderService.findOne({
+      where: { user: { id: currentUser.id }, id, transaction: { isSuccess: true } },
       relations: ['orderItems', 'orderItems.productMeta', 'orderItems.productMeta.product'],
       select: {
         orderItems: {
@@ -170,6 +202,7 @@ export class ApiOrderController {
             },
           },
         },
+        transaction: { isSuccess: true },
       },
     });
   }
