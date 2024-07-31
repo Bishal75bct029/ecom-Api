@@ -26,4 +26,12 @@ export class GetProductsFilteredListDto {
   @IsEnum(ProductSortQueryEnum)
   @IsOptional()
   sortBy: ProductSortQueryEnum;
+
+  @IsNumber()
+  @IsOptional()
+  minPrice: number;
+
+  @IsNumber()
+  @IsOptional()
+  maxPrice: number;
 }
