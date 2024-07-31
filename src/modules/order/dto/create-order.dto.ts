@@ -23,5 +23,10 @@ class CreateOrderProductMetaDto {
 
 export class OrderQueryDto {
   @IsString()
-  status: string;
+  status: OrderQueryEnum;
+}
+
+export enum OrderQueryEnum {
+  ALL = 'all',
+  PENDING = 'pending',
 }

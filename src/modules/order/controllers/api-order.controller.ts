@@ -1,7 +1,7 @@
 import { Controller, Post, Body, Req, BadRequestException, Query, Get, Param } from '@nestjs/common';
 import { Request } from 'express';
 import { DataSource, FindOptionsWhere, In, Not } from 'typeorm';
-import { CreateOrderDto, OrderQueryDto } from '../dto/create-order.dto';
+import { CreateOrderDto, OrderQueryDto, OrderQueryEnum } from '../dto/create-order.dto';
 import { ProductMetaService } from '@/modules/product/services/product-meta.service';
 import { OrderItemService } from '../services/order-item.service';
 import { OrderEntity, OrderStatusEnum } from '../entities/order.entity';
@@ -167,8 +167,8 @@ export class ApiOrderController {
       user: { id: currentUser.id },
       transaction: { isSuccess: true },
     };
-    if (status && status !== 'all') {
-      whereClause = { ...whereClause, status: Not(OrderStatusEnum.DELIVERED) };
+    if (status && status == OrderQueryEnum.PENDING) {
+      whereClause = { ...whereClause, status: Not(In([OrderStatusEnum.DELIVERED, OrderStatusEnum.CANCELLED])) };
     }
     const orders = await this.orderService.find({
       where: whereClause,
