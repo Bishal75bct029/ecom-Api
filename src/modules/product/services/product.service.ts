@@ -30,7 +30,7 @@ export class ProductService extends ProductRepository {
       ...products,
       productMeta: products.productMeta.map((meta) => ({
         ...meta,
-        price: getRoundedOffValue(Number(meta.price / 10000)),
+        price: getRoundedOffValue(Number(meta.price) / 10000),
         discountPrice: getRoundedOffValue((Number(meta.price) * (1 - discountPercentage / 100)) / 10000),
         discountPercentage: discountPercentage ?? 0,
       })),

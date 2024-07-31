@@ -20,3 +20,8 @@ class CreateOrderProductMetaDto {
   @IsNotEmpty()
   quantity: number;
 }
+
+export class OrderQueryDto {
+  @IsString()
+  status: string;
+}
