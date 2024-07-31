@@ -2,7 +2,7 @@ import { Controller, Get, NotFoundException, Param, Query, Req } from '@nestjs/c
 import { ProductService } from '../services';
 import { Request } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { FindManyOptions, ILike, In, IsNull, Not } from 'typeorm';
+import { Between, FindManyOptions, ILike, In, IsNull, Not } from 'typeorm';
 import { SchoolDiscountService } from '@/modules/school-discount/services/schoolDiscount.service';
 import { CategoryService } from '@/modules/category/services/category.service';
 import { getAllTreeIds } from '../helpers/flattenTree.util';
@@ -35,9 +35,9 @@ export class ApiProductController {
     if (dto.categoryId) {
       const existingCategory = await this.categoryService.findOne({ where: { id: dto.categoryId } });
       if (!existingCategory) throw new NotFoundException('Category not found');
-      const categoryTrees = await this.categoryService.findDescendantsTree(existingCategory);
-      const categoryIds = getAllTreeIds(categoryTrees);
-      whereQuery['categories'] = { id: In(categoryIds) };
+      // const categoryTrees = await this.categoryService.findDescendantsTree(existingCategory);
+      // const categoryIds = getAllTreeIds(categoryTrees);
+      whereQuery['categories'] = { id: In([existingCategory.id]) };
     }
 
     if (dto.search) {
@@ -58,6 +58,10 @@ export class ApiProductController {
         default:
           break;
       }
+    }
+
+    if (dto.maxPrice && dto.minPrice) {
+      whereQuery['productMeta'] = { price: Between(dto.minPrice * 100, dto.maxPrice * 100) };
     }
 
     const [products, count] = await this.productService.findAndCount({
