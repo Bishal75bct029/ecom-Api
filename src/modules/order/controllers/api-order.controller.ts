@@ -103,7 +103,7 @@ export class ApiOrderController {
           {
             amount: {
               currency_code: 'SGD',
-              value: (totalPrice / 100).toFixed(2),
+              value: (totalPrice / 10000).toFixed(2),
             },
           },
         ]),
@@ -133,7 +133,7 @@ export class ApiOrderController {
       ]);
 
       const approvalUrl = paypalPaymentPayload?.result.links.find((item: any) => item.rel === 'approve').href;
-      return { approvalUrl, orderId: order.id };
+      return { approvalUrl };
     });
   }
 
@@ -141,19 +141,24 @@ export class ApiOrderController {
   async confirmOrder(@Query() query: CapturePaymentDto) {
     const { token } = query;
 
-    const transaction = await this.transactionService.findOne({ where: { transactionId: token, isSuccess: false } });
+    const transaction = await this.transactionService.findOne({
+      where: { transactionId: token, isSuccess: false },
+      relations: ['order'],
+      select: { order: { id: true } },
+    });
     if (!transaction) throw new BadRequestException('Sorry, failed to place order. Please try again later.');
 
     const paypalResponse = await this.paypalService.captureOrder(token);
     const paypalFee =
       paypalResponse.result.purchase_units[0].payments.captures[0].seller_receivable_breakdown?.paypal_fee.value || 0;
 
-    return await this.transactionService.save({
+    const savedTransaction = await this.transactionService.save({
       ...transaction,
       isSuccess: true,
       responseJson: paypalResponse,
-      paymentGatewayCharge: parseFloat((paypalFee * 100).toFixed(2)),
+      paymentGatewayCharge: getRoundedOffValue(paypalFee * 100),
     });
+    return { orderId: savedTransaction.order.id };
   }
 
   @Get()

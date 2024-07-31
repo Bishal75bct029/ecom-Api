@@ -1,0 +1,112 @@
+environment: development
+###################################################
+###################################################
+app:
+  name: ecom-api
+  defaultLables:
+  nameOverride: ecom-api
+  fullnameOverride: ecom-api
+###################################################
+###################################################
+configReloader:
+  enabled: true
+###################################################
+###################################################
+containerPort:
+  http: 4000
+
+service:
+  enabled: true
+
+scaling:
+  enabled: true
+  replicas:
+    max: 3
+    min: 1
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 50%
+###################################################
+###################################################
+kubeProbe:
+  enabled: true
+  liveness:
+    failureThreshold: 3
+    httpGet:
+      path: '/health'
+      port: 4000
+    initialDelaySeconds: 15
+    periodSeconds: 20
+    timeoutSeconds: 15
+  readiness:
+    failureThreshold: 2
+    httpGet:
+      path: '/health'
+      port: 4000
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+###################################################
+###################################################
+secrets:
+  enabled: true
+  secretStore:
+    name: secretstore
+    kind: SecretStore
+    refreshInterval: '10s'
+
+envFromSecret:
+  enabled: true #false #true
+  secretNames:
+    - env
+
+###################################################
+### Ingress
+###################################################
+ingress:
+  enabled: true #false
+  hosts:
+    - host: ecom-api.innovatetech.io
+      paths:
+        - path: /*
+  log_bucket: ''
+  certificate_arn: arn:aws:acm:ap-southeast-1:759280025909:certificate/79c58c60-aaa8-4264-9fad-afb6d12a689a
+  #extraPath:
+  #  - path: /*
+  #    backend:
+  #      service:
+  #        name: ssl-redirect
+  #        port:
+  #          name: use-annotation
+  #    pathType: ImplementationSpecific
+###################################################
+###################################################
+nodeSelector: {}
+affinity: {}
+tolerations: {}
+###################################################
+###################################################
+securityContext: #{}
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  #runAsUser: 1000
+  #runAsGroup: 1000
+  #fsGroup: 1000
+
+containerSecurityContext:
+  {}
+  #readOnlyRootFilesystem: true
+  #runAsNonRoot: true
+  #runAsUser: 1000
+  #runAsGroup: 1000
+  #fsGroup: 1000
+  #allowPrivilegeEscalation: false
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # seccompProfile:
+  #   type: RuntimeDefault
+
+container:
+  command: 'tini -- node dist/main.js'
