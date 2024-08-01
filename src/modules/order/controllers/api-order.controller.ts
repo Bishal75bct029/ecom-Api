@@ -143,8 +143,29 @@ export class ApiOrderController {
 
     const transaction = await this.transactionService.findOne({
       where: { transactionId: token, isSuccess: false },
-      relations: ['order'],
-      select: { order: { id: true } },
+      relations: ['order', 'order.orderItems', 'order.orderItems.productMeta', 'order.orderItems.productMeta.product'],
+      select: {
+        order: {
+          id: true,
+          totalPrice: true,
+          status: true,
+          orderItems: {
+            id: true,
+            pricePerUnit: true,
+            quantity: true,
+            totalPrice: true,
+            productMeta: {
+              id: true,
+              image: true,
+              variant: {},
+              product: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
     });
     if (!transaction) throw new BadRequestException('Sorry, failed to place order. Please try again later.');
 
@@ -152,13 +173,14 @@ export class ApiOrderController {
     const paypalFee =
       paypalResponse.result.purchase_units[0].payments.captures[0].seller_receivable_breakdown?.paypal_fee.value || 0;
 
-    const savedTransaction = await this.transactionService.save({
+    await this.transactionService.save({
       ...transaction,
       isSuccess: true,
       responseJson: paypalResponse,
       paymentGatewayCharge: getRoundedOffValue(paypalFee * 100),
     });
-    return { orderId: savedTransaction.order.id };
+
+    return transaction.order;
   }
 
   @Get()
@@ -174,6 +196,7 @@ export class ApiOrderController {
       where: whereClause,
       relations: ['orderItems', 'orderItems.productMeta', 'orderItems.productMeta.product', 'transaction'],
       select: {
+        id: true,
         orderItems: {
           id: true,
           quantity: true,
@@ -221,6 +244,9 @@ export class ApiOrderController {
       },
       relations: ['orderItems', 'orderItems.productMeta', 'orderItems.productMeta.product'],
       select: {
+        id: true,
+        totalPrice: true,
+        status: true,
         orderItems: {
           id: true,
           pricePerUnit: true,
