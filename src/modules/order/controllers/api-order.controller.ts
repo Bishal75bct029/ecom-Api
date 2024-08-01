@@ -103,7 +103,7 @@ export class ApiOrderController {
           {
             amount: {
               currency_code: 'SGD',
-              value: (totalPrice / 10000).toFixed(2),
+              value: (totalPrice / 100).toFixed(2),
             },
           },
         ]),
