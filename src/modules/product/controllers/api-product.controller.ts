@@ -201,4 +201,38 @@ export class ApiProductController {
       ? this.productService.getDiscountedProducts(product, schoolDiscount.discountPercentage)
       : this.productService.getDiscountedProducts(product);
   }
+
+  @Get('meta/:id')
+  async getProductByMetaId(@Param('id') id: string, @Req() { currentUser }: Request) {
+    const { schoolId } = currentUser;
+
+    const product = await this.productService.findOne({
+      where: { productMeta: { id } },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        productMeta: {
+          image: true,
+          price: true,
+          id: true,
+          stock: true,
+          variant: {},
+        },
+      },
+      relations: ['productMeta'],
+    });
+
+    if (!schoolId) return this.productService.getDiscountedProducts(product);
+
+    const schoolDiscount = await this.schoolDiscountService.findOne({
+      where: { schoolId },
+      select: ['discountPercentage'],
+      cache: true,
+    });
+
+    return schoolDiscount
+      ? this.productService.getDiscountedProducts(product, schoolDiscount.discountPercentage)
+      : this.productService.getDiscountedProducts(product);
+  }
 }
