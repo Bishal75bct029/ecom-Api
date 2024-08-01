@@ -195,11 +195,17 @@ export class ApiOrderController {
     const orders = await this.orderService.find({
       where: whereClause,
       relations: ['orderItems', 'orderItems.productMeta', 'orderItems.productMeta.product', 'transaction'],
+      order: { createdAt: 'DESC' },
       select: {
         id: true,
+        totalPrice: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
         orderItems: {
           id: true,
           quantity: true,
+          pricePerUnit: true,
           totalPrice: true,
           productMeta: {
             id: true,
