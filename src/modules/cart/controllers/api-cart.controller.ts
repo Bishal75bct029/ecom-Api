@@ -102,7 +102,6 @@ export class ApiCartController {
         user: {
           id: req.currentUser.id,
         },
-        productMetaId: In(createCartDto.productMetaId),
       },
     });
 
