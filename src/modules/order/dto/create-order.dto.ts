@@ -20,3 +20,13 @@ class CreateOrderProductMetaDto {
   @IsNotEmpty()
   quantity: number;
 }
+
+export class OrderQueryDto {
+  @IsString()
+  status: OrderQueryEnum;
+}
+
+export enum OrderQueryEnum {
+  ALL = 'all',
+  PENDING = 'pending',
+}

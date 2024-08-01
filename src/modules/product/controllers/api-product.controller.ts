@@ -60,7 +60,7 @@ export class ApiProductController {
       }
     }
 
-    if (dto.maxPrice && dto.minPrice) {
+    if (dto.maxPrice !== undefined && dto.minPrice !== undefined) {
       whereQuery['productMeta'] = { price: Between(dto.minPrice * 100, dto.maxPrice * 100) };
     }
 

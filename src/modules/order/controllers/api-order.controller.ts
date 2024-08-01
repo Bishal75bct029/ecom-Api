@@ -1,10 +1,10 @@
 import { Controller, Post, Body, Req, BadRequestException, Query, Get, Param } from '@nestjs/common';
 import { Request } from 'express';
-import { DataSource, In } from 'typeorm';
-import { CreateOrderDto } from '../dto/create-order.dto';
+import { DataSource, FindOptionsWhere, In, Not } from 'typeorm';
+import { CreateOrderDto, OrderQueryDto, OrderQueryEnum } from '../dto/create-order.dto';
 import { ProductMetaService } from '@/modules/product/services/product-meta.service';
 import { OrderItemService } from '../services/order-item.service';
-import { OrderEntity } from '../entities/order.entity';
+import { OrderEntity, OrderStatusEnum } from '../entities/order.entity';
 import { OrderItemEntity } from '../entities/order-item.entity';
 import { PaymentMethodService } from '@/modules/payment-method/services/payment-method.service';
 import { TransactionService } from '@/modules/transaction/services/transaction.service';
@@ -69,10 +69,10 @@ export class ApiOrderController {
       await entityManager.save(ProductMetaEntity, decreaseProductMetaQuantities);
 
       //calculate total price with discount if any
-      let totalPrice = this.orderItemService.calculateTotalPrice(productMetas, createOrderDto) * 100;
+      let totalPrice = this.orderItemService.calculateTotalPrice(productMetas, createOrderDto);
       const discount = await this.schoolDiscountService.findOne({ where: { schoolId } });
       if (discount) {
-        totalPrice = Math.floor(getRoundedOffValue((totalPrice * (1 - discount.discountPercentage / 100)) / 10000));
+        totalPrice = Math.floor(getRoundedOffValue((totalPrice * (1 - discount.discountPercentage / 100)) / 100));
       }
 
       //save order and order items
@@ -82,11 +82,15 @@ export class ApiOrderController {
       });
       const orderItems = productMetas.map((productMeta) => {
         const quantity = createOrderDto.productMetaIds.find(({ id }) => id === productMeta.id).quantity;
+        const pricePerUnit = Math.floor(
+          getRoundedOffValue((Number(productMeta.price) * (1 - discount.discountPercentage / 100)) / 100),
+        );
+
         return {
           productMeta,
-          pricePerUnit: productMeta.price,
+          pricePerUnit,
           quantity,
-          totalPrice,
+          totalPrice: quantity * pricePerUnit,
           order,
         };
       });
@@ -158,14 +162,20 @@ export class ApiOrderController {
   }
 
   @Get()
-  getOrders(@Req() { currentUser }: Request) {
-    return this.orderService.find({
-      where: { user: { id: currentUser.id }, transaction: { isSuccess: true } },
+  async getOrders(@Req() { currentUser }: Request, @Query() { status }: OrderQueryDto) {
+    let whereClause: FindOptionsWhere<OrderEntity> = {
+      user: { id: currentUser.id },
+      transaction: { isSuccess: true },
+    };
+    if (status && status == OrderQueryEnum.PENDING) {
+      whereClause = { ...whereClause, status: Not(In([OrderStatusEnum.DELIVERED, OrderStatusEnum.CANCELLED])) };
+    }
+    const orders = await this.orderService.find({
+      where: whereClause,
       relations: ['orderItems', 'orderItems.productMeta', 'orderItems.productMeta.product', 'transaction'],
       select: {
         orderItems: {
           id: true,
-          pricePerUnit: true,
           quantity: true,
           totalPrice: true,
           productMeta: {
@@ -184,12 +194,31 @@ export class ApiOrderController {
         },
       },
     });
+    return orders.map((order) => {
+      return {
+        ...order,
+        orderItems: order.orderItems.map((orderItem) => {
+          return {
+            ...orderItem,
+            pricePerUnit: Number(orderItem.totalPrice) / 100,
+            productMeta: {
+              ...orderItem.productMeta,
+              price: (Number(orderItem.productMeta.price) / 100) * orderItem.quantity,
+            },
+          };
+        }),
+      };
+    });
   }
 
   @Get(':id')
   getOrderById(@Req() { currentUser }: Request, @Param('id') id: string) {
     return this.orderService.findOne({
-      where: { user: { id: currentUser.id }, id, transaction: { isSuccess: true } },
+      where: {
+        user: { id: currentUser.id },
+        id,
+        transaction: { isSuccess: true },
+      },
       relations: ['orderItems', 'orderItems.productMeta', 'orderItems.productMeta.product'],
       select: {
         orderItems: {
