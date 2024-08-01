@@ -220,6 +220,7 @@ export class ApiOrderController {
         },
         transaction: {
           isSuccess: true,
+          transactionId: true,
         },
       },
     });
