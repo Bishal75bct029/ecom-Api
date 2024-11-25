@@ -31,6 +31,14 @@ export class UserService extends AbstractService<UserEntity> {
     ]);
   }
 
+  async verifyJWT(token, role: UserRoleEnum) {
+    return this.jwtService.verifyAsync<UserJwtPayload>(token, {
+      secret: role === 'ADMIN' ? envConfig.ADMIN_JWT_SECRET : envConfig.API_JWT_SECRET,
+      issuer: role === 'ADMIN' ? envConfig.ADMIN_JWT_ISSUER : envConfig.API_JWT_ISSUER,
+      audience: role === 'ADMIN' ? envConfig.ADMIN_JWT_AUDIENCE : envConfig.API_JWT_AUDIENCE,
+    });
+  }
+
   async login(loginUserDto: LoginUserDto) {
     const user = await this.findOne({ where: { email: loginUserDto.email } });
 

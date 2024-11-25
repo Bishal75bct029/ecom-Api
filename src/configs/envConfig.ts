@@ -10,8 +10,8 @@ export const envConfig = cleanEnv(process.env, {
   NODE_ENV: str({ default: 'local', choices: ['local', 'development', 'staging', 'production'] }),
   PORT: port({ default: 3000 }),
 
-  ECOM_USER_INT: str(),
-  ECOM_USER_INT_API: str(),
+  ECOM_USER_INTERACTION: str(),
+  ECOM_USER_INTERACTION_API: str(),
 
   ADMIN_JWT_SECRET: str(),
   ADMIN_JWT_ISSUER: str(),
@@ -34,6 +34,7 @@ export const envConfig = cleanEnv(process.env, {
   AWS_REGION: str(),
 
   ALLOWED_ORIGINS: str(),
+  PASSWORD_RESET_DOMAIN: str(),
 
   PAYPAL_CLIENT_ID: str(),
   PAYPAL_CLIENT_SECRET: str(),
