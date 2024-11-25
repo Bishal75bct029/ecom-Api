@@ -7,6 +7,7 @@ import { CreateAddressDto } from '../dto/address.dto';
 import { AddressService } from '../services/address.service';
 import { UserRoleEnum } from '../entities/user.entity';
 import { envConfig } from '@/configs/envConfig';
+import { UserJwtPayload } from '@/@types';
 
 @ApiTags('API User')
 @Controller('api/users')
@@ -83,7 +84,7 @@ export class ApiUserController {
           contact: true,
         },
         cart: {
-          productMetaId: true,
+          cartItems: true,
         },
       },
       relations: ['addresses', 'cart'],

@@ -14,6 +14,7 @@ import { DiscountModule } from './modules/discount/discount.module';
 import { ApiAuthorizationMiddleware } from './common/middlewares/api/api-authorization.middleware';
 import { PaymentMethodModule } from './modules/payment-method/payment-method.module';
 import { TransactionModule } from './modules/transaction/transaction.module';
+import { HttpsModule } from './modules/https/https.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { TransactionModule } from './modules/transaction/transaction.module';
     DiscountModule,
     PaymentMethodModule,
     TransactionModule,
+    HttpsModule,
   ],
   controllers: [AppController],
   providers: [

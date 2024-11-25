@@ -1,8 +1,12 @@
-import { ArrayMinSize, IsNotEmpty, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsUUID } from 'class-validator';
 
 export class CreateCartDto {
-  @IsUUID('all', { each: true })
+  @IsUUID()
   @IsNotEmpty()
-  @ArrayMinSize(1)
-  productMetaId: string[];
+  productMetaId: string;
+
+  @IsNumber()
+  quantity: number;
 }
+
+export interface RemoveCartDto extends Pick<CreateCartDto, 'productMetaId'> {}

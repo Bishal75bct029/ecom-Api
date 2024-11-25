@@ -1,3 +1,4 @@
+import { UserJwtPayload } from '@/@types';
 import { envConfig } from '@/configs/envConfig';
 import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';

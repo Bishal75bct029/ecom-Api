@@ -1,5 +1,5 @@
 import { OmitType, PickType } from '@nestjs/swagger';
-import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsInt, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class CreateAdminUserDto {
   @IsNotEmpty()
@@ -29,7 +29,28 @@ export class LoginUserDto extends PickType(CreateAdminUserDto, ['email', 'passwo
   role: string;
 }
 
-export class ValidateOtpDto extends PickType(CreateAdminUserDto, ['email']) {
+export class ForgotPasswordQuery {
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+}
+
+export class ValidateOtpDto extends ForgotPasswordQuery {
+  @IsInt()
+  @IsNotEmpty()
+  otp: number;
+
+  // @IsIn(['login', 'forgotPassword'], { message: "Type must be 'login' or 'forgotPassword'" })
+  // @IsNotEmpty()
+  // type: 'login' | 'forgotPassword';
+}
+
+export class ChangePasswordDto {
   @IsString()
-  otp: string;
+  @IsNotEmpty()
+  token: string;
+
+  @IsString()
+  @IsNotEmpty()
+  password: string;
 }

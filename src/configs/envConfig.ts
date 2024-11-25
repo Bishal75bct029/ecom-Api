@@ -1,7 +1,5 @@
-import * as dotenv from 'dotenv';
+import 'dotenv/config';
 import { cleanEnv, num, port, str, url } from 'envalid';
-
-dotenv.config();
 
 export const envConfig = cleanEnv(process.env, {
   DB_NAME: str(),
@@ -11,6 +9,9 @@ export const envConfig = cleanEnv(process.env, {
   DB_PASSWORD: str(),
   NODE_ENV: str({ default: 'local', choices: ['local', 'development', 'staging', 'production'] }),
   PORT: port({ default: 3000 }),
+
+  ECOM_USER_INT: str(),
+  ECOM_USER_INT_API: str(),
 
   ADMIN_JWT_SECRET: str(),
   ADMIN_JWT_ISSUER: str(),
@@ -23,6 +24,7 @@ export const envConfig = cleanEnv(process.env, {
   API_JWT_AUDIENCE: str(),
 
   REDIS_URL: str(),
+  REDIS_PORT: str(),
   REDIS_HOST: str(),
   REDIS_PREFIX: str(),
 

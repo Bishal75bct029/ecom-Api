@@ -79,7 +79,7 @@ export class AdminUserController {
     if (!user) throw new BadRequestException('Invalid credentials');
 
     const otp = await this.redisService.get(user.email + '_OTP');
-    if (!otp || otp != otpDto.otp) throw new BadRequestException('Invalid Otp');
+    if (!otp || otp != otpDto.otp.toString()) throw new BadRequestException('Invalid Otp');
 
     await this.redisService.delete(user.email + '_OTP');
 

@@ -8,6 +8,11 @@ export class CartEntity extends BaseEntity {
   @JoinColumn()
   user: UserEntity | string;
 
-  @Column({ type: 'simple-array', nullable: false })
-  productMetaId: string[];
+  @Column({ type: 'simple-json', nullable: true })
+  cartItems: CartItem[];
 }
+
+type CartItem = {
+  productMetaId: string;
+  quantity: number;
+};
