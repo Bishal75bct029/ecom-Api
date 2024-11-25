@@ -34,7 +34,7 @@ export const envConfig = cleanEnv(process.env, {
   AWS_REGION: str(),
 
   ALLOWED_ORIGINS: str(),
-  PASSWORD_RESET_DOMAIN: str(),
+  PASSWORD_RESET_URL: str(),
 
   PAYPAL_CLIENT_ID: str(),
   PAYPAL_CLIENT_SECRET: str(),

@@ -58,7 +58,7 @@ export class AdminUserController {
     if (!user) throw new NotFoundException('User not found');
 
     const [token, _] = await this.userService.generateJWTs({ email, role: UserRoleEnum.ADMIN });
-    const url = envConfig.PASSWORD_RESET_DOMAIN + '/reset-password?token=' + token;
+    const url = envConfig.PASSWORD_RESET_URL + '?token=' + token;
 
     await Promise.all([
       this.redisService.set(email + '_PW_RESET_LINK', token, 300),
@@ -146,7 +146,6 @@ export class AdminUserController {
     if (!otp || otp != otpDto.otp) throw new BadRequestException('Invalid Otp');
 
     this.redisService.delete(user.email + '_OTP');
-
     const [token, refreshToken] = await this.userService.generateJWTs({ id: user.id, role: user.role });
 
     return { token, refreshToken };
