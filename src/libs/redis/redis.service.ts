@@ -22,7 +22,7 @@ export class RedisService {
   }
 
   async set(key: string, value: any, expiry?: number): Promise<void> {
-    if (typeof value !== 'string') value = JSON.stringify(value);
+    value = JSON.stringify(value);
 
     if (!expiry) {
       await this.redisClient.set(`${this._prefix}:${key}`, value);

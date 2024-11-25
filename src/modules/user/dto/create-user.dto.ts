@@ -36,9 +36,9 @@ export class ForgotPasswordQuery {
 }
 
 export class ValidateOtpDto extends ForgotPasswordQuery {
-  @IsInt()
+  @IsString()
   @IsNotEmpty()
-  otp: number;
+  otp: string;
 
   // @IsIn(['login', 'forgotPassword'], { message: "Type must be 'login' or 'forgotPassword'" })
   // @IsNotEmpty()
