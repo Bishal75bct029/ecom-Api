@@ -85,7 +85,6 @@ export class ApiProductController {
 
         const productIds = buyCartProductInteractions.map((data) => data.productId);
 
-        console.log(categoryIds);
         const parentCategories = (await Promise.all(
           categoryIds.map(async (categoryId) => {
             const category = await this.categoryService.findOne({
@@ -210,7 +209,7 @@ export class ApiProductController {
       products = [...totalProducts];
       count = totalCount;
     }
-    console.log(schoolId);
+
     if (!schoolId) {
       const discountedProducts = this.productService.getDiscountedProducts(products);
       return {
@@ -225,7 +224,6 @@ export class ApiProductController {
       cache: true,
     });
 
-    console.log(schoolDiscount);
     const discountedProducts = schoolDiscount
       ? this.productService.getDiscountedProducts(products, schoolDiscount.discountPercentage)
       : this.productService.getDiscountedProducts(products);

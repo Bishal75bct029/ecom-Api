@@ -5,7 +5,7 @@ import { UserService } from '../services/user.service';
 import {
   ChangePasswordDto,
   CreateAdminUserDto,
-  ForgotPasswordQuery,
+  ForgotPasswordDto,
   LoginUserDto,
   ValidateOtpDto,
 } from '../dto/create-user.dto';
@@ -51,14 +51,13 @@ export class AdminUserController {
   }
 
   @Post('forgot-password')
-  async forgotPassword(@Query() query: ForgotPasswordQuery) {
-    const { email } = query;
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    const { email } = forgotPasswordDto;
     const user = await this.userService.findOne({ where: { email } });
 
     if (!user) throw new NotFoundException('User not found');
 
     const otp = this.userService.generateOtp();
-    console.log(typeof otp, 'hey man');
     await Promise.all([
       this.redisService.set(email + '_OTP', otp, 90),
       // this.sqsService.sendToQueue({
@@ -81,7 +80,6 @@ export class AdminUserController {
   @Post('validate-password-otp')
   async validateOtp(@Body() { email, otp }: ValidateOtpDto) {
     const redisOtp = await this.redisService.get(email + '_OTP');
-    console.log(typeof redisOtp, typeof otp.toString());
     if (!redisOtp || otp.toString() !== redisOtp) throw new BadRequestException('Invalid Otp');
 
     this.redisService.delete(email + '_OTP');

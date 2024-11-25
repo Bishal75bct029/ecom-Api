@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, NotFoundException, Param, Post } from '@nestjs/common';
 import { CategoryService } from '../services/category.service';
 import { Get } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -33,8 +33,6 @@ export class ApiCategoryController {
       const subCategories = [];
 
       for (const sub of subs) {
-        console.log(sub, 'sub is the');
-
         const subEntity = this.categoryService.create({
           name: sub.name,
           status,
@@ -56,8 +54,6 @@ export class ApiCategoryController {
 
     const parentCategory = parent ? await this.categoryService.findOne({ where: { id: parent } }) : null;
 
-    console.log(parentCategory, 'Parent category');
-
     const category = this.categoryService.create({
       name,
       description,
@@ -70,5 +66,28 @@ export class ApiCategoryController {
     savedCategory.children = await createSubCategories(subCategory, savedCategory, status);
 
     return await this.categoryService.save(savedCategory);
+  }
+
+  @Delete(':id')
+  async deleteCategory(@Param('id') id: string) {
+    const category = await this.categoryService.findOne({
+      where: { id },
+      relations: ['children'],
+    });
+
+    if (!category) throw new NotFoundException('Category not found');
+
+    const deleteChildNodes = (category: CategoryEntity) => {
+      for (const child of category.children) {
+        if (child.children && child.children.length > 0) {
+          deleteChildNodes(child);
+        }
+        this.categoryService.softDelete(child.id);
+      }
+    };
+
+    deleteChildNodes(category);
+
+    await this.categoryService.softDelete(id);
   }
 }
