@@ -172,8 +172,22 @@ export class AdminUserController {
     if (redisOtp) throw new Error('Cannot resend OTP');
 
     const otp = this.userService.generateOtp();
-    await this.redisService.set(email + '_OTP', otp, 300);
+    await Promise.allSettled([
+      this.redisService.set(email + '_OTP', otp.toString(), 300),
+      // this.sqsService.sendToQueue({
+      //   QueueUrl: envConfig.EMAIL_SQS_URL,
+      //   MessageBody: JSON.stringify({
+      //     emailTemplateName: 'OTP',
+      //     templateData: {
+      //       fullName: name,
+      //       OTPCode: otp,
+      //     },
+      //     emailFrom: '',
+      //     toAddress: email,
+      //   }),
+      // }),
+    ]);
 
-    return { otp };
+    return { message: 'OTP resent successfully' };
   }
 }
