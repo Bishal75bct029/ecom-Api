@@ -1,4 +1,4 @@
-import { Controller, Post, Body, BadRequestException, Query, Get, GoneException, Req } from '@nestjs/common';
+import { Controller, Post, Body, BadRequestException, Query, Get, GoneException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { ApiTags } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
@@ -58,15 +58,7 @@ export class AdminUserController {
 
     if (!user) return true;
 
-    const token = await this.jwtService.signAsync(
-      { email },
-      {
-        secret: envConfig.ADMIN_JWT_SECRET,
-        issuer: envConfig.ADMIN_JWT_ISSUER,
-        audience: envConfig.ADMIN_JWT_AUDIENCE,
-        expiresIn: 300,
-      },
-    );
+    const token = await this.userService.generateJWTs({ email, role: UserRoleEnum.ADMIN });
     const url = envConfig.PASSWORD_RESET_URL + '?token=' + token;
     await Promise.all([
       this.redisService.set(email + '_PW_RESET_TOKEN', token, 300),
@@ -106,13 +98,8 @@ export class AdminUserController {
 
   @Post('reset-password')
   async changePassword(@Body() { token, password }: ChangePasswordDto) {
-    let email = '';
-    try {
-      const { email: mail } = await this.userService.verifyJWT(token, UserRoleEnum.ADMIN);
-      email = mail;
-    } catch (error) {
-      throw new GoneException('Your link has expired.');
-    }
+    const { email } = await this.userService.verifyJWT(token, UserRoleEnum.ADMIN);
+
     const user = await this.userService.findOne({ where: { email } });
     if (!user) throw new GoneException('Your link has expired.');
 
@@ -125,7 +112,7 @@ export class AdminUserController {
     if (isOldPassword) {
       throw new BadRequestException("You can't use your old password.");
     }
-    await Promise.allSettled([
+    await Promise.all([
       this.userService.update({ id: user.id }, { password: await bcrypt.hash(password, 10) }),
       this.redisService.delete(email + '_PW_RESET_TOKEN'),
     ]);
