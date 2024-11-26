@@ -59,3 +59,5 @@ export class ChangePasswordDto {
   })
   password: string;
 }
+
+export class ResendOtpDto extends ForgotPasswordDto {}

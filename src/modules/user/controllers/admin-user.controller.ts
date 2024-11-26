@@ -7,6 +7,7 @@ import {
   CreateAdminUserDto,
   ForgotPasswordDto,
   LoginUserDto,
+  ResendOtpDto,
   ValidateOtpDto,
   ValidatePasswordResetTokenQuery,
 } from '../dto/create-user.dto';
@@ -160,5 +161,19 @@ export class AdminUserController {
     const [token, refreshToken] = await this.userService.generateJWTs({ id: user.id, role: user.role });
 
     return { token, refreshToken };
+  }
+
+  @Post('resend-otp')
+  async resendOtp(@Body() { email }: ResendOtpDto) {
+    const user = await this.userService.findOne({ where: { email } });
+    if (!user) return true;
+
+    const redisOtp = await this.redisService.get(email + '_OTP');
+    if (redisOtp) throw new Error('Cannot resend OTP');
+
+    const otp = this.userService.generateOtp();
+    await this.redisService.set(email + '_OTP', otp, 300);
+
+    return { otp };
   }
 }

@@ -31,7 +31,7 @@ export class UserService extends AbstractService<UserEntity> {
     ]);
   }
 
-  async verifyJWT(token, role: UserRoleEnum) {
+  async verifyJWT(token: string, role: UserRoleEnum) {
     return this.jwtService.verifyAsync<UserJwtPayload>(token, {
       secret: role === 'ADMIN' ? envConfig.ADMIN_JWT_SECRET : envConfig.API_JWT_SECRET,
       issuer: role === 'ADMIN' ? envConfig.ADMIN_JWT_ISSUER : envConfig.API_JWT_ISSUER,
