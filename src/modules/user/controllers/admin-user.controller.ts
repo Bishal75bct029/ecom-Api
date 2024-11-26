@@ -1,4 +1,4 @@
-import { Controller, Post, Body, BadRequestException, Query, Get, GoneException } from '@nestjs/common';
+import { Controller, Post, Body, BadRequestException, Query, Get, GoneException, Req } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { ApiTags } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
@@ -68,20 +68,25 @@ export class AdminUserController {
       },
     );
     const url = envConfig.PASSWORD_RESET_URL + '?token=' + token;
-    await Promise.allSettled([
+    await Promise.all([
       this.redisService.set(email + '_PW_RESET_TOKEN', token, 300),
-      // this.sqsService.sendToQueue({
-      //   QueueUrl: envConfig.EMAIL_SQS_URL,
-      //   MessageBody: JSON.stringify({
-      //     emailTemplateName: 'OTP',
-      //     templateData: {
-      //       fullName: user.name,
-      //       OTPCode: otp,
-      //     },
-      //     emailFrom: '',
-      //     toAddress: email,
-      //   }),
-      // }),
+      this.sqsService.sendToQueue({
+        QueueUrl: envConfig.EMAIL_SQS_URL,
+        MessageBody: JSON.stringify({
+          emailTemplateName: 'General',
+          templateData: {
+            subject: 'Forgot Password Request',
+            fullName: user.name,
+            message: `
+           Forgot your password?
+           We received a request to reset your password.
+           To reset your password copy and paste the link below or click it. This link will be valid for 5 minutes.
+           ${url}`,
+          },
+          emailFrom: 'Ecommerce<noreply@innovatetech.io>',
+          toAddress: email,
+        }),
+      }),
     ]);
 
     return true;
@@ -101,7 +106,13 @@ export class AdminUserController {
 
   @Post('reset-password')
   async changePassword(@Body() { token, password }: ChangePasswordDto) {
-    const { email } = await this.userService.verifyJWT(token, UserRoleEnum.ADMIN);
+    let email = '';
+    try {
+      const { email: mail } = await this.userService.verifyJWT(token, UserRoleEnum.ADMIN);
+      email = mail;
+    } catch (error) {
+      throw new GoneException('Your link has expired.');
+    }
     const user = await this.userService.findOne({ where: { email } });
     if (!user) throw new GoneException('Your link has expired.');
 
@@ -109,6 +120,11 @@ export class AdminUserController {
     if (!redisPasswordResetToken || redisPasswordResetToken !== token)
       throw new GoneException('Your link has expired.');
 
+    const isOldPassword = await bcrypt.compare(password, user.password);
+
+    if (isOldPassword) {
+      throw new BadRequestException("You can't use your old password.");
+    }
     await Promise.allSettled([
       this.userService.update({ id: user.id }, { password: await bcrypt.hash(password, 10) }),
       this.redisService.delete(email + '_PW_RESET_TOKEN'),
@@ -126,20 +142,20 @@ export class AdminUserController {
     if (isOtpEnabled) {
       const otp = this.userService.generateOtp();
 
-      await Promise.allSettled([
+      await Promise.all([
         this.redisService.set(email + '_OTP', otp.toString(), 300),
-        // this.sqsService.sendToQueue({
-        //   QueueUrl: envConfig.EMAIL_SQS_URL,
-        //   MessageBody: JSON.stringify({
-        //     emailTemplateName: 'OTP',
-        //     templateData: {
-        //       fullName: name,
-        //       OTPCode: otp,
-        //     },
-        //     emailFrom: '',
-        //     toAddress: email,
-        //   }),
-        // }),
+        this.sqsService.sendToQueue({
+          QueueUrl: envConfig.EMAIL_SQS_URL,
+          MessageBody: JSON.stringify({
+            emailTemplateName: 'NepalOTP',
+            templateData: {
+              fullName: name,
+              OTPCode: otp,
+            },
+            emailFrom: 'Ecommerce<noreply@innovatetech.io>',
+            toAddress: email,
+          }),
+        }),
       ]);
 
       return { message: 'OTP sent successfully.', isOtpEnabled };
@@ -172,22 +188,23 @@ export class AdminUserController {
     if (redisOtp) throw new Error('Cannot resend OTP');
 
     const otp = this.userService.generateOtp();
-    await Promise.allSettled([
+
+    await Promise.all([
       this.redisService.set(email + '_OTP', otp.toString(), 300),
-      // this.sqsService.sendToQueue({
-      //   QueueUrl: envConfig.EMAIL_SQS_URL,
-      //   MessageBody: JSON.stringify({
-      //     emailTemplateName: 'OTP',
-      //     templateData: {
-      //       fullName: name,
-      //       OTPCode: otp,
-      //     },
-      //     emailFrom: '',
-      //     toAddress: email,
-      //   }),
-      // }),
+      this.sqsService.sendToQueue({
+        QueueUrl: envConfig.EMAIL_SQS_URL,
+        MessageBody: JSON.stringify({
+          emailTemplateName: 'NepalOTP',
+          templateData: {
+            fullName: user.name,
+            OTPCode: otp,
+          },
+          emailFrom: 'Ecommerce<noreply@innovatetech.io>',
+          toAddress: email,
+        }),
+      }),
     ]);
 
-    return { message: 'OTP resent successfully' };
+    return true;
   }
 }

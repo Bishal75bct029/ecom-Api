@@ -55,7 +55,7 @@ export class ChangePasswordDto {
   @IsNotEmpty()
   @Matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/, {
     message:
-      'Password must have at least one uppercase letter, one number, one special character, and be at least 8 characters long',
+      'Password must have at least 1 uppercase letter, 1 number, 1 special character, and be at least 8 characters long',
   })
   password: string;
 }
