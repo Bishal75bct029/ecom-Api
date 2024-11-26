@@ -1,4 +1,4 @@
-import { Controller, Post, Body, BadRequestException, NotFoundException, Query } from '@nestjs/common';
+import { Controller, Post, Body, BadRequestException, Query, Get, GoneException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { ApiTags } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
@@ -55,13 +55,20 @@ export class AdminUserController {
     const { email } = forgotPasswordDto;
     const user = await this.userService.findOne({ where: { email } });
 
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) return true;
 
-    const [token, _] = await this.userService.generateJWTs({ email, role: UserRoleEnum.ADMIN });
+    const token = await this.jwtService.signAsync(
+      { email },
+      {
+        secret: envConfig.ADMIN_JWT_SECRET,
+        issuer: envConfig.ADMIN_JWT_ISSUER,
+        audience: envConfig.ADMIN_JWT_AUDIENCE,
+        expiresIn: 300,
+      },
+    );
     const url = envConfig.PASSWORD_RESET_URL + '?token=' + token;
-
-    await Promise.all([
-      this.redisService.set(email + '_PW_RESET_LINK', token, 300),
+    await Promise.allSettled([
+      this.redisService.set(email + '_PW_RESET_TOKEN', token, 300),
       // this.sqsService.sendToQueue({
       //   QueueUrl: envConfig.EMAIL_SQS_URL,
       //   MessageBody: JSON.stringify({
@@ -76,31 +83,35 @@ export class AdminUserController {
       // }),
     ]);
 
-    return { message: 'Password reset link sent successfully.', url };
+    return true;
   }
 
-  @Post('validate-password-link')
+  @Get('validate-password-link')
   async validateOtp(@Query() { token }: ValidatePasswordResetTokenQuery) {
-    const { email } = await this.userService.verifyJWT(token, UserRoleEnum.ADMIN);
-    const redisPasswordResetLink = await this.redisService.get(email + '_PW_RESET_LINK');
-    if (!redisPasswordResetLink || redisPasswordResetLink !== token) throw new BadRequestException('Invalid Link');
-
-    return true;
+    try {
+      const { email } = await this.userService.verifyJWT(token, UserRoleEnum.ADMIN);
+      const redisPasswordResetToken = await this.redisService.get(email + '_PW_RESET_TOKEN');
+      if (!redisPasswordResetToken || redisPasswordResetToken !== token) throw new Error();
+      return true;
+    } catch (error) {
+      throw new GoneException('Your link has expired.');
+    }
   }
 
   @Post('reset-password')
   async changePassword(@Body() { token, password }: ChangePasswordDto) {
     const { email } = await this.userService.verifyJWT(token, UserRoleEnum.ADMIN);
     const user = await this.userService.findOne({ where: { email } });
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new GoneException('Your link has expired.');
 
-    const redisPasswordResetLink = await this.redisService.get(email + '_PW_RESET_LINK');
-    console.log(token, 'get \n', redisPasswordResetLink, 'token is here');
-    if (!redisPasswordResetLink || redisPasswordResetLink !== token) throw new BadRequestException('Invalid Link');
+    const redisPasswordResetToken = await this.redisService.get(email + '_PW_RESET_TOKEN');
+    if (!redisPasswordResetToken || redisPasswordResetToken !== token)
+      throw new GoneException('Your link has expired.');
 
-    await this.userService.update({ id: user.id }, { password: await bcrypt.hash(password, 10) });
-    this.redisService.delete(email + '_PW_RESET_LINK');
-
+    await Promise.allSettled([
+      this.userService.update({ id: user.id }, { password: await bcrypt.hash(password, 10) }),
+      this.redisService.delete(email + '_PW_RESET_TOKEN'),
+    ]);
     return { message: 'Password changed successfully' };
   }
 
@@ -114,20 +125,20 @@ export class AdminUserController {
     if (isOtpEnabled) {
       const otp = this.userService.generateOtp();
 
-      await Promise.all([
+      await Promise.allSettled([
         this.redisService.set(email + '_OTP', otp.toString(), 300),
-        this.sqsService.sendToQueue({
-          QueueUrl: envConfig.EMAIL_SQS_URL,
-          MessageBody: JSON.stringify({
-            emailTemplateName: 'OTP',
-            templateData: {
-              fullName: name,
-              OTPCode: otp,
-            },
-            emailFrom: '',
-            toAddress: email,
-          }),
-        }),
+        // this.sqsService.sendToQueue({
+        //   QueueUrl: envConfig.EMAIL_SQS_URL,
+        //   MessageBody: JSON.stringify({
+        //     emailTemplateName: 'OTP',
+        //     templateData: {
+        //       fullName: name,
+        //       OTPCode: otp,
+        //     },
+        //     emailFrom: '',
+        //     toAddress: email,
+        //   }),
+        // }),
       ]);
 
       return { message: 'OTP sent successfully.', isOtpEnabled };
@@ -140,10 +151,10 @@ export class AdminUserController {
   @Post('validate-otp')
   async validateLoginOtp(@Body() otpDto: ValidateOtpDto) {
     const user = await this.userService.findOne({ where: { email: otpDto.email, role: UserRoleEnum.ADMIN } });
-    if (!user) throw new BadRequestException('Invalid credentials');
+    if (!user) throw new BadRequestException('Invalid credentials.');
 
     const otp = await this.redisService.get(user.email + '_OTP');
-    if (!otp || otp != otpDto.otp) throw new BadRequestException('Invalid Otp');
+    if (!otp || otp != otpDto.otp) throw new BadRequestException('The code you entered is incorrect.');
 
     this.redisService.delete(user.email + '_OTP');
     const [token, refreshToken] = await this.userService.generateJWTs({ id: user.id, role: user.role });
