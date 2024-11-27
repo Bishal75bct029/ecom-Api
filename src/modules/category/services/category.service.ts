@@ -1,11 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CategoryRepository } from '../repositories/category.repository';
-import { CreateCategoryDto, UpdateCategoryDto } from '../dto';
+import { CreateUpdateCategoryDto, UpdateCategoryDto } from '../dto';
 import { CategoryEntity } from '../entities/category.entity';
 
 @Injectable()
 export class CategoryService extends CategoryRepository {
-  async saveCategory(category: CreateCategoryDto) {
+  async saveCategory(category: CreateUpdateCategoryDto) {
     if (!category.parent) {
       return this.createAndSave({ name: category.name, image: category.image });
     }
