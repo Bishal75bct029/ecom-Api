@@ -16,10 +16,10 @@ export class CategoryEntity extends BaseEntity {
   @Column({ type: 'enum', enum: CategoryStatusEnum, default: CategoryStatusEnum.INACTIVE })
   status: CategoryStatusEnum;
 
-  @TreeChildren()
+  @TreeChildren({ cascade: true })
   children: CategoryEntity[];
 
-  @TreeParent()
+  @TreeParent({ onDelete: 'CASCADE' })
   parent: CategoryEntity;
 
   @Column({ type: 'text', nullable: true })

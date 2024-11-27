@@ -146,23 +146,16 @@ export class AdminCategoryController {
   async deleteCategory(@Param('id') id: string) {
     const category = await this.categoryService.findOne({
       where: { id },
-      select: { id: true },
+      select: {
+        id: true,
+      },
     });
 
-    const categoryWithChildren = await this.categoryService.findDescendantsTree(category);
-    if (!category) throw new NotFoundException('Category not found');
+    if (category) {
+      const categoryWithChildren = await this.categoryService.findDescendantsTree(category);
+      await this.categoryService.softRemove([categoryWithChildren]);
+    }
 
-    const deleteChildNodes = (categoryWithChildren: CategoryEntity) => {
-      for (const child of categoryWithChildren.children) {
-        if (child.children && child.children.length > 0) {
-          deleteChildNodes(child);
-        }
-        this.categoryService.softDelete(child.id);
-      }
-    };
-
-    deleteChildNodes(categoryWithChildren);
-
-    await this.categoryService.softDelete(id);
+    return true;
   }
 }

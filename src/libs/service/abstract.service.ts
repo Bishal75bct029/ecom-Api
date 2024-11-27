@@ -8,6 +8,7 @@ import {
   FindOptionsWhere,
   SaveOptions,
   ObjectId,
+  RemoveOptions,
 } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
@@ -42,6 +43,10 @@ export abstract class AbstractService<T> {
 
   async delete(findOption: FindOptionsWhere<T>) {
     return this.repository.delete(findOption);
+  }
+
+  async softRemove(entities: T[], options?: RemoveOptions): Promise<T[]> {
+    return this.repository.softRemove(entities, options);
   }
 
   async softDelete(
