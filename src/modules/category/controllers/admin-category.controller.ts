@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, NotFoundException, Delete, Query } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, NotFoundException, Delete, Query, Req } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -7,6 +7,7 @@ import { CategoryService } from '../services/category.service';
 import { CategoryStatusEnum, CreateUpdateCategoryDto, GetCategoryQuery, SubCategory } from '../dto';
 import { CategoryEntity } from '../entities/category.entity';
 import { getPaginatedResponse } from '@/common/utils';
+import { Request } from 'express';
 
 @ApiTags('Admin Category')
 @Controller('admin/categories')
@@ -29,18 +30,19 @@ export class AdminCategoryController {
       .getRepository(CategoryEntity)
       .createQueryBuilder('categories')
       .leftJoin('categories.products', 'product')
+      .leftJoin('categories.updatedBy', 'users')
       .loadRelationCountAndMap('categories.productCount', 'categories.products')
       .select([
         'categories.id as id',
         'categories.name AS "name"',
         'categories.status as "status"',
-        'categories.createdBy AS "createdBy"',
-        'categories.updatedBy as "updatedBy"',
+        'users.name as "updatedBy"',
         'categories.updatedAt as "updatedAt"',
         'COUNT(product.id) AS "productCount"',
       ])
       .where('categories.parent IS NULL')
-      .groupBy('categories.id');
+      .groupBy('categories.id')
+      .addGroupBy('users.name');
 
     if (status) {
       queryBuilder.andWhere('categories.status = :status', { status: status.toUpperCase() });
@@ -90,8 +92,9 @@ export class AdminCategoryController {
   }
 
   @Post()
-  async saveCategory(@Body() createCategoryDto: CreateUpdateCategoryDto) {
+  async saveCategory(@Req() { currentUser }: Request, @Body() createCategoryDto: CreateUpdateCategoryDto) {
     const { id, name, description, status, children, parent } = createCategoryDto;
+    const { id: userId } = currentUser;
 
     const createSubCategories = async (
       subs: SubCategory[],
@@ -129,6 +132,7 @@ export class AdminCategoryController {
       description,
       status,
       parent: parentCategory,
+      updatedBy: { id: userId },
     });
 
     const savedCategory = await this.categoryService.save(category);
