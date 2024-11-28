@@ -10,8 +10,7 @@ export const envConfig = cleanEnv(process.env, {
   NODE_ENV: str({ default: 'local', choices: ['local', 'development', 'staging', 'production'] }),
   PORT: port({ default: 3000 }),
 
-  ECOM_USER_INTERACTION: str(),
-  ECOM_USER_INTERACTION_API: str(),
+  USER_INTERACTION_BASE_URL: str(),
 
   ADMIN_JWT_SECRET: str(),
   ADMIN_JWT_ISSUER: str(),

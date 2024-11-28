@@ -42,7 +42,7 @@ export class ApiProductController {
     if (dto.queryType === ProductQueyTypeEnum.RECOMMENDED && currentUser.id) {
       const { viewProductInteractions, buyCartProductInteractions, searchInteractions } =
         await this.httpsService.fetchData<UserInteractionResponse>(
-          envConfig.ECOM_USER_INTERACTION + envConfig.ECOM_USER_INTERACTION_API,
+          `${envConfig.USER_INTERACTION_BASE_URL}/api/interactions`,
           headers['authorization'].split(' ')[1],
         );
 
