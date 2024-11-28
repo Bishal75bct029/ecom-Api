@@ -1,4 +1,14 @@
-import { Controller, Post, Body, BadRequestException, Query, Get, GoneException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  BadRequestException,
+  Query,
+  Get,
+  GoneException,
+  HttpCode,
+  ForbiddenException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { ApiTags } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
@@ -15,7 +25,6 @@ import { UserRoleEnum } from '../entities/user.entity';
 import { RedisService } from '@/libs/redis/redis.service';
 import { envConfig } from '@/configs/envConfig';
 import { SQSService } from '@/common/module/aws/sqs.service';
-import { JwtService } from '@nestjs/jwt';
 
 @ApiTags('Admin User')
 @Controller('admin/users')
@@ -24,7 +33,6 @@ export class AdminUserController {
     private readonly userService: UserService,
     private redisService: RedisService,
     private sqsService: SQSService,
-    private jwtService: JwtService,
   ) {}
 
   @Post('create')
@@ -42,13 +50,18 @@ export class AdminUserController {
   // }
 
   @Post('refresh')
+  @HttpCode(200)
   async refreshAdmin(@Body('refreshToken') refreshToken: string) {
-    const [token, generatedRefreshToken] = await this.userService.refreshUser(refreshToken, {
-      secret: envConfig.ADMIN_JWT_SECRET,
-      issuer: envConfig.ADMIN_JWT_ISSUER,
-      audience: envConfig.ADMIN_JWT_AUDIENCE,
-    });
-    return { token, refreshToken: generatedRefreshToken };
+    try {
+      const [token, generatedRefreshToken] = await this.userService.refreshUser(refreshToken, {
+        secret: envConfig.ADMIN_JWT_SECRET,
+        issuer: envConfig.ADMIN_JWT_ISSUER,
+        audience: envConfig.ADMIN_JWT_AUDIENCE,
+      });
+      return { token, refreshToken: generatedRefreshToken };
+    } catch (error) {
+      throw new ForbiddenException('Session expired. Please re-login.');
+    }
   }
 
   @Post('forgot-password')

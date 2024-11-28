@@ -1,3 +1,4 @@
+import { PickType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 
@@ -5,6 +6,7 @@ export enum CategoryStatusEnum {
   ACTIVE = 'ACTIVE',
   INACTIVE = 'INACTIVE',
 }
+
 export class CreateUpdateCategoryDto {
   @IsString()
   @IsOptional()
@@ -67,3 +69,5 @@ export class GetCategoryQuery {
   @IsOptional()
   status: 'active' | 'inactive';
 }
+
+export class CategoryStatusDto extends PickType(CreateUpdateCategoryDto, ['status']) {}

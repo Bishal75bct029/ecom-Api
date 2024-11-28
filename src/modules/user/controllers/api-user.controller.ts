@@ -1,4 +1,15 @@
-import { Controller, Post, Body, Req, BadRequestException, Put, Param, Get, HttpCode } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Req,
+  BadRequestException,
+  Put,
+  Param,
+  Get,
+  HttpCode,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Request } from 'express';
 import { ApiTags } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
@@ -7,7 +18,6 @@ import { CreateAddressDto } from '../dto/address.dto';
 import { AddressService } from '../services/address.service';
 import { UserRoleEnum } from '../entities/user.entity';
 import { envConfig } from '@/configs/envConfig';
-import { UserJwtPayload } from '@/@types';
 
 @ApiTags('API User')
 @Controller('api/users')
@@ -35,12 +45,16 @@ export class ApiUserController {
   @Post('refresh')
   @HttpCode(200)
   async refresh(@Body('refreshToken') refreshToken: string) {
-    const [token, generatedRefreshToken] = await this.userService.refreshUser(refreshToken, {
-      secret: envConfig.API_JWT_SECRET,
-      issuer: envConfig.API_JWT_ISSUER,
-      audience: envConfig.API_JWT_AUDIENCE,
-    });
-    return { token, refreshToken: generatedRefreshToken };
+    try {
+      const [token, generatedRefreshToken] = await this.userService.refreshUser(refreshToken, {
+        secret: envConfig.API_JWT_SECRET,
+        issuer: envConfig.API_JWT_ISSUER,
+        audience: envConfig.API_JWT_AUDIENCE,
+      });
+      return { token, refreshToken: generatedRefreshToken };
+    } catch (error) {
+      throw new ForbiddenException('Session expired. Please re-login.');
+    }
   }
 
   @Get('address')

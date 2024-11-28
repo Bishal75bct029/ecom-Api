@@ -39,120 +39,116 @@ export class ApiOrderController {
 
   @Post()
   async create(@Body() createOrderDto: CreateOrderDto, @Req() req: Request) {
-    try {
-      const { paymentMethodId } = createOrderDto;
-      const { schoolId, id: userId } = req.currentUser;
-      //initial validations
-      const [paymentMethod, productMetas] = await Promise.all([
-        this.paymentMethodService.findOne({
-          where: { id: paymentMethodId, isActive: true },
-        }),
-        this.productMetaService.find({
-          where: { id: In(createOrderDto.productMetaIds.map(({ id }) => id)) },
-        }),
+    const { paymentMethodId } = createOrderDto;
+    const { schoolId, id: userId } = req.currentUser;
+    //initial validations
+    const [paymentMethod, productMetas] = await Promise.all([
+      this.paymentMethodService.findOne({
+        where: { id: paymentMethodId, isActive: true },
+      }),
+      this.productMetaService.find({
+        where: { id: In(createOrderDto.productMetaIds.map(({ id }) => id)) },
+      }),
+    ]);
+
+    if (
+      !paymentMethod ||
+      productMetas.length === 0 ||
+      productMetas.length !== createOrderDto.productMetaIds.length ||
+      !userId
+    )
+      throw new BadRequestException('Sorry, failed to place order. Please try again later.');
+
+    /** Transaction */
+    return await this.dataSource.transaction(async (entityManager) => {
+      //validate qunatities
+      this.productMetaService.validateQuantity(productMetas, createOrderDto);
+
+      //decrease quantity in product meta
+      const decreaseProductMetaQuantities = productMetas.map((product) => {
+        const productFromOrder = createOrderDto.productMetaIds.find((item) => item.id === product.id);
+        return { ...product, stock: product.stock - productFromOrder.quantity };
+      });
+      await entityManager.save(ProductMetaEntity, decreaseProductMetaQuantities);
+
+      //calculate total price with discount if any
+      let totalPrice = this.orderItemService.calculateTotalPrice(productMetas, createOrderDto);
+      let discount: SchoolDiscountEntity;
+      if (schoolId) {
+        discount = await this.schoolDiscountService.findOne({
+          where: { schoolId },
+        });
+        if (discount) {
+          totalPrice = Math.floor(
+            getRoundedOffValue((totalPrice * (1 - (discount.discountPercentage || 0) / 100)) / 100),
+          );
+        }
+      }
+
+      //save order and order items
+      const order = await entityManager.save(OrderEntity, {
+        totalPrice,
+        user: { id: userId },
+      });
+      const orderItems = productMetas.map((productMeta) => {
+        const quantity = createOrderDto.productMetaIds.find(({ id }) => id === productMeta.id).quantity;
+        const pricePerUnit = Math.floor(
+          getRoundedOffValue((Number(productMeta.price) * ((1 - discount?.discountPercentage || 0) / 100)) / 100),
+        );
+
+        return {
+          productMeta,
+          pricePerUnit,
+          quantity,
+          totalPrice: quantity * pricePerUnit,
+          order,
+        };
+      });
+      const createdOrderItems = this.orderItemService.createMany(orderItems);
+      await entityManager.save(OrderItemEntity, createdOrderItems);
+
+      //create paypal payment intent
+      const [paypalPaymentPayload, userCart] = await Promise.all([
+        this.paypalService.createPayment([
+          {
+            amount: {
+              currency_code: 'SGD',
+              value: (totalPrice / 100).toFixed(2),
+            },
+          },
+        ]),
+        this.cartService.findOne({ where: { user: { id: userId } } }),
       ]);
 
-      if (
-        !paymentMethod ||
-        productMetas.length === 0 ||
-        productMetas.length !== createOrderDto.productMetaIds.length ||
-        !userId
-      )
-        throw new BadRequestException('Sorry, failed to place order. Please try again later.');
-
-      /** Transaction */
-      return await this.dataSource.transaction(async (entityManager) => {
-        //validate qunatities
-        this.productMetaService.validateQuantity(productMetas, createOrderDto);
-
-        //decrease quantity in product meta
-        const decreaseProductMetaQuantities = productMetas.map((product) => {
-          const productFromOrder = createOrderDto.productMetaIds.find((item) => item.id === product.id);
-          return { ...product, stock: product.stock - productFromOrder.quantity };
+      //cart query
+      let promisifiedCart: Promise<CartEntity>;
+      const productMetaIds = userCart.cartItems.map((item) => item.productMetaId);
+      if (userCart && productMetaIds.some((metaId) => productMetas.map(({ id }) => id).includes(metaId))) {
+        const updatedCartItems = userCart.cartItems.filter(
+          (item) => !productMetas.map(({ id }) => id).includes(item.productMetaId),
+        );
+        promisifiedCart = entityManager.save(CartEntity, {
+          ...userCart,
+          cartItems: updatedCartItems,
         });
-        await entityManager.save(ProductMetaEntity, decreaseProductMetaQuantities);
+      }
 
-        //calculate total price with discount if any
-        let totalPrice = this.orderItemService.calculateTotalPrice(productMetas, createOrderDto);
-        let discount: SchoolDiscountEntity;
-        if (schoolId) {
-          discount = await this.schoolDiscountService.findOne({
-            where: { schoolId },
-          });
-          if (discount) {
-            totalPrice = Math.floor(
-              getRoundedOffValue((totalPrice * (1 - (discount.discountPercentage || 0) / 100)) / 100),
-            );
-          }
-        }
-
-        //save order and order items
-        const order = await entityManager.save(OrderEntity, {
-          totalPrice,
+      //save transaction and cart update
+      await Promise.all([
+        entityManager.save(TransactionEntity, {
+          transactionId: paypalPaymentPayload?.result.id,
+          paymentMethod,
+          price: totalPrice,
+          order,
+          transactionCode: this.transactionService.genTransactionCode(),
           user: { id: userId },
-        });
-        const orderItems = productMetas.map((productMeta) => {
-          const quantity = createOrderDto.productMetaIds.find(({ id }) => id === productMeta.id).quantity;
-          const pricePerUnit = Math.floor(
-            getRoundedOffValue((Number(productMeta.price) * ((1 - discount?.discountPercentage || 0) / 100)) / 100),
-          );
+        }),
+        promisifiedCart,
+      ]);
 
-          return {
-            productMeta,
-            pricePerUnit,
-            quantity,
-            totalPrice: quantity * pricePerUnit,
-            order,
-          };
-        });
-        const createdOrderItems = this.orderItemService.createMany(orderItems);
-        await entityManager.save(OrderItemEntity, createdOrderItems);
-
-        //create paypal payment intent
-        const [paypalPaymentPayload, userCart] = await Promise.all([
-          this.paypalService.createPayment([
-            {
-              amount: {
-                currency_code: 'SGD',
-                value: (totalPrice / 100).toFixed(2),
-              },
-            },
-          ]),
-          this.cartService.findOne({ where: { user: { id: userId } } }),
-        ]);
-
-        //cart query
-        let promisifiedCart: Promise<CartEntity>;
-        const productMetaIds = userCart.cartItems.map((item) => item.productMetaId);
-        if (userCart && productMetaIds.some((metaId) => productMetas.map(({ id }) => id).includes(metaId))) {
-          const updatedCartItems = userCart.cartItems.filter(
-            (item) => !productMetas.map(({ id }) => id).includes(item.productMetaId),
-          );
-          promisifiedCart = entityManager.save(CartEntity, {
-            ...userCart,
-            cartItems: updatedCartItems,
-          });
-        }
-
-        //save transaction and cart update
-        await Promise.all([
-          entityManager.save(TransactionEntity, {
-            transactionId: paypalPaymentPayload?.result.id,
-            paymentMethod,
-            price: totalPrice,
-            order,
-            transactionCode: this.transactionService.genTransactionCode(),
-            user: { id: userId },
-          }),
-          promisifiedCart,
-        ]);
-
-        const approvalUrl = paypalPaymentPayload?.result.links.find((item: any) => item.rel === 'approve').href;
-        return { approvalUrl };
-      });
-    } catch (e) {
-      console.log(e);
-    }
+      const approvalUrl = paypalPaymentPayload?.result.links.find((item: any) => item.rel === 'approve').href;
+      return { approvalUrl };
+    });
   }
 
   @Get('confirm')

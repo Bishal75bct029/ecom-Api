@@ -12,9 +12,8 @@ export const TYPEORM_CONFIG = {
   entities: [join(__dirname, '../**/*.entity{.ts,.js}')],
   migrations: [join(__dirname, '../migrations/*{.ts,.js}')],
   migrationsTableName: 'migrations',
-  synchronize: true,
+  synchronize: false,
   logging: envConfig.NODE_ENV === 'local',
-  // logging: false,
   cache: {
     duration: 86400 * 1000,
     type: 'ioredis',

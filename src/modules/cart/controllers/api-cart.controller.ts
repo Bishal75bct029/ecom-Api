@@ -125,15 +125,6 @@ export class ApiCartController {
       user: { id: req.currentUser.id },
       cartItems: [{ productMetaId, quantity }],
     });
-
-    // return await this.cartService.createAndSave({
-    //   id: isUserCartAvailable ? isUserCartAvailable.id : undefined,
-    //   productMetaId:
-    //     isUserCartAvailable && isUserCartAvailable.productMetaId?.length
-    //       ? [...new Set([...isUserCartAvailable.productMetaId, ...createCartDto.productMetaId])]
-    //       : createCartDto.productMetaId,
-    //   user: { id: req.currentUser.id },
-    // });
   }
 
   @Put()

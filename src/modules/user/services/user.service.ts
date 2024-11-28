@@ -7,7 +7,6 @@ import { AbstractService } from '@/libs/service/abstract.service';
 import { UserEntity, UserRoleEnum } from '../entities';
 import { envConfig } from '@/configs/envConfig';
 import { LoginUserDto } from '../dto';
-import { UserJwtPayload } from '@/@types';
 
 @Injectable()
 export class UserService extends AbstractService<UserEntity> {
@@ -68,6 +67,7 @@ export class UserService extends AbstractService<UserEntity> {
 
     if (!user) throw new ForbiddenException('Invalid token');
 
-    return this.generateJWTs(payload);
+    const [newToken] = await this.generateJWTs(payload);
+    return [newToken, refreshToken];
   }
 }

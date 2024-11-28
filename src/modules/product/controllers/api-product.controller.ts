@@ -16,7 +16,6 @@ import { HttpsService } from '@/modules/https/https.service';
 import { ProductEntity } from '../entities';
 import { envConfig } from '@/configs/envConfig';
 import { shuffleArray } from '../helpers/shuffleArrays';
-import { CategoryEntity } from '@/modules/category/entities/category.entity';
 import { getPaginatedResponse } from '@/common/utils';
 
 @ApiTags('Api Product')
@@ -85,16 +84,13 @@ export class ApiProductController {
 
         const productIds = buyCartProductInteractions.map((data) => data.productId);
 
-        const parentCategories = (await Promise.all(
-          categoryIds.map(async (categoryId) => {
-            const category = await this.categoryService.findOne({
-              where: { id: categoryId },
-              relations: ['parent'],
-            });
+        const categoriesWithParents = await this.categoryService.find({
+          where: { id: In(categoryIds) },
+          relations: ['parent'],
+        });
 
-            return category.parent ? category.parent : [];
-          }),
-        )) as CategoryEntity[];
+        // Extract only the parent entities or return an empty array if no parent exists
+        const parentCategories = categoriesWithParents.filter((category) => !!category.parent);
 
         const categoryTrees = await Promise.all(
           parentCategories.map(async (parentCategory) => {

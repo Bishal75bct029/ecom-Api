@@ -19,7 +19,7 @@ export class CategoryEntity extends BaseEntity {
   @TreeChildren({ cascade: true })
   children: CategoryEntity[];
 
-  @TreeParent({ onDelete: 'CASCADE' })
+  @TreeParent()
   parent: CategoryEntity;
 
   @Column({ type: 'text', nullable: true })

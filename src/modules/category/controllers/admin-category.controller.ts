@@ -1,10 +1,10 @@
-import { Controller, Post, Body, Get, Param, Delete, Query, Req } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Delete, Query, Req, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 
 import { CategoryService } from '../services/category.service';
-import { CreateUpdateCategoryDto, GetCategoryQuery } from '../dto';
+import { CategoryStatusDto, CreateUpdateCategoryDto, GetCategoryQuery } from '../dto';
 import { CategoryEntity } from '../entities/category.entity';
 import { getPaginatedResponse } from '@/common/utils';
 import { Request } from 'express';
@@ -30,7 +30,7 @@ export class AdminCategoryController {
       .getRepository(CategoryEntity)
       .createQueryBuilder('categories')
       .leftJoin('categories.products', 'product')
-      .leftJoin('categories.updatedBy', 'users')
+      .innerJoin('categories.updatedBy', 'users')
       .loadRelationCountAndMap('categories.productCount', 'categories.products')
       .select([
         'categories.id as id',
@@ -96,7 +96,7 @@ export class AdminCategoryController {
     const { id, name, description, status, children } = createCategoryDto;
     const { id: userId } = currentUser;
 
-    const savedUpdatedCategory = await this.categoryService.createAndSave({
+    return this.categoryService.createAndSave({
       id,
       name,
       description,
@@ -104,8 +104,13 @@ export class AdminCategoryController {
       children,
       updatedBy: { id: userId },
     });
+  }
 
-    return savedUpdatedCategory;
+  @Put(':id')
+  async toggleCategoryStatus(@Param('id') id: string, @Body() { status }: CategoryStatusDto) {
+    await this.categoryService.update({ id }, { status });
+
+    return true;
   }
 
   @Delete(':id')
