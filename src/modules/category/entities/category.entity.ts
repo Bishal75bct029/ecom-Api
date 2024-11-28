@@ -1,6 +1,6 @@
 import { BaseEntity } from '@/libs/entity/base.entity';
 import { ProductEntity } from '@/modules/product/entities';
-import { Entity, Tree, Column, TreeChildren, TreeParent, ManyToMany, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Tree, Column, TreeChildren, TreeParent, ManyToMany, ManyToOne } from 'typeorm';
 import { CategoryStatusEnum } from '../dto';
 import { UserEntity } from '@/modules/user/entities';
 

@@ -1,10 +1,10 @@
-import { Controller, Post, Body, Get, Param, NotFoundException, Delete, Query, Req } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Delete, Query, Req } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 
 import { CategoryService } from '../services/category.service';
-import { CategoryStatusEnum, CreateUpdateCategoryDto, GetCategoryQuery, SubCategory } from '../dto';
+import { CreateUpdateCategoryDto, GetCategoryQuery } from '../dto';
 import { CategoryEntity } from '../entities/category.entity';
 import { getPaginatedResponse } from '@/common/utils';
 import { Request } from 'express';
@@ -93,53 +93,19 @@ export class AdminCategoryController {
 
   @Post()
   async saveCategory(@Req() { currentUser }: Request, @Body() createCategoryDto: CreateUpdateCategoryDto) {
-    const { id, name, description, status, children, parent } = createCategoryDto;
+    const { id, name, description, status, children } = createCategoryDto;
     const { id: userId } = currentUser;
 
-    const createSubCategories = async (
-      subs: SubCategory[],
-      parent: CategoryEntity | null,
-      status: CategoryStatusEnum,
-    ): Promise<CategoryEntity[]> => {
-      const subCategories = [];
-
-      for (const sub of subs) {
-        const subEntity = this.categoryService.create({
-          id: sub.id,
-          name: sub.name,
-          status,
-          parent,
-        });
-
-        const savedSubEntity = await this.categoryService.save(subEntity);
-        savedSubEntity.children =
-          sub.children && sub.children.length > 0
-            ? await createSubCategories(sub.children, savedSubEntity, status)
-            : [];
-
-        await this.categoryService.save(savedSubEntity);
-        subCategories.push(savedSubEntity);
-      }
-
-      return subCategories;
-    };
-
-    const parentCategory = parent ? await this.categoryService.findOne({ where: { id: parent } }) : null;
-
-    const category = this.categoryService.create({
+    const savedUpdatedCategory = await this.categoryService.createAndSave({
       id,
       name,
       description,
       status,
-      parent: parentCategory,
+      children,
       updatedBy: { id: userId },
     });
 
-    const savedCategory = await this.categoryService.save(category);
-
-    savedCategory.children = await createSubCategories(children, savedCategory, status);
-
-    return await this.categoryService.save(savedCategory);
+    return savedUpdatedCategory;
   }
 
   @Delete(':id')

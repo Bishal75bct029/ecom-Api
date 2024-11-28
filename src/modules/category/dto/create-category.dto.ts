@@ -29,10 +29,6 @@ export class CreateUpdateCategoryDto {
 
   @IsEnum(CategoryStatusEnum)
   status: CategoryStatusEnum;
-
-  @IsString()
-  @IsOptional()
-  parent?: string;
 }
 
 export class SubCategory {
