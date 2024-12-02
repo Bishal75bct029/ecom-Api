@@ -33,6 +33,6 @@ export class ProductMetaEntity extends BaseEntity {
   @Column({ nullable: false })
   stock: number;
 
-  @ManyToOne(() => ProductEntity, (product) => product.productMeta)
+  @ManyToOne(() => ProductEntity, (product) => product.productMeta, { onDelete: 'CASCADE' })
   product: ProductEntity;
 }

@@ -45,8 +45,12 @@ export abstract class AbstractService<T> {
     return this.repository.delete(findOption);
   }
 
-  async softRemove(entities: T[], options?: RemoveOptions): Promise<T[]> {
-    return this.repository.softRemove(entities, options);
+  async softRemove(entities: T[] | T, options?: RemoveOptions): Promise<T[] | T> {
+    if (Array.isArray(entities)) {
+      return this.repository.softRemove(entities as DeepPartial<T>[], options);
+    }
+
+    return this.repository.softRemove(entities as DeepPartial<T>, options);
   }
 
   async softDelete(

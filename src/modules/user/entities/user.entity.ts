@@ -7,6 +7,7 @@ import { OrderEntity } from '@/modules/order/entities/order.entity';
 import { CartEntity } from '@/modules/cart/entities/cart.entity';
 import { TransactionEntity } from '@/modules/transaction/entities/transaction.entity';
 import { CategoryEntity } from '@/modules/category/entities/category.entity';
+import { ProductEntity } from '@/modules/product/entities';
 
 export enum UserRoleEnum {
   ADMIN = 'ADMIN',
@@ -53,4 +54,7 @@ export class UserEntity extends BaseEntity {
 
   @OneToMany(() => CategoryEntity, (category) => category.updatedAt)
   updatedCategory: CategoryEntity[];
+
+  @OneToMany(() => CategoryEntity, (category) => category.updatedAt)
+  updatedProduct: ProductEntity[];
 }

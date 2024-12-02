@@ -1,11 +1,13 @@
-import { Controller, Get, Post, Body, Put, Param, BadRequestException, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, BadRequestException, Query, Delete } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { ILike, In } from 'typeorm';
+import { FindManyOptions, ILike, In } from 'typeorm';
 import { ProductService, ProductMetaService } from '../services';
 import { CreateProductDto, UpdateProductDto } from '../dto';
 import { CategoryService } from '../../category/services/category.service';
 import { getRecursiveDataArrayFromObjectOrArray } from '../helpers/getRecursiveDataArray.util';
 import { getRoundedOffValue } from '@/common/utils';
+import { GetAdminProductsQuery } from '../dto/get-products-filteredList-dto';
+import { PRODUCT_STATUS_ENUM, ProductEntity } from '../entities';
 
 @ApiTags('Admin Product')
 @Controller('admin/products')
@@ -17,20 +19,84 @@ export class AdminProductController {
   ) {}
 
   @Get()
-  async getAllProducts(@Query('name') name?: string) {
-    const products = await this.productService.find({
-      where: [{ name: ILike(`%${name}%`) }, { tags: ILike(`%${name}%`) }, { description: ILike(`%${name}%`) }],
-      relations: ['productMeta', 'categories'],
+  async getAllProducts(@Query() productQuery: GetAdminProductsQuery) {
+    const { search, status, category, limit, page, sortBy } = productQuery;
+    let { order } = productQuery;
+
+    order = order?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+
+    let whereClause: FindManyOptions<ProductEntity>['where'] = [];
+
+    if (search) {
+      whereClause = [
+        { name: ILike(`%${search}%`) },
+        { tags: ILike(`%${search}%`) },
+        { description: ILike(`%${search}%`) },
+      ];
+    }
+
+    if (status && status.toLowerCase() !== 'all') {
+      if (Array.isArray(whereClause) && whereClause.length > 0) {
+        whereClause = whereClause.map((condition) => ({
+          ...condition,
+          status: status as PRODUCT_STATUS_ENUM,
+        }));
+      } else {
+        whereClause = [{ status: status as PRODUCT_STATUS_ENUM }];
+      }
+    }
+
+    if (category) {
+      if (Array.isArray(whereClause) && whereClause.length > 0) {
+        whereClause = whereClause.map((condition) => ({
+          ...condition,
+          categories: { name: category },
+        }));
+      } else {
+        whereClause = [{ categories: { name: category } }];
+      }
+    }
+
+    const categories = this.categoryService.find({ select: { name: true } });
+
+    const [products, count] = await this.productService.findAndCount({
+      where: whereClause,
+      relations: ['productMeta', 'categories', 'updatedBy'],
+      skip: (page - 1) * limit || 0,
+      take: limit,
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        images: true,
+        productMeta: true,
+        stock: true,
+        categories: {
+          name: true,
+        },
+        updatedAt: true,
+        updatedBy: { name: true },
+      },
+      order: sortBy ? { [sortBy]: order } : undefined,
     });
 
-    return products.map((product) => {
-      product.productMeta.map((meta) => {
+    return {
+      count,
+      categories: (await categories).map((category) => category.name),
+      items: products.map((product) => {
         return {
-          ...meta,
-          price: getRoundedOffValue(meta.price / 10000),
+          ...product,
+          updatedBy: product.updatedBy.name,
+          categories: product.categories.map((category) => category.name),
+          productMeta: product.productMeta.map((meta) => {
+            return {
+              ...meta,
+              price: getRoundedOffValue(Number(meta.price) / 10000),
+            };
+          }),
         };
-      });
-    });
+      }),
+    };
   }
 
   @Post()
@@ -86,5 +152,23 @@ export class AdminProductController {
     );
 
     return { ...updatedProduct, productMetas: updatedProductMetas };
+  }
+
+  @Delete(':id')
+  async deleteProduct(@Param('id') id: string) {
+    const product = await this.productService.findOne({
+      where: { id },
+      relations: ['productMeta'],
+      select: {
+        id: true,
+        productMeta: {
+          id: true,
+        },
+      },
+    });
+
+    await this.productService.softRemove(product);
+
+    return true;
   }
 }

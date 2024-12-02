@@ -1,4 +1,5 @@
-import { IsEnum, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsEnum, IsIn, IsNumber, IsOptional, IsString, IsUUID, ValidateIf } from 'class-validator';
+import { PRODUCT_STATUS_ENUM } from '../entities';
 
 export enum ProductSortQueryEnum {
   PRICE_HIGH_TO_LOW = 'PHL',
@@ -65,6 +66,35 @@ export class SearchInteractionResponse {
   sortBy: string;
   value: string;
   userId: string;
+}
+
+export class GetAdminProductsQuery {
+  @IsOptional()
+  page: number;
+
+  @IsOptional()
+  limit: number;
+
+  @IsOptional()
+  @IsString()
+  search: string;
+
+  @IsOptional()
+  @IsEnum(PRODUCT_STATUS_ENUM)
+  @ValidateIf((o) => o.status !== 'all')
+  status: PRODUCT_STATUS_ENUM | 'all';
+
+  @IsOptional()
+  @IsString()
+  category: string;
+
+  @IsOptional()
+  @IsIn(['name', 'productCount', 'updatedAt', 'stock'])
+  sortBy: 'name' | 'productCount' | 'updatedAt' | 'stock';
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  order: 'ASC' | 'DESC';
 }
 
 export type ProductInteractionType = 'view' | 'buy' | 'cart';
