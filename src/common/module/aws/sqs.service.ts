@@ -12,6 +12,7 @@ export class SQSService {
         accessKeyId: envConfig.AWS_ACCESS_KEY_ID,
         secretAccessKey: envConfig.AWS_SECRET_ACCESS_KEY,
       },
+      region: envConfig.AWS_REGION,
     });
   }
 
