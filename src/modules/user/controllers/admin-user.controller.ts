@@ -8,8 +8,10 @@ import {
   GoneException,
   HttpCode,
   ForbiddenException,
+  Req,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { Request } from 'express';
 import { ApiTags } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
 import {
@@ -65,14 +67,14 @@ export class AdminUserController {
   }
 
   @Post('forgot-password')
-  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto, @Req() req: Request) {
     const { email } = forgotPasswordDto;
     const user = await this.userService.findOne({ where: { email } });
 
     if (!user) return true;
 
     const [token] = await this.userService.generateJWTs({ email, role: UserRoleEnum.ADMIN });
-    const url = envConfig.PASSWORD_RESET_URL + '?token=' + token;
+    const url = req.headers.origin + '/reset-password?token=' + token;
     await Promise.all([
       this.redisService.set(email + '_PW_RESET_TOKEN', token, 300),
       this.sqsService.sendToQueue({
