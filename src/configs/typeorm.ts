@@ -19,7 +19,7 @@ export const TYPEORM_CONFIG = {
     type: 'ioredis',
     options: {
       host: envConfig.REDIS_HOST,
-      port: 6379,
+      port: envConfig.REDIS_PORT,
     },
   },
 } as DataSourceOptions;
