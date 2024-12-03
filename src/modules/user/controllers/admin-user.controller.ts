@@ -71,7 +71,7 @@ export class AdminUserController {
 
     if (!user) return true;
 
-    const token = await this.userService.generateJWTs({ email, role: UserRoleEnum.ADMIN });
+    const [token] = await this.userService.generateJWTs({ email, role: UserRoleEnum.ADMIN });
     const url = envConfig.PASSWORD_RESET_URL + '?token=' + token;
     await Promise.all([
       this.redisService.set(email + '_PW_RESET_TOKEN', token, 300),
