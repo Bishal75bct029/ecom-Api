@@ -142,29 +142,22 @@ export class AdminUserController {
     });
 
     if (isOtpEnabled) {
-      try {
-        const otp = this.userService.generateOtp();
-
-        await Promise.all([
-          this.redisService.set(email + '_OTP', otp.toString(), 300),
-          this.sqsService.sendToQueue({
-            QueueUrl: envConfig.EMAIL_SQS_URL,
-            MessageBody: JSON.stringify({
-              emailTemplateName: 'NepalOTP',
-              templateData: {
-                fullName: name,
-                OTPCode: otp,
-              },
-              emailFrom: 'Ecommerce<noreply@innovatetech.io>',
-              toAddress: email,
-            }),
+      const otp = this.userService.generateOtp();
+      await Promise.all([
+        this.redisService.set(email + '_OTP', otp.toString(), 300),
+        this.sqsService.sendToQueue({
+          QueueUrl: envConfig.EMAIL_SQS_URL,
+          MessageBody: JSON.stringify({
+            emailTemplateName: 'NepalOTP',
+            templateData: {
+              fullName: name,
+              OTPCode: otp,
+            },
+            emailFrom: 'Ecommerce<noreply@innovatetech.io>',
+            toAddress: email,
           }),
-        ]);
-      } catch (error) {
-        console.log(error);
-        return;
-      }
-
+        }),
+      ]);
       return { message: 'OTP sent successfully.', isOtpEnabled };
     }
 
