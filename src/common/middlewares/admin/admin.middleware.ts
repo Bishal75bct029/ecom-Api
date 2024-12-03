@@ -28,6 +28,7 @@ export class AdminMiddleware implements NestMiddleware {
 
       if (payload.role !== 'ADMIN') throw new UnauthorizedException('Unauthorized');
       req.currentUser = payload;
+
       next();
     } catch (error) {
       throw new UnauthorizedException('Unauthorized');

@@ -30,6 +30,14 @@ export class UserService extends AbstractService<UserEntity> {
     ]);
   }
 
+  async verifyJWT(token: string, role: UserRoleEnum) {
+    return this.jwtService.verifyAsync<UserJwtPayload>(token, {
+      secret: role === 'ADMIN' ? envConfig.ADMIN_JWT_SECRET : envConfig.API_JWT_SECRET,
+      issuer: role === 'ADMIN' ? envConfig.ADMIN_JWT_ISSUER : envConfig.API_JWT_ISSUER,
+      audience: role === 'ADMIN' ? envConfig.ADMIN_JWT_AUDIENCE : envConfig.API_JWT_AUDIENCE,
+    });
+  }
+
   async login(loginUserDto: LoginUserDto) {
     const user = await this.findOne({ where: { email: loginUserDto.email } });
 
@@ -46,7 +54,7 @@ export class UserService extends AbstractService<UserEntity> {
   }
 
   generateOtp() {
-    return Math.floor(Math.random() * 1000000);
+    return Math.floor(Math.random() * 1000000).toString();
   }
 
   async refreshUser(refreshToken: string, options: JwtVerifyOptions) {
@@ -59,6 +67,7 @@ export class UserService extends AbstractService<UserEntity> {
 
     if (!user) throw new ForbiddenException('Invalid token');
 
-    return this.generateJWTs(payload);
+    const [newToken] = await this.generateJWTs(payload);
+    return [newToken, refreshToken];
   }
 }

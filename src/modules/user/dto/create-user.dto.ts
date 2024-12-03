@@ -1,5 +1,5 @@
 import { OmitType, PickType } from '@nestjs/swagger';
-import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, Matches, MinLength } from 'class-validator';
 
 export class CreateAdminUserDto {
   @IsNotEmpty()
@@ -29,7 +29,35 @@ export class LoginUserDto extends PickType(CreateAdminUserDto, ['email', 'passwo
   role: string;
 }
 
-export class ValidateOtpDto extends PickType(CreateAdminUserDto, ['email']) {
+export class ForgotPasswordDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+}
+
+export class ValidateOtpDto extends ForgotPasswordDto {
   @IsString()
+  @IsNotEmpty()
   otp: string;
 }
+
+export class ValidatePasswordResetTokenQuery {
+  @IsString()
+  token: string;
+}
+
+export class ChangePasswordDto {
+  @IsString()
+  @IsNotEmpty()
+  token: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/, {
+    message:
+      'Password must have at least 1 uppercase letter, 1 number, 1 special character, and be at least 8 characters long',
+  })
+  password: string;
+}
+
+export class ResendOtpDto extends ForgotPasswordDto {}

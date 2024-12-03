@@ -1,10 +1,12 @@
+import { Column, Entity, OneToMany, OneToOne } from 'typeorm';
+
 import { BaseEntity } from '@/libs/entity/base.entity';
 import { ReviewEntity } from '@/modules/review/entities/review.entity';
-import { Column, Entity, OneToMany, OneToOne } from 'typeorm';
 import { AddressEntity } from './address.entity';
 import { OrderEntity } from '@/modules/order/entities/order.entity';
 import { CartEntity } from '@/modules/cart/entities/cart.entity';
 import { TransactionEntity } from '@/modules/transaction/entities/transaction.entity';
+import { CategoryEntity } from '@/modules/category/entities/category.entity';
 
 export enum UserRoleEnum {
   ADMIN = 'ADMIN',
@@ -48,4 +50,7 @@ export class UserEntity extends BaseEntity {
 
   @Column({ type: 'uuid', nullable: true })
   schoolId: string;
+
+  @OneToMany(() => CategoryEntity, (category) => category.updatedAt)
+  updatedCategory: CategoryEntity[];
 }

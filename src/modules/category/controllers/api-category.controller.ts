@@ -11,6 +11,6 @@ export class ApiCategoryController {
 
   @Get()
   async categories() {
-    return this.categoryService.findTrees();
+    return this.categoryService.findTrees({});
   }
 }

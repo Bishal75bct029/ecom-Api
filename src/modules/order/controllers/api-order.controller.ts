@@ -2,22 +2,24 @@ import { Controller, Post, Body, Req, BadRequestException, Query, Get, Param } f
 import { Request } from 'express';
 import { DataSource, FindOptionsWhere, In, Not } from 'typeorm';
 import { CreateOrderDto, OrderQueryDto, OrderQueryEnum } from '../dto/create-order.dto';
-import { ProductMetaService } from '@/modules/product/services/product-meta.service';
+
+import { CapturePaymentDto } from '@/modules/transaction/dto/capture-payment.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { OrderItemService } from '../services/order-item.service';
-import { OrderEntity, OrderStatusEnum } from '../entities/order.entity';
-import { OrderItemEntity } from '../entities/order-item.entity';
+import { SchoolDiscountService } from '@/modules/school-discount/services/schoolDiscount.service';
+import { ProductMetaService } from '@/modules/product/services';
 import { PaymentMethodService } from '@/modules/payment-method/services/payment-method.service';
 import { TransactionService } from '@/modules/transaction/services/transaction.service';
-import { PaypalService } from '@/common/module/payment/paypal.service';
-import { SchoolDiscountService } from '@/modules/school-discount/services/schoolDiscount.service';
-import { ProductMetaEntity } from '@/modules/product/entities';
-import { TransactionEntity } from '@/modules/transaction/entities/transaction.entity';
 import { CartService } from '@/modules/cart/services/cart.service';
-import { CartEntity } from '@/modules/cart/entities/cart.entity';
-import { CapturePaymentDto } from '@/modules/transaction/dto/capture-payment.dto';
 import { OrderService } from '../services/order.service';
+import { PaypalService } from '@/common/module/payment/paypal.service';
+import { SchoolDiscountEntity } from '@/modules/school-discount/entities/schoolDiscount.entity';
+import { ProductMetaEntity } from '@/modules/product/entities';
+import { OrderEntity, OrderStatusEnum } from '../entities/order.entity';
+import { OrderItemEntity } from '../entities/order-item.entity';
+import { CartEntity } from '@/modules/cart/entities/cart.entity';
+import { TransactionEntity } from '@/modules/transaction/entities/transaction.entity';
 import { getRoundedOffValue } from '@/common/utils';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('API Order')
 @ApiBearerAuth()
@@ -39,10 +41,11 @@ export class ApiOrderController {
   async create(@Body() createOrderDto: CreateOrderDto, @Req() req: Request) {
     const { paymentMethodId } = createOrderDto;
     const { schoolId, id: userId } = req.currentUser;
-
     //initial validations
     const [paymentMethod, productMetas] = await Promise.all([
-      this.paymentMethodService.findOne({ where: { id: paymentMethodId, isActive: true } }),
+      this.paymentMethodService.findOne({
+        where: { id: paymentMethodId, isActive: true },
+      }),
       this.productMetaService.find({
         where: { id: In(createOrderDto.productMetaIds.map(({ id }) => id)) },
       }),
@@ -70,9 +73,16 @@ export class ApiOrderController {
 
       //calculate total price with discount if any
       let totalPrice = this.orderItemService.calculateTotalPrice(productMetas, createOrderDto);
-      const discount = await this.schoolDiscountService.findOne({ where: { schoolId } });
-      if (discount) {
-        totalPrice = Math.floor(getRoundedOffValue((totalPrice * (1 - discount.discountPercentage / 100)) / 100));
+      let discount: SchoolDiscountEntity;
+      if (schoolId) {
+        discount = await this.schoolDiscountService.findOne({
+          where: { schoolId },
+        });
+        if (discount) {
+          totalPrice = Math.floor(
+            getRoundedOffValue((totalPrice * (1 - (discount.discountPercentage || 0) / 100)) / 100),
+          );
+        }
       }
 
       //save order and order items
@@ -83,7 +93,7 @@ export class ApiOrderController {
       const orderItems = productMetas.map((productMeta) => {
         const quantity = createOrderDto.productMetaIds.find(({ id }) => id === productMeta.id).quantity;
         const pricePerUnit = Math.floor(
-          getRoundedOffValue((Number(productMeta.price) * (1 - discount.discountPercentage / 100)) / 100),
+          getRoundedOffValue((Number(productMeta.price) * ((1 - discount?.discountPercentage || 0) / 100)) / 100),
         );
 
         return {
@@ -112,10 +122,14 @@ export class ApiOrderController {
 
       //cart query
       let promisifiedCart: Promise<CartEntity>;
-      if (userCart && userCart.productMetaId.some((metaId) => productMetas.map(({ id }) => id).includes(metaId))) {
+      const productMetaIds = userCart.cartItems.map((item) => item.productMetaId);
+      if (userCart && productMetaIds.some((metaId) => productMetas.map(({ id }) => id).includes(metaId))) {
+        const updatedCartItems = userCart.cartItems.filter(
+          (item) => !productMetas.map(({ id }) => id).includes(item.productMetaId),
+        );
         promisifiedCart = entityManager.save(CartEntity, {
           ...userCart,
-          productMetaId: userCart.productMetaId.filter((metaId) => !productMetas.map(({ id }) => id).includes(metaId)),
+          cartItems: updatedCartItems,
         });
       }
 
@@ -190,7 +204,10 @@ export class ApiOrderController {
       transaction: { isSuccess: true },
     };
     if (status && status == OrderQueryEnum.PENDING) {
-      whereClause = { ...whereClause, status: Not(In([OrderStatusEnum.DELIVERED, OrderStatusEnum.CANCELLED])) };
+      whereClause = {
+        ...whereClause,
+        status: Not(In([OrderStatusEnum.DELIVERED, OrderStatusEnum.CANCELLED])),
+      };
     }
     const orders = await this.orderService.find({
       where: whereClause,
