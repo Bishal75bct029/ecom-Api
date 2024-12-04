@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { cleanEnv, num, port, str, url } from 'envalid';
+import { cleanEnv, port, str, url } from 'envalid';
 
 export const envConfig = cleanEnv(process.env, {
   DB_NAME: str(),
@@ -15,8 +15,8 @@ export const envConfig = cleanEnv(process.env, {
   ADMIN_JWT_SECRET: str(),
   ADMIN_JWT_ISSUER: str(),
   ADMIN_JWT_AUDIENCE: str(),
-  JWT_TTL: num(),
-  JWT_REFRESH_TOKEN_TTL: num(),
+  JWT_TTL: str(),
+  JWT_REFRESH_TOKEN_TTL: str(),
 
   API_JWT_SECRET: str(),
   API_JWT_ISSUER: str(),

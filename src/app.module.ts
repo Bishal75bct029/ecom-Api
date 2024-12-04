@@ -2,7 +2,6 @@ import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/c
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TYPEORM_CONFIG } from '@/configs/typeorm';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { TransformResponseInterceptor } from './common/interceptors';
@@ -15,6 +14,7 @@ import { ApiAuthorizationMiddleware } from './common/middlewares/api/api-authori
 import { PaymentMethodModule } from './modules/payment-method/payment-method.module';
 import { TransactionModule } from './modules/transaction/transaction.module';
 import { HttpsModule } from './modules/https/https.module';
+import { PasetoJwtModule } from './libs/pasetoJwt/pasetoJwt.module';
 
 @Module({
   imports: [
@@ -25,7 +25,6 @@ import { HttpsModule } from './modules/https/https.module';
         limit: 10,
       },
     ]),
-    JwtModule.register({ global: true }),
     RedisModule,
     ProductModule,
     CategoryModule,
@@ -37,6 +36,7 @@ import { HttpsModule } from './modules/https/https.module';
     PaymentMethodModule,
     TransactionModule,
     HttpsModule,
+    PasetoJwtModule,
   ],
   controllers: [AppController],
   providers: [

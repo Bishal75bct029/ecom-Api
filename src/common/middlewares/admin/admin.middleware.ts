@@ -1,6 +1,6 @@
 import { envConfig } from '@/configs/envConfig';
+import { PasetoJwtService } from '@/libs/pasetoJwt/pasetoJwt.service';
 import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { NextFunction, Request, Response } from 'express';
 
 declare global {
@@ -13,14 +13,14 @@ declare global {
 
 @Injectable()
 export class AdminMiddleware implements NestMiddleware {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(private readonly jwtService: PasetoJwtService) {}
   async use(req: Request, _res: Response, next: NextFunction) {
     try {
       const [, token] = req.headers['authorization']?.split(' ') || [];
 
       if (!token) throw new UnauthorizedException('Unauthorized');
 
-      const payload = await this.jwtService.verifyAsync<UserJwtPayload>(token, {
+      const payload = await this.jwtService.pasetoVerify<UserJwtPayload>(token, {
         secret: envConfig.ADMIN_JWT_SECRET,
         issuer: envConfig.ADMIN_JWT_ISSUER,
         audience: envConfig.ADMIN_JWT_AUDIENCE,
