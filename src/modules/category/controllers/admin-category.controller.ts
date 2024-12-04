@@ -1,5 +1,5 @@
 import { Controller, Post, Body, Get, Param, Delete, Query, Req, Put } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 
@@ -10,6 +10,7 @@ import { getPaginatedResponse } from '@/common/utils';
 import { Request } from 'express';
 
 @ApiTags('Admin Category')
+@ApiBearerAuth()
 @Controller('admin/categories')
 export class AdminCategoryController {
   constructor(
