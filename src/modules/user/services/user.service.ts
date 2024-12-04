@@ -25,7 +25,7 @@ export class UserService extends AbstractService<UserEntity> {
       audience: payload.role === 'ADMIN' ? envConfig.ADMIN_JWT_AUDIENCE : envConfig.API_JWT_AUDIENCE,
     };
     return Promise.all([
-      this.jwtService.pasetoSign(payload, { ...options, expiresIn: '10s' }),
+      this.jwtService.pasetoSign(payload, { ...options, expiresIn: envConfig.JWT_TTL }),
       this.jwtService.pasetoSign(payload, { ...options, expiresIn: envConfig.JWT_REFRESH_TOKEN_TTL }),
     ]);
   }
