@@ -144,7 +144,7 @@ export class AdminUserController {
     if (isOtpEnabled) {
       const otp = this.userService.generateOtp();
       await Promise.all([
-        this.redisService.set(email + '_OTP', otp.toString(), 300),
+        this.redisService.set(email + '_OTP', otp.toString(), 60),
         this.sqsService.sendToQueue({
           QueueUrl: envConfig.EMAIL_SQS_URL,
           MessageBody: JSON.stringify({
@@ -190,7 +190,7 @@ export class AdminUserController {
     const otp = this.userService.generateOtp();
 
     await Promise.all([
-      this.redisService.set(email + '_OTP', otp.toString(), 300),
+      this.redisService.set(email + '_OTP', otp.toString(), 60),
       this.sqsService.sendToQueue({
         QueueUrl: envConfig.EMAIL_SQS_URL,
         MessageBody: JSON.stringify({
