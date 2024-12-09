@@ -13,7 +13,7 @@ import {
 import { Request } from 'express';
 import { ApiTags } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
-import { CreateUserDto, LoginUserDto } from '../dto/create-user.dto';
+import { LoginUserDto } from '../dto/create-user.dto';
 import { CreateAddressDto } from '../dto/address.dto';
 import { AddressService } from '../services/address.service';
 import { UserRoleEnum } from '../entities/user.entity';
@@ -26,11 +26,6 @@ export class ApiUserController {
     private readonly userService: UserService,
     private readonly addressService: AddressService,
   ) {}
-
-  @Post('create')
-  async createUser(@Body() createUserDto: CreateUserDto) {
-    return this.userService.createAndSave({ ...createUserDto, role: UserRoleEnum.USER });
-  }
 
   @Post('login')
   async login(@Body() loginUserDto: LoginUserDto) {
