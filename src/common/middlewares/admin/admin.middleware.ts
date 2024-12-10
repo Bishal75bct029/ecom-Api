@@ -16,6 +16,7 @@ export class AdminMiddleware implements NestMiddleware {
   constructor(private readonly jwtService: PasetoJwtService) {}
   async use(req: Request, _res: Response, next: NextFunction) {
     try {
+      console.log(req.originalUrl, req.method);
       const [, token] = req.headers['authorization']?.split(' ') || [];
 
       if (!token) throw new UnauthorizedException('Unauthorized');
