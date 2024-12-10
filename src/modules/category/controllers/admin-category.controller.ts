@@ -1,10 +1,10 @@
-import { Controller, Post, Body, Get, Param, Delete, Query, Req, Put } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Delete, Query, Req, Put, NotFoundException } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { DataSource, In } from 'typeorm';
 
 import { CategoryService } from '../services/category.service';
-import { CategoryStatusDto, CreateUpdateCategoryDto, GetCategoryQuery } from '../dto';
+import { CategoryStatusEnum, CreateUpdateCategoryDto, GetCategoryQuery } from '../dto';
 import { CategoryEntity } from '../entities/category.entity';
 import { getPaginatedResponse } from '@/common/utils';
 import { Request } from 'express';
@@ -24,7 +24,7 @@ export class AdminCategoryController {
     let { order, limit, page } = categoryQuery;
 
     order = order?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
-    limit = limit || 10;
+    limit = limit || undefined;
     page = page || 1;
 
     const queryBuilder = this.dataSource
@@ -89,6 +89,8 @@ export class AdminCategoryController {
         status: true,
       },
     });
+    if (!category) throw new NotFoundException('Category not found');
+
     return this.categoryService.findDescendantsTree(category);
   }
 
@@ -97,7 +99,7 @@ export class AdminCategoryController {
     const { id, name, description, status, children } = createCategoryDto;
     const { id: userId } = currentUser;
 
-    return this.categoryService.createAndSave({
+    const category = await this.categoryService.createAndSave({
       id,
       name,
       description,
@@ -105,13 +107,22 @@ export class AdminCategoryController {
       children,
       updatedBy: { id: userId },
     });
+    const categoriesId = this.categoryService.getIdsFromParent(category);
+    await this.categoryService.update({ id: In(categoriesId) }, { status });
+
+    return true;
   }
 
   @Put(':id')
-  async toggleCategoryStatus(@Param('id') id: string, @Body() { status }: CategoryStatusDto) {
-    await this.categoryService.update({ id }, { status });
+  async toggleCategoryStatus(@Param('id') id: string) {
+    const category = await this.categoryService.findOne({ where: { id } });
+    await this.categoryService.findDescendantsTree(category);
+    const categoriesId = this.categoryService.getIdsFromParent(category);
 
-    return true;
+    const status =
+      category.status === CategoryStatusEnum.ACTIVE ? CategoryStatusEnum.INACTIVE : CategoryStatusEnum.ACTIVE;
+
+    return this.categoryService.update({ id: In(categoriesId) }, { status });
   }
 
   @Delete(':id')
