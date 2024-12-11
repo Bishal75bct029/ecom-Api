@@ -62,12 +62,14 @@ export class AdminCategoryController {
       }
 
       queryBuilder.orderBy(orderByField, order);
+    } else {
+      queryBuilder.orderBy('categories.updatedAt', 'DESC');
     }
 
     const [categories, count] = await Promise.all([
       queryBuilder
-        .skip((page - 1) * limit)
-        .take(limit)
+        .offset((page - 1) * limit)
+        .limit(limit)
         .getRawMany(),
       queryBuilder.getCount(),
     ]);
