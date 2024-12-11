@@ -182,10 +182,10 @@ export class AdminUserController {
   @Post('resend-otp')
   async resendOtp(@Body() { email }: ResendOtpDto) {
     const user = await this.userService.findOne({ where: { email } });
-    if (!user) return true;
+    if (!user) throw new BadRequestException('Cannot resend OTP.');
 
     const redisOtp = await this.redisService.get(email + '_OTP');
-    if (redisOtp) throw new Error('Cannot resend OTP');
+    if (redisOtp) throw new BadRequestException('Cannot resend OTP');
 
     const otp = this.userService.generateOtp();
 
