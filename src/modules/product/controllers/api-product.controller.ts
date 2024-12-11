@@ -12,7 +12,7 @@ import {
 } from '../dto/get-products-filteredList-dto';
 import { SimilarProductsDto } from '../dto/similarProducts.dto';
 import { CategoryService } from '@/modules/category/services/category.service';
-import { HttpsService } from '@/modules/https/https.service';
+import { HttpsService } from '@/libs/https/https.service';
 import { ProductEntity } from '../entities';
 import { envConfig } from '@/configs/envConfig';
 import { shuffleArray } from '../helpers/shuffleArrays';
