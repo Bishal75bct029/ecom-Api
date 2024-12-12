@@ -3,7 +3,6 @@ import { ForbiddenException, Injectable, NestMiddleware, NotFoundException } fro
 import { getPatternMatchingRoute } from '@/common/utils';
 import { PermissionService } from '@/modules/RBAC/services/permission.service';
 import { UserRoleEnum } from '@/modules/user/entities';
-import { envConfig } from '@/configs/envConfig';
 import { RedisService } from '@/libs/redis/redis.service';
 import { type PermissionEntity } from '@/modules/RBAC/entities';
 
@@ -14,7 +13,7 @@ export class PermissionMiddleware implements NestMiddleware {
     private readonly redisService: RedisService,
   ) {}
   async use(req: Request, _res: Response, next: NextFunction) {
-    const isCached = await this.redisService.get<PermissionEntity[]>(`${envConfig.REDIS_PREFIX}:${req.method}-RBAC`);
+    const isCached = await this.redisService.get<PermissionEntity[]>(`${req.method}-RBAC`);
 
     let routesWithPermissions: PermissionEntity[] = [];
     if (!isCached || !isCached.length) {
