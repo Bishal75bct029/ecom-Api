@@ -1,8 +1,8 @@
+import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
+import { NextFunction, Request, Response } from 'express';
 import { sanitizeRequestBody } from '@/common/utils';
 import { envConfig } from '@/configs/envConfig';
 import { PasetoJwtService } from '@/libs/pasetoJwt/pasetoJwt.service';
-import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
-import { NextFunction, Request, Response } from 'express';
 
 declare global {
   namespace Express {
@@ -17,7 +17,6 @@ export class AdminMiddleware implements NestMiddleware {
   constructor(private readonly jwtService: PasetoJwtService) {}
   async use(req: Request, _res: Response, next: NextFunction) {
     try {
-      console.log(req.originalUrl, req.method);
       const [, token] = req.headers['authorization']?.split(' ') || [];
 
       if (!token) throw new UnauthorizedException('Unauthorized');

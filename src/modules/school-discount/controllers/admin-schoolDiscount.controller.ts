@@ -2,7 +2,9 @@ import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post } from '@nest
 import { SchoolDiscountService } from '../services/schoolDiscount.service';
 import { CreateSchoolDiscountDto } from '../dtos/create-schoolDiscount.dto';
 import { RedisService } from '@/libs/redis/redis.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Admin School Discount')
 @Controller('admin/school-discount')
 export class AdminSchoolDiscountController {
   constructor(

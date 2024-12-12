@@ -51,7 +51,7 @@ export class AdminProductController {
 
     const product = await this.productService.save({ ...newProduct });
 
-    const productMetas = await this.productMetaService.saveMany(
+    const productMetas = await this.productMetaService.save(
       newProductMetas.map((meta) => ({ ...meta, product, price: meta.price * 100 })),
     );
 
@@ -81,7 +81,7 @@ export class AdminProductController {
     const updatedProduct = await this.productService.save(newProduct);
     const newProductMetas = this.productMetaService.createMany(productMetas);
 
-    const updatedProductMetas = await this.productMetaService.saveMany(
+    const updatedProductMetas = await this.productMetaService.save(
       newProductMetas.map((meta) => ({ ...meta, price: Number(meta.price), product })),
     );
 
