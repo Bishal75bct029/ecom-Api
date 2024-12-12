@@ -1,10 +1,12 @@
-import { Controller, Get, Query, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Inject, Query, UnauthorizedException } from '@nestjs/common';
 import { readFileSync } from 'node:fs';
 import { DataSource } from 'typeorm';
-import { PermissionEntity } from '@/modules/RBAC/entities';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { RedisService } from './libs/redis/redis.service';
+import { type Redis } from 'ioredis';
 import { ApiExcludeController } from '@nestjs/swagger';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { PermissionEntity } from '@/modules/RBAC/entities';
+import { ManualCacheKeysEnum } from './libs/redis/types';
+import { REDIS_CLIENT } from './app.constants';
 import { envConfig } from './configs/envConfig';
 
 @Controller()
@@ -12,7 +14,7 @@ import { envConfig } from './configs/envConfig';
 export class AppController {
   constructor(
     @InjectDataSource() private readonly dataSource: DataSource,
-    private redisService: RedisService,
+    @Inject(REDIS_CLIENT) private readonly redisClient: Redis,
   ) {}
 
   @Get('/health')
@@ -24,8 +26,7 @@ export class AppController {
   async update(@Query('secret') secret: string) {
     if (!secret) throw new UnauthorizedException('Unauthorized');
 
-    const storedSecret = await this.redisService.get<string>(`${envConfig.REDIS_PREFIX}:ECOM_UPDATE_KEY`);
-
+    const storedSecret = await this.redisClient.get(ManualCacheKeysEnum.ECOM_UPDATE_KEY);
     if (!storedSecret || storedSecret !== secret) throw new UnauthorizedException('Unauthorized');
 
     const routes = JSON.parse(readFileSync('./dist/routes.json', 'utf8')) as PermissionEntity[];
@@ -35,12 +36,19 @@ export class AppController {
         .insert()
         .into(PermissionEntity)
         .values(routes)
-        .orUpdate(['allowedRoles', 'path', 'method', 'feature'], ['path', 'method'])
+        .orUpdate(['allowedRoles', 'path', 'method', 'feature', 'isSystemUpdate'], ['path', 'method'])
         .execute(),
-      this.dataSource.queryResultCache.remove(
-        ['GET', 'POST', 'PUT', 'DELETE'].map((method) => `${envConfig.REDIS_PREFIX}:${method}-RBAC`),
-      ),
-      this.redisService.delete(`${envConfig.REDIS_PREFIX}:ECOM_UPDATE_KEY`),
+      this.redisClient.del(ManualCacheKeysEnum.ECOM_UPDATE_KEY),
     ]);
+
+    await Promise.all(
+      ['GET', 'POST', 'PUT', 'DELETE'].map((method) =>
+        this.redisClient.set(
+          `${envConfig.REDIS_PREFIX}:${method}-RBAC`,
+          JSON.stringify(routes.filter((route) => route.method === method)),
+        ),
+      ),
+    );
+    return { message: 'Updated' };
   }
 }

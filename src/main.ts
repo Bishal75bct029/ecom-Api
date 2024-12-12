@@ -40,7 +40,7 @@ BigInt.prototype.toJSON = function () {
   );
   app.useGlobalFilters(new AllExceptionFilter(new Logger()));
   swaggerSetup(app);
-  await app.listen(envConfig.PORT, () => {
+  await app.listen(envConfig.PORT, '0.0.0.0', () => {
     const server = app.getHttpServer();
     transformAllRoutes(server);
     Logger.log(`Listening on port ${envConfig.PORT}`);

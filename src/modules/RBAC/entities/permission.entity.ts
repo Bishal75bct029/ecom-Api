@@ -1,5 +1,5 @@
-import { UserRoleEnum } from '@/modules/user/entities';
-import { Column, Entity, Unique } from 'typeorm';
+import { UserEntity, UserRoleEnum } from '@/modules/user/entities';
+import { Column, Entity, ManyToOne, Unique, UpdateDateColumn } from 'typeorm';
 import { PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'permissions' })
@@ -19,4 +19,13 @@ export class PermissionEntity {
 
   @Column({ type: 'simple-array', enum: UserRoleEnum, default: [UserRoleEnum.USER] })
   allowedRoles: UserRoleEnum[];
+
+  @Column({ type: 'boolean', default: true })
+  isSystemUpdate: boolean;
+
+  @ManyToOne(() => UserEntity, { nullable: true, onDelete: 'SET NULL' })
+  updatedBy: UserEntity;
+
+  @UpdateDateColumn({ nullable: true })
+  updatedAt: Date;
 }

@@ -58,6 +58,7 @@ export const transformAllRoutes = (server: any) => {
               }
               return [];
             })(),
+            isSystemUpdate: true,
           } as PermissionEntity;
           return transformedRoute;
         }
