@@ -3,7 +3,6 @@ import { readFileSync } from 'node:fs';
 import { DataSource } from 'typeorm';
 import { PermissionEntity } from '@/modules/RBAC/entities';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { UserRoleEnum } from './modules/user/entities';
 import { RedisService } from './libs/redis/redis.service';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { envConfig } from './configs/envConfig';
@@ -39,12 +38,7 @@ export class AppController {
         .orUpdate(['allowedRoles', 'path', 'method', 'feature'], ['path', 'method'])
         .execute(),
       this.dataSource.queryResultCache.remove(
-        ['GET', 'POST', 'PUT', 'DELETE']
-          .map((method) => [
-            `${envConfig.REDIS_PREFIX}:${method}-${UserRoleEnum.USER}`,
-            `${envConfig.REDIS_PREFIX}:${method}-${UserRoleEnum.ADMIN}`,
-          ])
-          .flat(),
+        ['GET', 'POST', 'PUT', 'DELETE'].map((method) => `${envConfig.REDIS_PREFIX}:${method}-RBAC`),
       ),
       this.redisService.delete(`${envConfig.REDIS_PREFIX}:ECOM_UPDATE_KEY`),
     ]);
