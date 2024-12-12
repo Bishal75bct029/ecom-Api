@@ -1,14 +1,4 @@
-export const escapeHtml = (str: string): string =>
-  str
-    .trim()
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\//g, '&#x2F;')
-    .replace(/\\/g, '&#x5C;')
-    .replace(/`/g, '&#96;');
+import * as sanitize from 'sanitize-html';
 
 const keysToExclude = ['password'];
 
@@ -24,5 +14,5 @@ export const sanitizeRequestBody = (body: any) => {
     }, {});
   }
 
-  return typeof body === 'string' ? escapeHtml(body) : body;
+  return typeof body === 'string' ? sanitize(body) : body;
 };
