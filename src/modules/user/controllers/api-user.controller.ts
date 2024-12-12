@@ -9,6 +9,7 @@ import {
   Get,
   HttpCode,
   ForbiddenException,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { ApiTags } from '@nestjs/swagger';
@@ -67,7 +68,7 @@ export class ApiUserController {
   }
 
   @Put('address/:id')
-  async updateAddress(@Body() createAddressDto: CreateAddressDto, @Param('id') id: string) {
+  async updateAddress(@Body() createAddressDto: CreateAddressDto, @Param('id', ParseUUIDPipe) id: string) {
     const address = await this.addressService.findOne({ where: { id } });
 
     if (!address) throw new BadRequestException("Address doesn't exists");

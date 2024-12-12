@@ -1,4 +1,4 @@
-import { Controller, Post, Body, BadRequestException, Req, Put, Param } from '@nestjs/common';
+import { Controller, Post, Body, BadRequestException, Req, Put, Param, ParseUUIDPipe } from '@nestjs/common';
 import { Request } from 'express';
 import { ReviewService } from '../services/review.service';
 import { UserService } from '@/modules/user/services';
@@ -34,7 +34,7 @@ export class ApiReviewController {
   }
 
   @Put(':id')
-  async update(@Body() updateReviewDto: UpdateReviewDto, @Param('id') id: string) {
+  async update(@Body() updateReviewDto: UpdateReviewDto, @Param('id', ParseUUIDPipe) id: string) {
     const review = await this.reviewService.findOne({ where: { id } });
     if (!review) throw new BadRequestException('Review Not Found');
     return this.reviewService.createAndSave({ ...updateReviewDto, id: review.id });

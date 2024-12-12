@@ -1,4 +1,4 @@
-import { Controller, Get, NotFoundException, Param, Query, Req } from '@nestjs/common';
+import { Controller, Get, NotFoundException, Param, ParseUUIDPipe, Query, Req } from '@nestjs/common';
 import { ProductService } from '../services';
 import { Request } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -278,7 +278,7 @@ export class ApiProductController {
   }
 
   @Get(':id')
-  async getProduct(@Param('id') id: string, @Req() { currentUser }: Request) {
+  async getProduct(@Param('id', ParseUUIDPipe) id: string, @Req() { currentUser }: Request) {
     const { schoolId } = currentUser;
 
     const product = await this.productService.findOne({
@@ -322,7 +322,7 @@ export class ApiProductController {
   }
 
   @Get('meta/:id')
-  async getProductByMetaId(@Param('id') id: string, @Req() { currentUser }: Request) {
+  async getProductByMetaId(@Param('id', ParseUUIDPipe) id: string, @Req() { currentUser }: Request) {
     const { schoolId } = currentUser;
 
     const product = await this.productService.findOne({

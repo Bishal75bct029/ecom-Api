@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Put, Param, BadRequestException, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, BadRequestException, Query, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ILike, In } from 'typeorm';
 import { ProductService, ProductMetaService } from '../services';
@@ -59,7 +59,7 @@ export class AdminProductController {
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
+  async update(@Param('id', ParseUUIDPipe) id: string, @Body() updateProductDto: UpdateProductDto) {
     const { productMetas, categoryId, ...rest } = updateProductDto;
 
     const product = await this.productService.findOne({ where: { id } });

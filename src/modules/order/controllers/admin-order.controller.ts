@@ -1,4 +1,4 @@
-import { Controller, Body, Put, Param, BadRequestException, Get, Query } from '@nestjs/common';
+import { Controller, Body, Put, Param, BadRequestException, Get, Query, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { DataSource, In } from 'typeorm';
 import { OrderService } from '../services/order.service';
@@ -39,7 +39,7 @@ export class AdminOrderController {
   }
 
   @Put(':id/status')
-  async update(@Body() updateOrderStatusDto: UpdateOrderStatusDto, @Param('id') id: string) {
+  async update(@Body() updateOrderStatusDto: UpdateOrderStatusDto, @Param('id', ParseUUIDPipe) id: string) {
     let order = await this.orderService.findOne({ where: { id }, relations: { orderItems: { productMeta: true } } });
 
     if (!order) throw new BadRequestException('Order not found');

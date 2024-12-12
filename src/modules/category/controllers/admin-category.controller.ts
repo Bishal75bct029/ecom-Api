@@ -1,4 +1,16 @@
-import { Controller, Post, Body, Get, Param, Delete, Query, Req, Put, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Delete,
+  Query,
+  Req,
+  Put,
+  NotFoundException,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, In } from 'typeorm';
@@ -8,6 +20,7 @@ import { CategoryStatusEnum, CreateUpdateCategoryDto, GetCategoryQuery } from '.
 import { CategoryEntity } from '../entities/category.entity';
 import { getPaginatedResponse } from '@/common/utils';
 import { Request } from 'express';
+import { ValidateIDDto } from '@/common/dtos';
 
 @ApiTags('Admin Category')
 @ApiBearerAuth()
@@ -68,7 +81,7 @@ export class AdminCategoryController {
 
     const [categories, count] = await Promise.all([
       queryBuilder
-        .offset((page - 1) * limit)
+        .offset((page - 1) * limit || 0)
         .limit(limit)
         .getRawMany(),
       queryBuilder.getCount(),
@@ -81,7 +94,7 @@ export class AdminCategoryController {
   }
 
   @Get(':id')
-  async categoryByID(@Param('id') id: string) {
+  async categoryByID(@Param('id') { id }: ValidateIDDto) {
     const category = await this.categoryService.findOne({
       where: { id },
       select: {
@@ -116,7 +129,7 @@ export class AdminCategoryController {
   }
 
   @Put(':id')
-  async toggleCategoryStatus(@Param('id') id: string) {
+  async toggleCategoryStatus(@Param('id', ParseUUIDPipe) { id }: ValidateIDDto) {
     const category = await this.categoryService.findOne({ where: { id } });
     await this.categoryService.findDescendantsTree(category);
     const categoriesId = this.categoryService.getIdsFromParent(category);
@@ -128,7 +141,7 @@ export class AdminCategoryController {
   }
 
   @Delete(':id')
-  async deleteCategory(@Param('id') id: string) {
+  async deleteCategory(@Param('id', ParseUUIDPipe) { id }: ValidateIDDto) {
     const category = await this.categoryService.findOne({
       where: { id },
       select: {
