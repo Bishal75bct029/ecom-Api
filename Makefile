@@ -1,5 +1,8 @@
 generate-keys:
-	pnpm ts-node ./scripts/generateKeys.ts
+	pnpm ts-node ./src/scripts/generateKeys.ts
+
+update-rbac:
+	pnpm ts-node ./src/scripts/updateRbac.ts
 
 server:
 	pnpm start:dev

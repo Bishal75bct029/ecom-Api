@@ -1,8 +1,8 @@
+import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
+import { NextFunction, Request, Response } from 'express';
 import { sanitizeRequestBody } from '@/common/utils';
 import { envConfig } from '@/configs/envConfig';
 import { PasetoJwtService } from '@/libs/pasetoJwt/pasetoJwt.service';
-import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
-import { NextFunction, Request, Response } from 'express';
 
 declare global {
   namespace Express {

@@ -1,10 +1,12 @@
 import { Controller, Post, Body, BadRequestException, Req, Put, Param } from '@nestjs/common';
 import { Request } from 'express';
+import { ApiTags } from '@nestjs/swagger';
 import { ReviewService } from '../services/review.service';
 import { UserService } from '@/modules/user/services';
 import { ProductService } from '@/modules/product/services';
 import { CreateReviewDto, UpdateReviewDto } from '../dto';
 
+@ApiTags('API Review')
 @Controller('api/review')
 export class ApiReviewController {
   constructor(
