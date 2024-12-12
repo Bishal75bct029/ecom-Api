@@ -13,7 +13,7 @@ import { DiscountModule } from './modules/discount/discount.module';
 import { ApiAuthorizationMiddleware } from './common/middlewares/api/api-authorization.middleware';
 import { PaymentMethodModule } from './modules/payment-method/payment-method.module';
 import { TransactionModule } from './modules/transaction/transaction.module';
-import { HttpsModule } from './modules/https/https.module';
+import { HttpsModule } from './libs/https/https.module';
 import { PasetoJwtModule } from './libs/pasetoJwt/pasetoJwt.module';
 
 @Module({

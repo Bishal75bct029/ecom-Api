@@ -1,3 +1,4 @@
+import { sanitizeRequestBody } from '@/common/utils';
 import { envConfig } from '@/configs/envConfig';
 import { PasetoJwtService } from '@/libs/pasetoJwt/pasetoJwt.service';
 import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
@@ -29,7 +30,7 @@ export class AdminMiddleware implements NestMiddleware {
 
       if (payload.role !== 'ADMIN') throw new UnauthorizedException('Unauthorized');
       req.currentUser = payload;
-
+      req.body = sanitizeRequestBody(req.body);
       next();
     } catch (error) {
       throw new UnauthorizedException('Unauthorized');
