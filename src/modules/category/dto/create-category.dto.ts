@@ -9,9 +9,6 @@ export enum CategoryStatusEnum {
 }
 
 export class CreateUpdateCategoryDto extends PartialType(ValidateIDDto) {
-  @IsOptional()
-  id?: string;
-
   @IsString()
   @IsNotEmpty()
   name: string;
@@ -34,9 +31,6 @@ export class CreateUpdateCategoryDto extends PartialType(ValidateIDDto) {
 }
 
 export class SubCategory extends PartialType(ValidateIDDto) {
-  @IsOptional()
-  id?: string;
-
   @IsString()
   @IsNotEmpty()
   name: string;

@@ -1,4 +1,4 @@
-import { Controller, Body, Put, Param, BadRequestException, Get, Query, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Body, Put, Param, BadRequestException, Get, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { DataSource, In } from 'typeorm';
 import { OrderService } from '../services/order.service';
@@ -6,6 +6,7 @@ import { UpdateOrderStatusDto } from '../dto/update-order.dto';
 import { OrderEntity, OrderStatusEnum } from '../entities/order.entity';
 import { ProductMetaService } from '../../product/services/product-meta.service';
 import { ProductMetaEntity } from '../../product/entities/productMeta.entity';
+import { ValidateIDDto } from '@/common/dtos';
 
 @ApiTags('Admin Order')
 @Controller('admin/orders')
@@ -39,7 +40,7 @@ export class AdminOrderController {
   }
 
   @Put(':id/status')
-  async update(@Body() updateOrderStatusDto: UpdateOrderStatusDto, @Param('id', ParseUUIDPipe) id: string) {
+  async update(@Body() updateOrderStatusDto: UpdateOrderStatusDto, @Param() { id }: ValidateIDDto) {
     let order = await this.orderService.findOne({ where: { id }, relations: { orderItems: { productMeta: true } } });
 
     if (!order) throw new BadRequestException('Order not found');

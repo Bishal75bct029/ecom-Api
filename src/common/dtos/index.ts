@@ -1,6 +1,7 @@
 import { IsNumber, IsOptional, IsUUID, Min } from 'class-validator';
 
 export class ValidateIDDto {
+  @IsOptional()
   @IsUUID('4', { message: 'Invalid ID: Please provide a valid UUID' })
   id: string;
 }

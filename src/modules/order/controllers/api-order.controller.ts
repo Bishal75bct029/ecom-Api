@@ -260,7 +260,7 @@ export class ApiOrderController {
   }
 
   @Get(':id')
-  getOrderById(@Req() { currentUser }: Request, @Param('id') { id }: ValidateIDDto) {
+  getOrderById(@Req() { currentUser }: Request, @Param() { id }: ValidateIDDto) {
     return this.orderService.findOne({
       where: {
         user: { id: currentUser.id },
