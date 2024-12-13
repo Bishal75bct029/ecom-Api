@@ -9,7 +9,6 @@ import { AdminMiddleware, ApiMiddleware, PermissionMiddleware } from './common/m
 import { ProductModule, CategoryModule, ReviewModule, UserModule, CartModule, OrderModule } from '@/modules';
 import { RedisModule } from './libs/redis/redis.module';
 import { ADMIN_PUBLIC_ROUTES, API_PUBLIC_ROUTES } from './app.constants';
-// import { DiscountModule } from './modules/discount/discount.module';
 import { ApiAuthorizationMiddleware } from './common/middlewares/api/api-authorization.middleware';
 import { PaymentMethodModule } from './modules/payment-method/payment-method.module';
 import { TransactionModule } from './modules/transaction/transaction.module';
@@ -34,7 +33,6 @@ import { SchoolDiscountModule } from './modules/school-discount/school-discount.
     UserModule,
     CartModule,
     OrderModule,
-    // DiscountModule,
     SchoolDiscountModule,
     PaymentMethodModule,
     TransactionModule,

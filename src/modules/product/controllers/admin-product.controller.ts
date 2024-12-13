@@ -2,10 +2,10 @@ import { Controller, Get, Post, Body, Put, Param, BadRequestException, Query } f
 import { ApiTags } from '@nestjs/swagger';
 import { ILike, In } from 'typeorm';
 import { ProductService, ProductMetaService } from '../services';
-import { CreateProductDto, UpdateProductDto } from '../dto';
+import { AdminGetProductsDto, CreateProductDto, UpdateProductDto } from '../dto';
 import { CategoryService } from '../../category/services/category.service';
 import { getRecursiveDataArrayFromObjectOrArray } from '../helpers/getRecursiveDataArray.util';
-import { getRoundedOffValue } from '@/common/utils';
+import { getPaginatedResponse, getRoundedOffValue } from '@/common/utils';
 
 @ApiTags('Admin Product')
 @Controller('admin/products')
@@ -17,20 +17,43 @@ export class AdminProductController {
   ) {}
 
   @Get()
-  async getAllProducts(@Query('name') name?: string) {
-    const products = await this.productService.find({
-      where: [{ name: ILike(`%${name}%`) }, { tags: ILike(`%${name}%`) }, { description: ILike(`%${name}%`) }],
+  async getAllProducts(@Query() query: AdminGetProductsDto) {
+    const { name } = query;
+    let { limit, page } = query;
+
+    console.log(typeof limit, typeof page);
+    limit = limit || 10;
+    page = page || 1;
+
+    const [products, count] = await this.productService.findAndCount({
+      where: [{ name: ILike(name) }, { tags: ILike(`%${name}%`) }, { description: ILike(`%${name}%`) }],
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        tags: true,
+        productMeta: {
+          id: true,
+          price: true,
+          sku: true,
+          isDefault: true,
+          image: true,
+          stock: true,
+        },
+      },
       relations: ['productMeta', 'categories'],
+      skip: (page - 1) * limit,
+      take: limit,
+      cache: 300,
     });
 
-    return products.map((product) => {
-      product.productMeta.map((meta) => {
-        return {
-          ...meta,
-          price: getRoundedOffValue(meta.price / 10000),
-        };
-      });
-    });
+    return {
+      products: products.map((product) => ({
+        ...product,
+        meta: product.productMeta.map((meta) => ({ ...meta, price: getRoundedOffValue(Number(meta.price) / 10000) })),
+      })),
+      ...getPaginatedResponse({ count, limit, page }),
+    };
   }
 
   @Post()
