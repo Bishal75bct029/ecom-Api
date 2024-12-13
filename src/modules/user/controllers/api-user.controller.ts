@@ -49,7 +49,7 @@ export class ApiUserController {
       });
       return { token, refreshToken: generatedRefreshToken };
     } catch (error) {
-      throw new ForbiddenException('Session expired. Please re-login.');
+      throw new ForbiddenException({ message: 'Session expired. Please re-login.', needsLogin: true });
     }
   }
 

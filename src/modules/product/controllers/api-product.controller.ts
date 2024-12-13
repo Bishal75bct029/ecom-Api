@@ -130,7 +130,7 @@ export class ApiProductController {
           },
           skip: (page - 1) * limit,
           take: limit,
-          cache: 300,
+          cache: true,
         });
         products = [...recommendedProducts, ...clickedSearchedProduct];
         count = recommendedCount + viewProductInteractions.length;

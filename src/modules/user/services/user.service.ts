@@ -57,7 +57,7 @@ export class UserService extends AbstractService<UserEntity> {
   generateOtp() {
     const minm = 100000;
     const maxm = 999999;
-    return Math.floor(Math.random() * (maxm - minm + 1)) + minm;
+    return (Math.floor(Math.random() * (maxm - minm + 1)) + minm).toString();
   }
 
   async refreshUser(refreshToken: string, options: ConsumeOptions<false> & { secret?: string }) {

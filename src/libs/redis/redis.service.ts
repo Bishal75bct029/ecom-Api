@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Redis } from 'ioredis';
+import { type Redis } from 'ioredis';
 import { envConfig } from '@/configs/envConfig';
 import { REDIS_CLIENT } from '@/app.constants';
 
@@ -31,7 +31,7 @@ export class RedisService {
     await this.redisClient.set(`${this._prefix}:${key}`, value, 'EX', expiry);
   }
 
-  async delete(key: string): Promise<void> {
-    await this.redisClient.del(`${this._prefix}:${key}`);
+  async delete(...keys: string[]): Promise<void> {
+    await this.redisClient.del(keys.map((key) => `${this._prefix}:${key}`));
   }
 }
