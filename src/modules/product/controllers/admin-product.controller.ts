@@ -21,12 +21,13 @@ export class AdminProductController {
     const { name } = query;
     let { limit, page } = query;
 
-    console.log(typeof limit, typeof page);
     limit = limit || 10;
     page = page || 1;
 
     const [products, count] = await this.productService.findAndCount({
-      where: [{ name: ILike(name) }, { tags: ILike(`%${name}%`) }, { description: ILike(`%${name}%`) }],
+      where: {
+        name: name ? ILike(`%${name}%`) : undefined,
+      },
       select: {
         id: true,
         name: true,
