@@ -32,10 +32,6 @@ BigInt.prototype.toJSON = function () {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      transform: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
     }),
   );
   app.useGlobalFilters(new AllExceptionFilter(new Logger()));
