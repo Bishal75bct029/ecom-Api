@@ -1,6 +1,8 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+
 import { DiscountService } from '../services/discount.service';
 import { CreateDiscountDTO } from '../dto/create-discount.dto';
+import { ValidateIDDto } from '@/common/dtos';
 
 @Controller('admin/discount')
 export class AdminDiscountController {
@@ -17,7 +19,7 @@ export class AdminDiscountController {
   }
 
   @Delete(':id')
-  async delete(@Param('id', ParseUUIDPipe) id: string) {
+  async delete(@Param() { id }: ValidateIDDto) {
     return this.discountServices.softDelete(id);
   }
 }

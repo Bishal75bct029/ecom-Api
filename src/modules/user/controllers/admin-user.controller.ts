@@ -40,6 +40,11 @@ export class AdminUserController {
   @Post('create')
   async createAdmin(@Body() createAdminUserDto: CreateAdminUserDto) {
     createAdminUserDto.password = await bcrypt.hash(createAdminUserDto.password, 10);
+
+    if (await this.userService.findOne({ where: { email: createAdminUserDto.email } })) {
+      throw new BadRequestException('User already exist');
+    }
+
     const user = await this.userService.createAndSave({ ...createAdminUserDto, role: UserRoleEnum.ADMIN });
     delete user.password;
 

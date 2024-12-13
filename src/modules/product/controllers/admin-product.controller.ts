@@ -6,6 +6,7 @@ import { AdminGetProductsDto, CreateProductDto, UpdateProductDto } from '../dto'
 import { CategoryService } from '../../category/services/category.service';
 import { getRecursiveDataArrayFromObjectOrArray } from '../helpers/getRecursiveDataArray.util';
 import { getPaginatedResponse, getRoundedOffValue } from '@/common/utils';
+import { ValidateIDDto } from '@/common/dtos';
 
 @ApiTags('Admin Product')
 @Controller('admin/products')
@@ -83,7 +84,7 @@ export class AdminProductController {
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
+  async update(@Param() { id }: ValidateIDDto, @Body() updateProductDto: UpdateProductDto) {
     const { productMetas, categoryId, ...rest } = updateProductDto;
 
     const product = await this.productService.findOne({ where: { id } });

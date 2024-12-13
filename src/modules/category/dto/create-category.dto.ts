@@ -1,23 +1,21 @@
+import { PaginationDto, ValidateIDDto } from '@/common/dtos';
+import { PartialType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 
 export enum CategoryStatusEnum {
   ACTIVE = 'ACTIVE',
   INACTIVE = 'INACTIVE',
 }
 
-export class CreateUpdateCategoryDto {
-  @IsString()
-  @IsOptional()
-  id: string;
-
+export class CreateUpdateCategoryDto extends PartialType(ValidateIDDto) {
   @IsString()
   @IsNotEmpty()
   name: string;
 
   @IsString()
   @IsOptional()
-  image: string;
+  image?: string;
 
   @IsString()
   @IsOptional()
@@ -32,11 +30,7 @@ export class CreateUpdateCategoryDto {
   status: CategoryStatusEnum;
 }
 
-export class SubCategory {
-  @IsString()
-  @IsOptional()
-  id: string;
-
+export class SubCategory extends PartialType(ValidateIDDto) {
   @IsString()
   @IsNotEmpty()
   name: string;
@@ -46,25 +40,17 @@ export class SubCategory {
   children: SubCategory[];
 }
 
-export class GetCategoryQuery {
+export class GetCategoryQuery extends PaginationDto {
   @IsOptional()
-  sortBy: 'name' | 'updatedAt' | 'productCount';
+  sortBy?: 'name' | 'updatedAt' | 'productCount';
 
   @IsOptional()
-  order: 'ASC' | 'DESC';
-
-  @IsOptional()
-  @IsInt()
-  limit: number;
-
-  @IsOptional()
-  @IsInt()
-  page: number;
+  order?: 'ASC' | 'DESC';
 
   @IsString()
   @IsOptional()
-  search: string;
+  search?: string;
 
   @IsOptional()
-  status: 'active' | 'inactive';
+  status?: 'active' | 'inactive';
 }

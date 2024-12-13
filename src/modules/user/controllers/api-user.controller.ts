@@ -18,6 +18,7 @@ import { CreateAddressDto } from '../dto/address.dto';
 import { AddressService } from '../services/address.service';
 import { UserRoleEnum } from '../entities/user.entity';
 import { envConfig } from '@/configs/envConfig';
+import { ValidateIDDto } from '@/common/dtos';
 
 @ApiTags('API User')
 @Controller('api/users')
@@ -67,7 +68,7 @@ export class ApiUserController {
   }
 
   @Put('address/:id')
-  async updateAddress(@Body() createAddressDto: CreateAddressDto, @Param('id') id: string) {
+  async updateAddress(@Body() createAddressDto: CreateAddressDto, @Param() { id }: ValidateIDDto) {
     const address = await this.addressService.findOne({ where: { id } });
 
     if (!address) throw new BadRequestException("Address doesn't exists");

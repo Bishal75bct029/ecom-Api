@@ -17,6 +17,7 @@ import { ProductEntity } from '../entities';
 import { envConfig } from '@/configs/envConfig';
 import { shuffleArray } from '../helpers/shuffleArrays';
 import { getPaginatedResponse } from '@/common/utils';
+import { ValidateIDDto } from '@/common/dtos';
 
 @ApiTags('Api Product')
 @ApiBearerAuth()
@@ -278,7 +279,7 @@ export class ApiProductController {
   }
 
   @Get(':id')
-  async getProduct(@Param('id') id: string, @Req() { currentUser }: Request) {
+  async getProduct(@Param() { id }: ValidateIDDto, @Req() { currentUser }: Request) {
     const { schoolId } = currentUser;
 
     const product = await this.productService.findOne({
@@ -322,7 +323,7 @@ export class ApiProductController {
   }
 
   @Get('meta/:id')
-  async getProductByMetaId(@Param('id') id: string, @Req() { currentUser }: Request) {
+  async getProductByMetaId(@Param() { id }: ValidateIDDto, @Req() { currentUser }: Request) {
     const { schoolId } = currentUser;
 
     const product = await this.productService.findOne({

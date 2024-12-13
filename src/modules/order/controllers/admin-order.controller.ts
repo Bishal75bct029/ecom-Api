@@ -6,6 +6,7 @@ import { UpdateOrderStatusDto } from '../dto/update-order.dto';
 import { OrderEntity, OrderStatusEnum } from '../entities/order.entity';
 import { ProductMetaService } from '../../product/services/product-meta.service';
 import { ProductMetaEntity } from '../../product/entities/productMeta.entity';
+import { ValidateIDDto } from '@/common/dtos';
 
 @ApiTags('Admin Order')
 @Controller('admin/orders')
@@ -39,7 +40,7 @@ export class AdminOrderController {
   }
 
   @Put(':id/status')
-  async update(@Body() updateOrderStatusDto: UpdateOrderStatusDto, @Param('id') id: string) {
+  async update(@Body() updateOrderStatusDto: UpdateOrderStatusDto, @Param() { id }: ValidateIDDto) {
     let order = await this.orderService.findOne({ where: { id }, relations: { orderItems: { productMeta: true } } });
 
     if (!order) throw new BadRequestException('Order not found');

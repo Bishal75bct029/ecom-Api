@@ -1,13 +1,27 @@
-import { Controller, Post, Body, Get, Param, Delete, Query, Req, Put, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Delete,
+  Query,
+  Req,
+  Put,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, In } from 'typeorm';
 
 import { CategoryService } from '../services/category.service';
-import { CategoryStatusEnum, CreateUpdateCategoryDto, GetCategoryQuery } from '../dto';
+import { CreateUpdateCategoryDto, GetCategoryQuery } from '../dto';
 import { CategoryEntity } from '../entities/category.entity';
 import { getPaginatedResponse } from '@/common/utils';
 import { Request } from 'express';
+import { ValidateIDDto } from '@/common/dtos';
+import { CategoryStatusDto } from '../dto/update-category.dto';
 
 @ApiTags('Admin Category')
 @ApiBearerAuth()
@@ -63,12 +77,12 @@ export class AdminCategoryController {
 
       queryBuilder.orderBy(orderByField, order);
     } else {
-      queryBuilder.orderBy('categories.updatedAt', 'DESC');
+      queryBuilder.orderBy('categories.createdAt', 'DESC');
     }
 
     const [categories, count] = await Promise.all([
       queryBuilder
-        .offset((page - 1) * limit)
+        .offset((page - 1) * limit || 0)
         .limit(limit)
         .getRawMany(),
       queryBuilder.getCount(),
@@ -81,7 +95,7 @@ export class AdminCategoryController {
   }
 
   @Get(':id')
-  async categoryByID(@Param('id') id: string) {
+  async categoryByID(@Param() { id }: ValidateIDDto) {
     const category = await this.categoryService.findOne({
       where: { id },
       select: {
@@ -116,19 +130,16 @@ export class AdminCategoryController {
   }
 
   @Put(':id')
-  async toggleCategoryStatus(@Param('id') id: string) {
+  async toggleCategoryStatus(@Param() { id }: ValidateIDDto, @Body() { status }: CategoryStatusDto) {
     const category = await this.categoryService.findOne({ where: { id } });
     await this.categoryService.findDescendantsTree(category);
     const categoriesId = this.categoryService.getIdsFromParent(category);
-
-    const status =
-      category.status === CategoryStatusEnum.ACTIVE ? CategoryStatusEnum.INACTIVE : CategoryStatusEnum.ACTIVE;
 
     return this.categoryService.update({ id: In(categoriesId) }, { status });
   }
 
   @Delete(':id')
-  async deleteCategory(@Param('id') id: string) {
+  async deleteCategory(@Param() { id }: ValidateIDDto) {
     const category = await this.categoryService.findOne({
       where: { id },
       select: {
@@ -139,8 +150,9 @@ export class AdminCategoryController {
     if (category) {
       const categoryWithChildren = await this.categoryService.findDescendantsTree(category);
       await this.categoryService.softRemove([categoryWithChildren]);
+      return true;
     }
 
-    return true;
+    throw new BadRequestException('Category not found');
   }
 }

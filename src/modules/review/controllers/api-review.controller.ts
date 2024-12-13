@@ -5,6 +5,7 @@ import { ReviewService } from '../services/review.service';
 import { UserService } from '@/modules/user/services';
 import { ProductService } from '@/modules/product/services';
 import { CreateReviewDto, UpdateReviewDto } from '../dto';
+import { ValidateIDDto } from '@/common/dtos';
 
 @ApiTags('API Review')
 @Controller('api/review')
@@ -36,7 +37,7 @@ export class ApiReviewController {
   }
 
   @Put(':id')
-  async update(@Body() updateReviewDto: UpdateReviewDto, @Param('id') id: string) {
+  async update(@Body() updateReviewDto: UpdateReviewDto, @Param() { id }: ValidateIDDto) {
     const review = await this.reviewService.findOne({ where: { id } });
     if (!review) throw new BadRequestException('Review Not Found');
     return this.reviewService.createAndSave({ ...updateReviewDto, id: review.id });
