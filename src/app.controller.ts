@@ -36,7 +36,9 @@ export class AppController {
         .insert()
         .into(PermissionEntity)
         .values(routes)
-        .orUpdate(['allowedRoles', 'path', 'method', 'feature', 'isSystemUpdate'], ['path', 'method'])
+        .orUpdate(['path', 'method', 'feature', 'isSystemUpdate'], ['path', 'method'], {
+          skipUpdateIfNoValuesChanged: true,
+        })
         .execute(),
       this.redisClient.del(ManualCacheKeysEnum.ECOM_UPDATE_KEY),
     ]);
