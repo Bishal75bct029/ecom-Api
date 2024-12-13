@@ -1,16 +1,4 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Get,
-  Param,
-  Delete,
-  Query,
-  Req,
-  Put,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Delete, Query, Req, Put, BadRequestException } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, In } from 'typeorm';
@@ -105,7 +93,7 @@ export class AdminCategoryController {
         status: true,
       },
     });
-    if (!category) throw new NotFoundException('Category not found');
+    if (!category) throw new BadRequestException('Category not found');
 
     return this.categoryService.findDescendantsTree(category);
   }
