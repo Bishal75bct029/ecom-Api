@@ -1,6 +1,7 @@
-import { UserRoleEnum } from '@/modules/user/entities';
 import { Reflector } from '@nestjs/core';
 import { writeFileSync } from 'fs';
+import { Router } from 'express';
+import { UserRoleEnum } from '@/modules/user/entities';
 import { type PermissionEntity } from '@/modules/RBAC/entities';
 import { ROUTE_FEATURE_NAME } from '../decorators/route-feature-name.decorator';
 
@@ -26,18 +27,18 @@ const routesToFeatureMappers = {
 };
 
 export const transformAllRoutes = (server: any) => {
-  const router = server._events.request._router;
+  const router = server._events.request._router as Router;
   const reflector = new Reflector();
 
   const routes = router.stack
-    .map((layer: any) => {
+    .map((layer) => {
       if (layer.route) {
         const route = layer.route;
         const path = route?.path;
         const method = route.stack[0].method.toUpperCase();
         if (
           (path.startsWith('/admin') || path.startsWith('/api')) &&
-          ['GET', 'POST', 'PUT', 'PATCH', 'DELETE '].includes(method)
+          ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(method)
         ) {
           const transformedRoute = {
             feature: (() => {
