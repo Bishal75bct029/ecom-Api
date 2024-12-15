@@ -4,7 +4,6 @@ import { Request } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Between, FindManyOptions, ILike, In, IsNull, Not } from 'typeorm';
 import { SchoolDiscountService } from '@/modules/school-discount/services/schoolDiscount.service';
-import { getAllTreeIds } from '../helpers/flattenTree.util';
 import {
   GetProductsFilteredListDto,
   ProductQueyTypeEnum,
@@ -15,7 +14,7 @@ import { CategoryService } from '@/modules/category/services/category.service';
 import { HttpsService } from '@/libs/https/https.service';
 import { ProductEntity } from '../entities';
 import { envConfig } from '@/configs/envConfig';
-import { shuffleArray } from '../helpers/shuffleArrays';
+import { shuffleArray, getAllTreeIds } from '../helpers';
 import { getPaginatedResponse } from '@/common/utils';
 import { ValidateIDDto } from '@/common/dtos';
 
