@@ -10,6 +10,8 @@ import {
   ObjectId,
   RemoveOptions,
   InsertResult,
+  SelectQueryBuilder,
+  QueryRunner,
 } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
@@ -78,5 +80,9 @@ export abstract class AbstractService<T> {
     criteria: string | string[] | number | number[] | Date | Date[] | ObjectId | ObjectId[] | FindOptionsWhere<T>,
   ) {
     return this.repository.softDelete(criteria);
+  }
+
+  createQueryBuilder(alias?: string, queryRunner?: QueryRunner): SelectQueryBuilder<T> {
+    return this.repository.createQueryBuilder(alias, queryRunner);
   }
 }

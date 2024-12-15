@@ -35,6 +35,10 @@ export class SubCategory extends PartialType(ValidateIDDto) {
   @IsNotEmpty()
   name: string;
 
+  @IsEnum(CategoryStatusEnum)
+  @IsOptional()
+  status: CategoryStatusEnum;
+
   @ValidateNested({ each: true })
   @Type(() => SubCategory)
   children: SubCategory[];

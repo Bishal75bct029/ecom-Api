@@ -1,5 +1,6 @@
 import { ApiHideProperty, OmitType, PickType } from '@nestjs/swagger';
-import { IsAlphanumeric, IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsAlphanumeric, IsEmail, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
 
 export class CreateAdminUserDto {
   @IsNotEmpty()
@@ -20,9 +21,14 @@ export class CreateAdminUserDto {
   })
   password: string;
 
-  @IsBoolean()
   @IsNotEmpty()
-  isOtpEnabled: boolean;
+  @Transform(({ value }) => {
+    if (![true, false, 'true', 'false'].includes(value)) {
+      throw new Error('Invalid value for isOtpEnabled.');
+    }
+    return value === 'true' || value === true;
+  })
+  isOtpEnabled: any;
 }
 
 export class CreateUserDto extends OmitType(CreateAdminUserDto, ['isOtpEnabled']) {}

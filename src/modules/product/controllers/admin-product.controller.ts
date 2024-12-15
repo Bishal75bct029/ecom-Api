@@ -4,7 +4,7 @@ import { ILike, In } from 'typeorm';
 import { ProductService, ProductMetaService } from '../services';
 import { AdminGetProductsDto, CreateProductDto, UpdateProductDto } from '../dto';
 import { CategoryService } from '../../category/services/category.service';
-import { getRecursiveDataArrayFromObjectOrArray } from '../helpers/getRecursiveDataArray.util';
+import { getRecursiveDataArrayFromObjectOrArray } from '../helpers';
 import { getPaginatedResponse, getRoundedOffValue } from '@/common/utils';
 import { ValidateIDDto } from '@/common/dtos';
 

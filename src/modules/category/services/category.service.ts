@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
 import { CategoryRepository } from '../repositories/category.repository';
 import { CategoryEntity } from '../entities/category.entity';
@@ -22,5 +22,13 @@ export class CategoryService extends CategoryRepository {
       }
     }
     return ids;
+  }
+
+  async checkUniqueParentName(name: string) {
+    const trees = await this.findTrees({ depth: 1 });
+    const isNameNotUnique = trees.some((tree) => tree.name.toLowerCase() === name.trim().toLowerCase());
+    if (isNameNotUnique) {
+      throw new BadRequestException('Parent category name must be unique.');
+    }
   }
 }

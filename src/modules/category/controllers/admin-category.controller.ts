@@ -1,24 +1,20 @@
 import { Controller, Post, Body, Get, Param, Delete, Query, Req, Put, BadRequestException } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource, In } from 'typeorm';
+import { In } from 'typeorm';
 
 import { CategoryService } from '../services/category.service';
 import { CreateUpdateCategoryDto, GetCategoryQuery } from '../dto';
-import { CategoryEntity } from '../entities/category.entity';
 import { getPaginatedResponse } from '@/common/utils';
 import { Request } from 'express';
 import { ValidateIDDto } from '@/common/dtos';
 import { CategoryStatusDto } from '../dto/update-category.dto';
+import { addPropertiesToNestedTree } from '../helpers';
 
 @ApiTags('Admin Category')
 @ApiBearerAuth()
 @Controller('admin/categories')
 export class AdminCategoryController {
-  constructor(
-    private readonly categoryService: CategoryService,
-    @InjectDataSource() private readonly dataSource: DataSource,
-  ) {}
+  constructor(private readonly categoryService: CategoryService) {}
 
   @Get()
   async getAll(@Query() categoryQuery: GetCategoryQuery) {
@@ -29,8 +25,7 @@ export class AdminCategoryController {
     limit = limit || undefined;
     page = page || 1;
 
-    const queryBuilder = this.dataSource
-      .getRepository(CategoryEntity)
+    const queryBuilder = this.categoryService
       .createQueryBuilder('categories')
       .leftJoin('categories.products', 'product')
       .innerJoin('categories.updatedBy', 'users')
@@ -100,20 +95,57 @@ export class AdminCategoryController {
 
   @Post()
   async saveCategory(@Req() { currentUser }: Request, @Body() createCategoryDto: CreateUpdateCategoryDto) {
-    const { id, name, description, status, children } = createCategoryDto;
-    const { id: userId } = currentUser;
+    const { id, name, description, status } = createCategoryDto;
+    let { children } = createCategoryDto;
 
-    const category = await this.categoryService.createAndSave({
-      id,
-      name,
-      description,
-      status,
-      children,
-      updatedBy: { id: userId },
-    });
-    const categoriesId = this.categoryService.getIdsFromParent(category);
-    await this.categoryService.update({ id: In(categoriesId) }, { status });
+    const trees = await this.categoryService.findTrees({ depth: 1 });
+    const isNameNotUnique = trees.some((tree) => tree.name.toLowerCase() === name.trim().toLowerCase());
+    if (isNameNotUnique) {
+      throw new BadRequestException('Parent category name must be unique.');
+    }
 
+    children = addPropertiesToNestedTree(children, { updatedBy: { id: currentUser.id }, status });
+
+    await this.categoryService.createAndSave(
+      {
+        id,
+        name,
+        description,
+        status,
+        children,
+        updatedBy: { id: currentUser.id },
+      },
+      { transaction: true },
+    );
+    return true;
+  }
+
+  @Put()
+  async updateCategory(@Req() { currentUser }: Request, @Body() createCategoryDto: CreateUpdateCategoryDto) {
+    const { id, name, description, status } = createCategoryDto;
+    let { children } = createCategoryDto;
+
+    const trees = await this.categoryService.findTrees({ depth: 1 });
+    const isNameNotUnique = trees
+      .filter((tree) => tree.id !== id)
+      .some((tree) => tree.name.toLowerCase() === name.trim().toLowerCase());
+    if (isNameNotUnique) {
+      throw new BadRequestException('Parent category name must be unique.');
+    }
+
+    children = addPropertiesToNestedTree(children, { updatedBy: { id: currentUser.id }, status });
+
+    await this.categoryService.createAndSave(
+      {
+        id,
+        name,
+        description,
+        status,
+        children,
+        updatedBy: { id: currentUser.id },
+      },
+      { transaction: true },
+    );
     return true;
   }
 
@@ -122,7 +154,6 @@ export class AdminCategoryController {
     const category = await this.categoryService.findOne({ where: { id } });
     await this.categoryService.findDescendantsTree(category);
     const categoriesId = this.categoryService.getIdsFromParent(category);
-
     return this.categoryService.update({ id: In(categoriesId) }, { status });
   }
 
