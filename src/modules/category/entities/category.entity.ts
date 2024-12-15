@@ -7,7 +7,7 @@ import { UserEntity } from '@/modules/user/entities';
 @Entity({ name: 'categories' })
 @Tree('materialized-path')
 export class CategoryEntity extends BaseEntity {
-  @Column({ unique: true })
+  @Column()
   name: string;
 
   @Column({ type: 'text', nullable: true })
