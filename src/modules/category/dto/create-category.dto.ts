@@ -1,5 +1,5 @@
 import { PaginationDto } from '@/common/dtos';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { IsEnum, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 
 export enum CategoryStatusEnum {
@@ -10,6 +10,7 @@ export enum CategoryStatusEnum {
 export class CreateCategoryDto {
   @IsString()
   @IsNotEmpty()
+  @Transform(({ value }) => value.trim())
   name: string;
 
   @IsString()
@@ -18,6 +19,7 @@ export class CreateCategoryDto {
 
   @IsString()
   @IsOptional()
+  @Transform(({ value }) => value.trim())
   description?: string;
 
   @IsEnum(CategoryStatusEnum)
@@ -32,6 +34,7 @@ export class CreateCategoryDto {
 class SubCategory {
   @IsString()
   @IsNotEmpty()
+  @Transform(({ value }) => value.trim())
   name: string;
 
   @ValidateNested({ each: true })

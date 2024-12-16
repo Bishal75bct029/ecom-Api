@@ -98,7 +98,7 @@ export class AdminCategoryController {
     let { children } = createCategoryDto;
 
     const trees = await this.categoryService.findTrees({ depth: 1 });
-    const isNameNotUnique = trees.some((tree) => tree.name.toLowerCase() === name.trim().toLowerCase());
+    const isNameNotUnique = trees.some((tree) => tree.name.trim().toLowerCase() === name.trim().toLowerCase());
     if (isNameNotUnique) {
       throw new BadRequestException('Parent category name must be unique.');
     }
@@ -126,7 +126,7 @@ export class AdminCategoryController {
     const trees = await this.categoryService.findTrees({ depth: 1 });
     const isNameNotUnique = trees
       .filter((tree) => tree.id !== id)
-      .some((tree) => tree.name.toLowerCase() === name.trim().toLowerCase());
+      .some((tree) => tree.name.trim().toLowerCase() === name.trim().toLowerCase());
     if (isNameNotUnique) {
       throw new BadRequestException('Parent category name must be unique.');
     }
