@@ -11,6 +11,7 @@ export class CreateAdminUserDto {
   @IsNotEmpty()
   @IsString()
   @IsAlphanumeric()
+  @Transform(({ value }) => value.trim())
   name: string;
 
   @IsString()

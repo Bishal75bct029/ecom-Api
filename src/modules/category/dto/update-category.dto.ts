@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsString, IsUUID, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { OmitType, PickType } from '@nestjs/swagger';
 import { CreateCategoryDto } from './create-category.dto';
 import { ValidateIDDto } from '@/common/dtos';
@@ -9,6 +9,7 @@ export class UpdateCategoryStatusDto extends PickType(CreateCategoryDto, ['statu
 class UpdateSubCategory extends ValidateIDDto {
   @IsString()
   @IsNotEmpty()
+  @Transform(({ value }) => value.trim())
   name: string;
 
   @ValidateNested({ each: true })
