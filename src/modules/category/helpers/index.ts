@@ -1,4 +1,4 @@
-export const addPropertiesToNestedTree = <T extends { name: string; children?: T[] }>(
+export const addPropertiesToNestedTree = <T extends { children?: T[] }>(
   data: T[],
   propertyToAdd?: Record<string, any>,
 ): T[] => {

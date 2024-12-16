@@ -3,11 +3,10 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { In } from 'typeorm';
 
 import { CategoryService } from '../services/category.service';
-import { CreateUpdateCategoryDto, GetCategoryQuery } from '../dto';
+import { CreateCategoryDto, UpdateCategoryDto, GetCategoryQuery, UpdateCategoryStatusDto } from '../dto';
 import { getPaginatedResponse } from '@/common/utils';
 import { Request } from 'express';
 import { ValidateIDDto } from '@/common/dtos';
-import { CategoryStatusDto } from '../dto/update-category.dto';
 import { addPropertiesToNestedTree } from '../helpers';
 
 @ApiTags('Admin Category')
@@ -94,8 +93,8 @@ export class AdminCategoryController {
   }
 
   @Post()
-  async saveCategory(@Req() { currentUser }: Request, @Body() createCategoryDto: CreateUpdateCategoryDto) {
-    const { id, name, description, status } = createCategoryDto;
+  async saveCategory(@Req() { currentUser }: Request, @Body() createCategoryDto: CreateCategoryDto) {
+    const { name, description, status } = createCategoryDto;
     let { children } = createCategoryDto;
 
     const trees = await this.categoryService.findTrees({ depth: 1 });
@@ -108,7 +107,6 @@ export class AdminCategoryController {
 
     await this.categoryService.createAndSave(
       {
-        id,
         name,
         description,
         status,
@@ -121,9 +119,9 @@ export class AdminCategoryController {
   }
 
   @Put()
-  async updateCategory(@Req() { currentUser }: Request, @Body() createCategoryDto: CreateUpdateCategoryDto) {
-    const { id, name, description, status } = createCategoryDto;
-    let { children } = createCategoryDto;
+  async updateCategory(@Req() { currentUser }: Request, @Body() updateCategoryDto: UpdateCategoryDto) {
+    const { id, name, description, status } = updateCategoryDto;
+    let { children } = updateCategoryDto;
 
     const trees = await this.categoryService.findTrees({ depth: 1 });
     const isNameNotUnique = trees
@@ -134,7 +132,6 @@ export class AdminCategoryController {
     }
 
     children = addPropertiesToNestedTree(children, { updatedBy: { id: currentUser.id }, status });
-
     await this.categoryService.createAndSave(
       {
         id,
@@ -150,7 +147,7 @@ export class AdminCategoryController {
   }
 
   @Put(':id')
-  async toggleCategoryStatus(@Param() { id }: ValidateIDDto, @Body() { status }: CategoryStatusDto) {
+  async toggleCategoryStatus(@Param() { id }: ValidateIDDto, @Body() { status }: UpdateCategoryStatusDto) {
     const category = await this.categoryService.findOne({ where: { id } });
     await this.categoryService.findDescendantsTree(category);
     const categoriesId = this.categoryService.getIdsFromParent(category);

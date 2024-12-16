@@ -1,7 +1,9 @@
-import { IsNumber, IsOptional, IsUUID, Min } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsNumber, IsOptional, IsUUID, Min } from 'class-validator';
 
 export class ValidateIDDto {
-  @IsOptional()
+  @IsNotEmpty()
+  @ApiProperty({ name: 'id' })
   @IsUUID('4', { message: 'Invalid ID: Please provide a valid UUID' })
   id: string;
 }

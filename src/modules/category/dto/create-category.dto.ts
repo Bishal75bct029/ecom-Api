@@ -1,5 +1,4 @@
-import { PaginationDto, ValidateIDDto } from '@/common/dtos';
-import { PartialType } from '@nestjs/mapped-types';
+import { PaginationDto } from '@/common/dtos';
 import { Type } from 'class-transformer';
 import { IsEnum, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 
@@ -8,7 +7,7 @@ export enum CategoryStatusEnum {
   INACTIVE = 'INACTIVE',
 }
 
-export class CreateUpdateCategoryDto extends PartialType(ValidateIDDto) {
+export class CreateCategoryDto {
   @IsString()
   @IsNotEmpty()
   name: string;
@@ -21,23 +20,19 @@ export class CreateUpdateCategoryDto extends PartialType(ValidateIDDto) {
   @IsOptional()
   description?: string;
 
+  @IsEnum(CategoryStatusEnum)
+  status: CategoryStatusEnum;
+
   @ValidateNested({ each: true })
   @Type(() => SubCategory)
   @IsNotEmpty()
   children: SubCategory[];
-
-  @IsEnum(CategoryStatusEnum)
-  status: CategoryStatusEnum;
 }
 
-export class SubCategory extends PartialType(ValidateIDDto) {
+class SubCategory {
   @IsString()
   @IsNotEmpty()
   name: string;
-
-  @IsEnum(CategoryStatusEnum)
-  @IsOptional()
-  status: CategoryStatusEnum;
 
   @ValidateNested({ each: true })
   @Type(() => SubCategory)
