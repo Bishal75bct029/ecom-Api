@@ -9,7 +9,7 @@ export class UpdateCategoryStatusDto extends PickType(CreateCategoryDto, ['statu
 class UpdateSubCategory extends ValidateIDDto {
   @IsString()
   @IsNotEmpty()
-  @Transform(({ value }) => value.trim())
+  @Transform(({ value }) => value.replace(/\s+/g, ' ').trim())
   name: string;
 
   @ValidateNested({ each: true })

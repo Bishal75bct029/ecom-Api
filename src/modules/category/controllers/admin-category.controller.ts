@@ -123,6 +123,12 @@ export class AdminCategoryController {
     const { id, name, description, status } = updateCategoryDto;
     let { children } = updateCategoryDto;
 
+    const categoryExists = await this.categoryService.findOne({ where: { id }, select: { id: true } });
+
+    if (!categoryExists) {
+      throw new BadRequestException("Category doesn't exist.");
+    }
+
     const trees = await this.categoryService.findTrees({ depth: 1 });
     const isNameNotUnique = trees
       .filter((tree) => tree.id !== id)
