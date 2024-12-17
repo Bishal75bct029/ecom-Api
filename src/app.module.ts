@@ -16,6 +16,7 @@ import { HttpsModule } from './libs/https/https.module';
 import { PasetoJwtModule } from './libs/pasetoJwt/pasetoJwt.module';
 import { RbacModule } from './modules/RBAC/rbac.module';
 import { SchoolDiscountModule } from './modules/school-discount/school-discount.module';
+import { FileUploadModule } from './modules/file-upload/file-upload.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { SchoolDiscountModule } from './modules/school-discount/school-discount.
     HttpsModule,
     PasetoJwtModule,
     RbacModule,
+    FileUploadModule,
   ],
   controllers: [AppController],
   providers: [

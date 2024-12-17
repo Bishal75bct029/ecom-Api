@@ -1,20 +1,19 @@
-import { Controller, Get, Inject, Query, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Query, UnauthorizedException } from '@nestjs/common';
 import { readFileSync } from 'node:fs';
 import { DataSource } from 'typeorm';
-import { type Redis } from 'ioredis';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { PermissionEntity } from '@/modules/RBAC/entities';
-import { ManualCacheKeysEnum } from './libs/redis/types';
-import { REDIS_CLIENT } from './app.constants';
+import { CacheKeysEnum } from './libs/redis/types';
 import { envConfig } from './configs/envConfig';
+import { RedisService } from './libs/redis/redis.service';
 
 @Controller()
 @ApiExcludeController()
 export class AppController {
   constructor(
     @InjectDataSource() private readonly dataSource: DataSource,
-    @Inject(REDIS_CLIENT) private readonly redisClient: Redis,
+    private readonly redisService: RedisService,
   ) {}
 
   @Get('/health')
@@ -26,7 +25,7 @@ export class AppController {
   async update(@Query('secret') secret: string) {
     if (!secret) throw new UnauthorizedException('Unauthorized');
 
-    const storedSecret = await this.redisClient.get(ManualCacheKeysEnum.ECOM_UPDATE_KEY);
+    const storedSecret = await this.redisService.get(CacheKeysEnum.ECOM_UPDATE_KEY, false);
     if (!storedSecret || storedSecret !== secret) throw new UnauthorizedException('Unauthorized');
 
     const routes = JSON.parse(readFileSync('./dist/routes.json', 'utf8')) as PermissionEntity[];
@@ -40,12 +39,12 @@ export class AppController {
           skipUpdateIfNoValuesChanged: true,
         })
         .execute(),
-      this.redisClient.del(ManualCacheKeysEnum.ECOM_UPDATE_KEY),
+      this.redisService.delete(CacheKeysEnum.ECOM_UPDATE_KEY),
     ]);
 
     await Promise.all(
       ['GET', 'POST', 'PUT', 'DELETE'].map((method) =>
-        this.redisClient.set(
+        this.redisService.set(
           `${envConfig.REDIS_PREFIX}:${method}-RBAC`,
           JSON.stringify(routes.filter((route) => route.method === method)),
         ),
