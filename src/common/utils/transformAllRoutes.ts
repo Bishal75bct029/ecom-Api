@@ -24,6 +24,7 @@ const routesToFeatureMappers = {
   review: 'REVIEW',
   'payment-methods': 'PAYMENT_METHOD',
   'school-discount': 'SCHOOL_DISCOUNT',
+  'file-upload': 'FILE_UPLOAD',
 };
 
 export const transformAllRoutes = (server: any) => {
