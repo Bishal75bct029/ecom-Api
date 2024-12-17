@@ -11,7 +11,7 @@ import { REDIS_CLIENT } from '@/app.constants';
     {
       provide: REDIS_CLIENT,
       useFactory: () => {
-        const redisInstance = new Redis(envConfig.REDIS_URL);
+        const redisInstance = new Redis(`redis://${envConfig.REDIS_HOST}:${envConfig.REDIS_PORT}`);
         redisInstance.on('error', (e) => {
           throw new Error(`Redis connection failed: ${e}`);
         });

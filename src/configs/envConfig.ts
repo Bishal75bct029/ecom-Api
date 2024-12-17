@@ -22,7 +22,6 @@ export const envConfig = cleanEnv(process.env, {
   API_JWT_ISSUER: str(),
   API_JWT_AUDIENCE: str(),
 
-  REDIS_URL: str(),
   REDIS_PORT: str(),
   REDIS_HOST: str(),
   REDIS_PREFIX: str(),
@@ -31,6 +30,7 @@ export const envConfig = cleanEnv(process.env, {
   AWS_SECRET_ACCESS_KEY: str(),
   EMAIL_SQS_URL: str(),
   AWS_REGION: str(),
+  AWS_BUCKET: str(),
 
   ALLOWED_ORIGINS: str(),
 
