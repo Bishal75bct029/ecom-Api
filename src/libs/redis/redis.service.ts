@@ -12,9 +12,11 @@ export class RedisService {
     return this.redisClient;
   }
 
-  async get<T = string>(key: string): Promise<T | null> {
-    const redisValue = await this.redisClient.get(`${this._prefix}:${key}`);
+  async get<T = string>(key: string, applyPrefix: boolean = true): Promise<T | null> {
+    key = applyPrefix ? `${this._prefix}:${key}` : key;
+    const redisValue = await this.redisClient.get(key);
     try {
+      if (!applyPrefix) return redisValue as T;
       return JSON.parse(redisValue) as T;
     } catch (error) {
       return redisValue as T;
