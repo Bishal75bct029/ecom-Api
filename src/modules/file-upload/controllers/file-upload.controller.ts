@@ -8,7 +8,7 @@ import { extractFilenameAndExtension } from '@/common/utils';
 import { CacheKeysEnum } from '@/libs/redis/types';
 
 @ApiTags('Admin File Upload')
-@Controller('admin/file-upload-token')
+@Controller('admin/file-upload')
 @ApiBearerAuth()
 export class AdminFileUploadController {
   constructor(
@@ -16,7 +16,7 @@ export class AdminFileUploadController {
     private readonly jwtService: PasetoJwtService,
   ) {}
 
-  @Post('')
+  @Post('token')
   async getSignedFileUploadToken(@Body() { name, size, uploadFor }: GetFileUploadSignedTokenDto) {
     const storedSecret = await this.redisService.get(CacheKeysEnum.FILE_SCANNER_KEY, false);
 
