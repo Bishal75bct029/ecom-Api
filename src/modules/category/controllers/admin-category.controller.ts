@@ -8,6 +8,7 @@ import { getPaginatedResponse } from '@/common/utils';
 import { Request } from 'express';
 import { ValidateIDDto } from '@/common/dtos';
 import { addPropertiesToNestedTree } from '../helpers';
+import { type CategoryEntity } from '../entities/category.entity';
 
 @ApiTags('Admin Category')
 @ApiBearerAuth()
@@ -129,6 +130,7 @@ export class AdminCategoryController {
       throw new BadRequestException("Category doesn't exist.");
     }
 
+    // check uniqueness
     const trees = await this.categoryService.findTrees({ depth: 1 });
     const isNameNotUnique = trees
       .filter((tree) => tree.id !== id)
@@ -137,6 +139,16 @@ export class AdminCategoryController {
       throw new BadRequestException('Parent category name must be unique.');
     }
 
+    // delete children if not in request
+    const treeData = await this.categoryService.findDescendantsTree(categoryExists);
+    const requestChildrenIds = this.categoryService.getIdsFromParent(updateCategoryDto as CategoryEntity);
+    const dbChildrenIds = this.categoryService.getIdsFromParent(treeData);
+    const idsToDelete = dbChildrenIds.filter((id) => !requestChildrenIds.includes(id));
+    if (idsToDelete.length) {
+      await this.categoryService.softDelete({ id: In(idsToDelete) });
+    }
+
+    // update
     children = addPropertiesToNestedTree(children, { updatedBy: { id: currentUser.id }, status });
     await this.categoryService.createAndSave(
       {
