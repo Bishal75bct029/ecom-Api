@@ -9,6 +9,12 @@ export const ADMIN_PUBLIC_ROUTES = [
   'admin/users/reset-password',
 ];
 
-export const API_PUBLIC_ROUTES = ['api/users/login', 'api/users/logout', 'api/users/refresh', 'api/categories'];
+export const API_PUBLIC_ROUTES = [
+  'api/users/login',
+  'api/users/logout',
+  'api/users/refresh',
+  'api/categories',
+  'api/products',
+];
 
 export const REDIS_CLIENT = Symbol('REDIS_CLIENT');
