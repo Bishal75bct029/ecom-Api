@@ -10,4 +10,5 @@ server:
 build:
 	pnpm build
 
-
+docker:
+	docker compose up --watch

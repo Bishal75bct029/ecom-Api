@@ -1,0 +1,20 @@
+
+FROM node:22-alpine
+
+# Set working directory
+WORKDIR /usr/src/app
+
+# Copy package files and install dependencies
+COPY package*.json pnpm-lock.yaml ./
+RUN apk add --no-cache tini \
+  && npm install -g pnpm \
+  && pnpm install
+
+# Copy all source code (but exclude files like node_modules via .dockerignore)
+COPY . .
+
+# Expose the application port
+EXPOSE 4000
+
+# Use tini for process management
+ENTRYPOINT ["/sbin/tini", "--"]

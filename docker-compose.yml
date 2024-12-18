@@ -1,0 +1,16 @@
+services:
+  ecom-api:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.dev
+    network_mode: 'host' # Enables host networking
+    volumes:
+      - ./src:/usr/src/app/src # Mount the source directory
+      - /usr/src/app/node_modules # Ignore node_modules to avoid conflicts
+      - .env:/usr/src/app/.env
+    command: ['yarn', 'start:dev'] # Use your Yarn development script
+    ports:
+      - '4000:4000' # Map app's port to host
+    environment:
+      - NODE_ENV=development # Development mode
+
