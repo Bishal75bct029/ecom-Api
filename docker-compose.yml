@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: ./Dockerfile.dev
     network_mode: 'host' # Enables host networking
+    container_name: ecom-api
     volumes:
       - ./src:/usr/src/app/src # Mount the source directory
       - /usr/src/app/node_modules # Ignore node_modules to avoid conflicts
