@@ -1,45 +1,40 @@
-import { PickType } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { PaginationDto } from '@/common/dtos';
+import { Transform, Type } from 'class-transformer';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 
 export enum CategoryStatusEnum {
   ACTIVE = 'ACTIVE',
   INACTIVE = 'INACTIVE',
 }
 
-export class CreateUpdateCategoryDto {
-  @IsString()
-  @IsOptional()
-  id: string;
-
+export class CreateCategoryDto {
   @IsString()
   @IsNotEmpty()
+  @Transform(({ value }) => value.replace(/\s+/g, ' ').trim())
   name: string;
 
   @IsString()
   @IsOptional()
-  image: string;
+  image?: string;
 
   @IsString()
   @IsOptional()
+  @Transform(({ value }) => value.replace(/\s+/g, ' ').trim())
   description?: string;
-
-  @ValidateNested({ each: true })
-  @Type(() => SubCategory)
-  @IsNotEmpty()
-  children: SubCategory[];
 
   @IsEnum(CategoryStatusEnum)
   status: CategoryStatusEnum;
+
+  @ValidateNested({ each: true })
+  @Type(() => SubCategory)
+  @IsNotEmpty()
+  children: SubCategory[];
 }
 
-export class SubCategory {
-  @IsString()
-  @IsOptional()
-  id: string;
-
+class SubCategory {
   @IsString()
   @IsNotEmpty()
+  @Transform(({ value }) => value.replace(/\s+/g, ' ').trim())
   name: string;
 
   @ValidateNested({ each: true })
@@ -47,27 +42,17 @@ export class SubCategory {
   children: SubCategory[];
 }
 
-export class GetCategoryQuery {
+export class GetCategoryQuery extends PaginationDto {
   @IsOptional()
-  sortBy: 'name' | 'updatedAt' | 'productCount';
+  sortBy?: 'name' | 'updatedAt' | 'productCount';
 
   @IsOptional()
-  order: 'ASC' | 'DESC';
-
-  @IsOptional()
-  @IsInt()
-  limit: number;
-
-  @IsOptional()
-  @IsInt()
-  page: number;
+  order?: 'ASC' | 'DESC';
 
   @IsString()
   @IsOptional()
-  search: string;
+  search?: string;
 
   @IsOptional()
-  status: 'active' | 'inactive';
+  status?: 'active' | 'inactive';
 }
-
-export class CategoryStatusDto extends PickType(CreateUpdateCategoryDto, ['status']) {}

@@ -1,21 +1,19 @@
-import { Controller, Post, Body, Get, Param, Delete, Query, Req, Put } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { Controller, Post, Body, Get, Param, Delete, Query, Req, Put, BadRequestException } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { In } from 'typeorm';
 
 import { CategoryService } from '../services/category.service';
-import { CategoryStatusDto, CreateUpdateCategoryDto, GetCategoryQuery } from '../dto';
-import { CategoryEntity } from '../entities/category.entity';
+import { CreateCategoryDto, UpdateCategoryDto, GetCategoryQuery, UpdateCategoryStatusDto } from '../dto';
 import { getPaginatedResponse } from '@/common/utils';
 import { Request } from 'express';
+import { ValidateIDDto } from '@/common/dtos';
+import { addPropertiesToNestedTree } from '../helpers';
 
 @ApiTags('Admin Category')
+@ApiBearerAuth()
 @Controller('admin/categories')
 export class AdminCategoryController {
-  constructor(
-    private readonly categoryService: CategoryService,
-    @InjectDataSource() private readonly dataSource: DataSource,
-  ) {}
+  constructor(private readonly categoryService: CategoryService) {}
 
   @Get()
   async getAll(@Query() categoryQuery: GetCategoryQuery) {
@@ -23,11 +21,10 @@ export class AdminCategoryController {
     let { order, limit, page } = categoryQuery;
 
     order = order?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
-    limit = limit || 10;
+    limit = limit || undefined;
     page = page || 1;
 
-    const queryBuilder = this.dataSource
-      .getRepository(CategoryEntity)
+    const queryBuilder = this.categoryService
       .createQueryBuilder('categories')
       .leftJoin('categories.products', 'product')
       .innerJoin('categories.updatedBy', 'users')
@@ -61,12 +58,14 @@ export class AdminCategoryController {
       }
 
       queryBuilder.orderBy(orderByField, order);
+    } else {
+      queryBuilder.orderBy('categories.createdAt', 'DESC');
     }
 
     const [categories, count] = await Promise.all([
       queryBuilder
-        .skip((page - 1) * limit)
-        .take(limit)
+        .offset((page - 1) * limit || 0)
+        .limit(limit)
         .getRawMany(),
       queryBuilder.getCount(),
     ]);
@@ -78,7 +77,7 @@ export class AdminCategoryController {
   }
 
   @Get(':id')
-  async categoryByID(@Param('id') id: string) {
+  async categoryByID(@Param() { id }: ValidateIDDto) {
     const category = await this.categoryService.findOne({
       where: { id },
       select: {
@@ -88,33 +87,81 @@ export class AdminCategoryController {
         status: true,
       },
     });
+    if (!category) throw new BadRequestException('Category not found');
+
     return this.categoryService.findDescendantsTree(category);
   }
 
   @Post()
-  async saveCategory(@Req() { currentUser }: Request, @Body() createCategoryDto: CreateUpdateCategoryDto) {
-    const { id, name, description, status, children } = createCategoryDto;
-    const { id: userId } = currentUser;
+  async saveCategory(@Req() { currentUser }: Request, @Body() createCategoryDto: CreateCategoryDto) {
+    const { name, description, status } = createCategoryDto;
+    let { children } = createCategoryDto;
 
-    return this.categoryService.createAndSave({
-      id,
-      name,
-      description,
-      status,
-      children,
-      updatedBy: { id: userId },
-    });
-  }
+    const trees = await this.categoryService.findTrees({ depth: 1 });
+    const isNameNotUnique = trees.some((tree) => tree.name.trim().toLowerCase() === name.trim().toLowerCase());
+    if (isNameNotUnique) {
+      throw new BadRequestException('Parent category name must be unique.');
+    }
 
-  @Put(':id')
-  async toggleCategoryStatus(@Param('id') id: string, @Body() { status }: CategoryStatusDto) {
-    await this.categoryService.update({ id }, { status });
+    children = addPropertiesToNestedTree(children, { updatedBy: { id: currentUser.id }, status });
 
+    await this.categoryService.createAndSave(
+      {
+        name,
+        description,
+        status,
+        children,
+        updatedBy: { id: currentUser.id },
+      },
+      { transaction: true },
+    );
     return true;
   }
 
+  @Put()
+  async updateCategory(@Req() { currentUser }: Request, @Body() updateCategoryDto: UpdateCategoryDto) {
+    const { id, name, description, status } = updateCategoryDto;
+    let { children } = updateCategoryDto;
+
+    const categoryExists = await this.categoryService.findOne({ where: { id }, select: { id: true } });
+
+    if (!categoryExists) {
+      throw new BadRequestException("Category doesn't exist.");
+    }
+
+    const trees = await this.categoryService.findTrees({ depth: 1 });
+    const isNameNotUnique = trees
+      .filter((tree) => tree.id !== id)
+      .some((tree) => tree.name.trim().toLowerCase() === name.trim().toLowerCase());
+    if (isNameNotUnique) {
+      throw new BadRequestException('Parent category name must be unique.');
+    }
+
+    children = addPropertiesToNestedTree(children, { updatedBy: { id: currentUser.id }, status });
+    await this.categoryService.createAndSave(
+      {
+        id,
+        name,
+        description,
+        status,
+        children,
+        updatedBy: { id: currentUser.id },
+      },
+      { transaction: true },
+    );
+    return true;
+  }
+
+  @Put(':id')
+  async toggleCategoryStatus(@Param() { id }: ValidateIDDto, @Body() { status }: UpdateCategoryStatusDto) {
+    const category = await this.categoryService.findOne({ where: { id } });
+    await this.categoryService.findDescendantsTree(category);
+    const categoriesId = this.categoryService.getIdsFromParent(category);
+    return this.categoryService.update({ id: In(categoriesId) }, { status });
+  }
+
   @Delete(':id')
-  async deleteCategory(@Param('id') id: string) {
+  async deleteCategory(@Param() { id }: ValidateIDDto) {
     const category = await this.categoryService.findOne({
       where: { id },
       select: {
@@ -125,8 +172,9 @@ export class AdminCategoryController {
     if (category) {
       const categoryWithChildren = await this.categoryService.findDescendantsTree(category);
       await this.categoryService.softRemove([categoryWithChildren]);
+      return true;
     }
 
-    return true;
+    throw new BadRequestException('Category not found');
   }
 }

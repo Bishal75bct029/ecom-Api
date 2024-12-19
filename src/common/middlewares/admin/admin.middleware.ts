@@ -1,7 +1,8 @@
-import { envConfig } from '@/configs/envConfig';
 import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { NextFunction, Request, Response } from 'express';
+import { sanitizeRequestBody } from '@/common/utils';
+import { envConfig } from '@/configs/envConfig';
+import { PasetoJwtService } from '@/libs/pasetoJwt/pasetoJwt.service';
 
 declare global {
   namespace Express {
@@ -13,14 +14,14 @@ declare global {
 
 @Injectable()
 export class AdminMiddleware implements NestMiddleware {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(private readonly jwtService: PasetoJwtService) {}
   async use(req: Request, _res: Response, next: NextFunction) {
     try {
       const [, token] = req.headers['authorization']?.split(' ') || [];
 
       if (!token) throw new UnauthorizedException('Unauthorized');
 
-      const payload = await this.jwtService.verifyAsync<UserJwtPayload>(token, {
+      const payload = await this.jwtService.pasetoVerify<UserJwtPayload>(token, {
         secret: envConfig.ADMIN_JWT_SECRET,
         issuer: envConfig.ADMIN_JWT_ISSUER,
         audience: envConfig.ADMIN_JWT_AUDIENCE,
@@ -28,7 +29,7 @@ export class AdminMiddleware implements NestMiddleware {
 
       if (payload.role !== 'ADMIN') throw new UnauthorizedException('Unauthorized');
       req.currentUser = payload;
-
+      req.body = sanitizeRequestBody(req.body);
       next();
     } catch (error) {
       throw new UnauthorizedException('Unauthorized');

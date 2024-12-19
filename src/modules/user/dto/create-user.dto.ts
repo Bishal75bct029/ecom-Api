@@ -1,5 +1,6 @@
-import { OmitType, PickType } from '@nestjs/swagger';
-import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, Matches, MinLength } from 'class-validator';
+import { ApiHideProperty, OmitType, PickType } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
+import { IsAlphanumeric, IsEmail, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
 
 export class CreateAdminUserDto {
   @IsNotEmpty()
@@ -9,24 +10,39 @@ export class CreateAdminUserDto {
 
   @IsNotEmpty()
   @IsString()
+  @IsAlphanumeric()
+  @Transform(({ value }) => value.replace(/\s+/g, ' ').trim())
   name: string;
 
   @IsString()
   @IsNotEmpty()
-  @MinLength(6)
+  @Matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/, {
+    message:
+      'Password must have at least 1 uppercase letter, 1 number, 1 special character, and be at least 8 characters long',
+  })
   password: string;
 
-  @IsBoolean()
   @IsNotEmpty()
-  isOtpEnabled: boolean;
+  @Transform(({ value }) => {
+    if (![true, false, 'true', 'false'].includes(value)) {
+      throw new Error('Invalid value for isOtpEnabled.');
+    }
+    return value === 'true' || value === true;
+  })
+  isOtpEnabled: any;
 }
 
 export class CreateUserDto extends OmitType(CreateAdminUserDto, ['isOtpEnabled']) {}
 
-export class LoginUserDto extends PickType(CreateAdminUserDto, ['email', 'password']) {
+export class LoginUserDto extends PickType(CreateAdminUserDto, ['email']) {
   @IsOptional()
   @IsString()
+  @ApiHideProperty()
   role: string;
+
+  @IsString()
+  @IsNotEmpty()
+  password: string;
 }
 
 export class ForgotPasswordDto {

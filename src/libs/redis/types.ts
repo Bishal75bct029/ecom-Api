@@ -1,0 +1,4 @@
+export enum CacheKeysEnum {
+  ECOM_UPDATE_KEY = 'ECOM_UPDATE_KEY',
+  FILE_SCANNER_KEY = 'FILE_SCANNER',
+}

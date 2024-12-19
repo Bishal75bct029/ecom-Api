@@ -13,11 +13,12 @@ import {
 import { Request } from 'express';
 import { ApiTags } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
-import { CreateUserDto, LoginUserDto } from '../dto/create-user.dto';
+import { LoginUserDto } from '../dto/create-user.dto';
 import { CreateAddressDto } from '../dto/address.dto';
 import { AddressService } from '../services/address.service';
 import { UserRoleEnum } from '../entities/user.entity';
 import { envConfig } from '@/configs/envConfig';
+import { ValidateIDDto } from '@/common/dtos';
 
 @ApiTags('API User')
 @Controller('api/users')
@@ -26,11 +27,6 @@ export class ApiUserController {
     private readonly userService: UserService,
     private readonly addressService: AddressService,
   ) {}
-
-  @Post('create')
-  async createUser(@Body() createUserDto: CreateUserDto) {
-    return this.userService.createAndSave({ ...createUserDto, role: UserRoleEnum.USER });
-  }
 
   @Post('login')
   async login(@Body() loginUserDto: LoginUserDto) {
@@ -53,7 +49,7 @@ export class ApiUserController {
       });
       return { token, refreshToken: generatedRefreshToken };
     } catch (error) {
-      throw new ForbiddenException('Session expired. Please re-login.');
+      throw new ForbiddenException({ message: 'Session expired. Please re-login.', needsLogin: true });
     }
   }
 
@@ -72,7 +68,7 @@ export class ApiUserController {
   }
 
   @Put('address/:id')
-  async updateAddress(@Body() createAddressDto: CreateAddressDto, @Param('id') id: string) {
+  async updateAddress(@Body() createAddressDto: CreateAddressDto, @Param() { id }: ValidateIDDto) {
     const address = await this.addressService.findOne({ where: { id } });
 
     if (!address) throw new BadRequestException("Address doesn't exists");

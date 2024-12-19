@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { Request } from 'express';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
 import {
   ChangePasswordDto,
@@ -38,8 +38,14 @@ export class AdminUserController {
   ) {}
 
   @Post('create')
+  @ApiBearerAuth()
   async createAdmin(@Body() createAdminUserDto: CreateAdminUserDto) {
     createAdminUserDto.password = await bcrypt.hash(createAdminUserDto.password, 10);
+
+    if (await this.userService.findOne({ where: { email: createAdminUserDto.email } })) {
+      throw new BadRequestException('User already exist');
+    }
+
     const user = await this.userService.createAndSave({ ...createAdminUserDto, role: UserRoleEnum.ADMIN });
     delete user.password;
 
@@ -62,7 +68,7 @@ export class AdminUserController {
       });
       return { token, refreshToken: generatedRefreshToken };
     } catch (error) {
-      throw new ForbiddenException('Session expired. Please re-login.');
+      throw new ForbiddenException({ message: 'Session expired. Please re-login.', needsLogin: true });
     }
   }
 
@@ -142,29 +148,22 @@ export class AdminUserController {
     });
 
     if (isOtpEnabled) {
-      try {
-        const otp = this.userService.generateOtp();
-
-        await Promise.all([
-          this.redisService.set(email + '_OTP', otp.toString(), 300),
-          this.sqsService.sendToQueue({
-            QueueUrl: envConfig.EMAIL_SQS_URL,
-            MessageBody: JSON.stringify({
-              emailTemplateName: 'NepalOTP',
-              templateData: {
-                fullName: name,
-                OTPCode: otp,
-              },
-              emailFrom: 'Ecommerce<noreply@innovatetech.io>',
-              toAddress: email,
-            }),
+      const otp = this.userService.generateOtp();
+      await Promise.all([
+        this.redisService.set(email + '_OTP', otp.toString(), 60),
+        this.sqsService.sendToQueue({
+          QueueUrl: envConfig.EMAIL_SQS_URL,
+          MessageBody: JSON.stringify({
+            emailTemplateName: 'NepalOTP',
+            templateData: {
+              fullName: name,
+              OTPCode: otp,
+            },
+            emailFrom: 'Ecommerce<noreply@innovatetech.io>',
+            toAddress: email,
           }),
-        ]);
-      } catch (error) {
-        console.log(error);
-        return;
-      }
-
+        }),
+      ]);
       return { message: 'OTP sent successfully.', isOtpEnabled };
     }
 
@@ -189,15 +188,15 @@ export class AdminUserController {
   @Post('resend-otp')
   async resendOtp(@Body() { email }: ResendOtpDto) {
     const user = await this.userService.findOne({ where: { email } });
-    if (!user) return true;
+    if (!user) throw new BadRequestException('Cannot resend OTP.');
 
     const redisOtp = await this.redisService.get(email + '_OTP');
-    if (redisOtp) throw new Error('Cannot resend OTP');
+    if (redisOtp) throw new BadRequestException('Cannot resend OTP');
 
     const otp = this.userService.generateOtp();
 
     await Promise.all([
-      this.redisService.set(email + '_OTP', otp.toString(), 300),
+      this.redisService.set(email + '_OTP', otp.toString(), 60),
       this.sqsService.sendToQueue({
         QueueUrl: envConfig.EMAIL_SQS_URL,
         MessageBody: JSON.stringify({

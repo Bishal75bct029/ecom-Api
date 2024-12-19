@@ -2,17 +2,18 @@ import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/com
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { JwtService, JwtVerifyOptions } from '@nestjs/jwt';
 import { AbstractService } from '@/libs/service/abstract.service';
 import { UserEntity, UserRoleEnum } from '../entities';
 import { envConfig } from '@/configs/envConfig';
 import { LoginUserDto } from '../dto';
+import { PasetoJwtService } from '@/libs/pasetoJwt/pasetoJwt.service';
+import { ConsumeOptions } from 'paseto';
 
 @Injectable()
 export class UserService extends AbstractService<UserEntity> {
   constructor(
     @InjectRepository(UserEntity) private readonly itemRepository: Repository<UserEntity>,
-    private readonly jwtService: JwtService,
+    private readonly jwtService: PasetoJwtService,
   ) {
     super(itemRepository);
   }
@@ -25,13 +26,13 @@ export class UserService extends AbstractService<UserEntity> {
     };
 
     return Promise.all([
-      await this.jwtService.signAsync(payload, { ...options, expiresIn: envConfig.JWT_TTL }),
-      await this.jwtService.signAsync(payload, { ...options, expiresIn: envConfig.JWT_REFRESH_TOKEN_TTL }),
+      this.jwtService.pasetoSign(payload, { ...options, expiresIn: envConfig.JWT_TTL }),
+      this.jwtService.pasetoSign(payload, { ...options, expiresIn: envConfig.JWT_REFRESH_TOKEN_TTL }),
     ]);
   }
 
   async verifyJWT(token: string, role: UserRoleEnum) {
-    return this.jwtService.verifyAsync<UserJwtPayload>(token, {
+    return this.jwtService.pasetoVerify<UserJwtPayload>(token, {
       secret: role === 'ADMIN' ? envConfig.ADMIN_JWT_SECRET : envConfig.API_JWT_SECRET,
       issuer: role === 'ADMIN' ? envConfig.ADMIN_JWT_ISSUER : envConfig.API_JWT_ISSUER,
       audience: role === 'ADMIN' ? envConfig.ADMIN_JWT_AUDIENCE : envConfig.API_JWT_AUDIENCE,
@@ -56,13 +57,13 @@ export class UserService extends AbstractService<UserEntity> {
   generateOtp() {
     const minm = 100000;
     const maxm = 999999;
-    return Math.floor(Math.random() * (maxm - minm + 1)) + minm;
+    return (Math.floor(Math.random() * (maxm - minm + 1)) + minm).toString();
   }
 
-  async refreshUser(refreshToken: string, options: JwtVerifyOptions) {
+  async refreshUser(refreshToken: string, options: ConsumeOptions<false> & { secret?: string }) {
     if (!refreshToken) throw new ForbiddenException('Invalid token');
 
-    const { id, role, schoolId = '' } = await this.jwtService.verifyAsync<UserJwtPayload>(refreshToken, options);
+    const { id, role, schoolId = '' } = await this.jwtService.pasetoVerify<UserJwtPayload>(refreshToken, options);
 
     const payload = { id, role, schoolId };
     const user = await this.findOne({ where: { id: payload.id, role: payload.role as UserRoleEnum } });

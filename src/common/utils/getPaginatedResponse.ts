@@ -4,11 +4,9 @@ interface GetPaginatedResponseProps {
   page: number;
 }
 
-export const getPaginatedResponse = ({ count, limit, page }: GetPaginatedResponseProps) => {
-  return {
-    count,
-    totalPage: Math.ceil(count / limit),
-    currentPage: page,
-    limit: limit,
-  };
-};
+export const getPaginatedResponse = ({ count, limit, page }: GetPaginatedResponseProps) => ({
+  count,
+  totalPage: Math.ceil(count / limit),
+  currentPage: page,
+  limit: limit,
+});

@@ -4,8 +4,9 @@ import { FindManyOptions, ILike, In } from 'typeorm';
 import { ProductService, ProductMetaService } from '../services';
 import { CreateProductDto, UpdateProductDto } from '../dto';
 import { CategoryService } from '../../category/services/category.service';
-import { getRecursiveDataArrayFromObjectOrArray } from '../helpers/getRecursiveDataArray.util';
+import { getRecursiveDataArrayFromObjectOrArray } from '../helpers';
 import { getRoundedOffValue } from '@/common/utils';
+import { ValidateIDDto } from '@/common/dtos';
 import { GetAdminProductsQuery } from '../dto/get-products-filteredList-dto';
 import { PRODUCT_STATUS_ENUM, ProductEntity } from '../entities';
 
@@ -117,7 +118,7 @@ export class AdminProductController {
 
     const product = await this.productService.save({ ...newProduct });
 
-    const productMetas = await this.productMetaService.saveMany(
+    const productMetas = await this.productMetaService.save(
       newProductMetas.map((meta) => ({ ...meta, product, price: meta.price * 100 })),
     );
 
@@ -125,7 +126,7 @@ export class AdminProductController {
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
+  async update(@Param() { id }: ValidateIDDto, @Body() updateProductDto: UpdateProductDto) {
     const { productMetas, categoryId, ...rest } = updateProductDto;
 
     const product = await this.productService.findOne({ where: { id } });
@@ -147,7 +148,7 @@ export class AdminProductController {
     const updatedProduct = await this.productService.save(newProduct);
     const newProductMetas = this.productMetaService.createMany(productMetas);
 
-    const updatedProductMetas = await this.productMetaService.saveMany(
+    const updatedProductMetas = await this.productMetaService.save(
       newProductMetas.map((meta) => ({ ...meta, price: Number(meta.price), product })),
     );
 

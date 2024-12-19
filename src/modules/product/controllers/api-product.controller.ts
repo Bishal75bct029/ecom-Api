@@ -4,7 +4,6 @@ import { Request } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Between, FindManyOptions, ILike, In, IsNull, Not } from 'typeorm';
 import { SchoolDiscountService } from '@/modules/school-discount/services/schoolDiscount.service';
-import { getAllTreeIds } from '../helpers/flattenTree.util';
 import {
   GetProductsFilteredListDto,
   ProductQueyTypeEnum,
@@ -12,11 +11,12 @@ import {
 } from '../dto/get-products-filteredList-dto';
 import { SimilarProductsDto } from '../dto/similarProducts.dto';
 import { CategoryService } from '@/modules/category/services/category.service';
-import { HttpsService } from '@/modules/https/https.service';
+import { HttpsService } from '@/libs/https/https.service';
 import { ProductEntity } from '../entities';
 import { envConfig } from '@/configs/envConfig';
-import { shuffleArray } from '../helpers/shuffleArrays';
+import { shuffleArray, getAllTreeIds } from '../helpers';
 import { getPaginatedResponse } from '@/common/utils';
+import { ValidateIDDto } from '@/common/dtos';
 
 @ApiTags('Api Product')
 @ApiBearerAuth()
@@ -130,7 +130,7 @@ export class ApiProductController {
           },
           skip: (page - 1) * limit,
           take: limit,
-          cache: 300,
+          cache: true,
         });
         products = [...recommendedProducts, ...clickedSearchedProduct];
         count = recommendedCount + viewProductInteractions.length;
@@ -278,7 +278,7 @@ export class ApiProductController {
   }
 
   @Get(':id')
-  async getProduct(@Param('id') id: string, @Req() { currentUser }: Request) {
+  async getProduct(@Param() { id }: ValidateIDDto, @Req() { currentUser }: Request) {
     const { schoolId } = currentUser;
 
     const product = await this.productService.findOne({
@@ -322,7 +322,7 @@ export class ApiProductController {
   }
 
   @Get('meta/:id')
-  async getProductByMetaId(@Param('id') id: string, @Req() { currentUser }: Request) {
+  async getProductByMetaId(@Param() { id }: ValidateIDDto, @Req() { currentUser }: Request) {
     const { schoolId } = currentUser;
 
     const product = await this.productService.findOne({

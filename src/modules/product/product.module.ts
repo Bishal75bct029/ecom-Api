@@ -4,7 +4,7 @@ import { AdminProductController, ApiProductController } from './controllers';
 import { ProductService, ProductMetaService } from './services';
 import { CategoryModule } from '../category/category.module';
 import { SchoolDiscountModule } from '../school-discount/school-discount.module';
-import { HttpsModule } from '../https/https.module';
+import { HttpsModule } from '@/libs/https/https.module';
 import { ProductEntity, ProductMetaEntity } from './entities';
 
 @Module({

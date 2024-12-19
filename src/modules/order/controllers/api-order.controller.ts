@@ -20,6 +20,7 @@ import { OrderItemEntity } from '../entities/order-item.entity';
 import { CartEntity } from '@/modules/cart/entities/cart.entity';
 import { TransactionEntity } from '@/modules/transaction/entities/transaction.entity';
 import { getRoundedOffValue } from '@/common/utils';
+import { ValidateIDDto } from '@/common/dtos';
 
 @ApiTags('API Order')
 @ApiBearerAuth()
@@ -259,7 +260,7 @@ export class ApiOrderController {
   }
 
   @Get(':id')
-  getOrderById(@Req() { currentUser }: Request, @Param('id') id: string) {
+  getOrderById(@Req() { currentUser }: Request, @Param() { id }: ValidateIDDto) {
     return this.orderService.findOne({
       where: {
         user: { id: currentUser.id },
