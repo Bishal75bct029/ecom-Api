@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Body, Put, Param, BadRequestException, Query, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, BadRequestException, Query, Delete, Req } from '@nestjs/common';
+import { Request } from 'express';
 import { ApiTags } from '@nestjs/swagger';
-import { FindManyOptions, ILike, In } from 'typeorm';
+import { DataSource, FindManyOptions, ILike, In } from 'typeorm';
 import { ProductService, ProductMetaService } from '../services';
 import { CreateProductDto, UpdateProductDto } from '../dto';
 import { CategoryService } from '../../category/services/category.service';
@@ -8,12 +9,13 @@ import { getRecursiveDataArrayFromObjectOrArray } from '../helpers';
 import { getRoundedOffValue } from '@/common/utils';
 import { ValidateIDDto } from '@/common/dtos';
 import { GetAdminProductsQuery } from '../dto/get-products-filteredList-dto';
-import { PRODUCT_STATUS_ENUM, ProductEntity } from '../entities';
+import { PRODUCT_STATUS_ENUM, ProductEntity, ProductMetaEntity } from '../entities';
 
 @ApiTags('Admin Product')
 @Controller('admin/products')
 export class AdminProductController {
   constructor(
+    private dataSource: DataSource,
     private readonly productService: ProductService,
     private readonly productMetaService: ProductMetaService,
     private readonly categoryService: CategoryService,
@@ -90,6 +92,7 @@ export class AdminProductController {
           updatedBy: product.updatedBy.name,
           categories: product.categories.map((category) => category.name),
           productMeta: product.productMeta.map((meta) => {
+            console.log(meta.price);
             return {
               ...meta,
               price: getRoundedOffValue(Number(meta.price) / 10000),
@@ -100,43 +103,111 @@ export class AdminProductController {
     };
   }
 
+  @Get(':id')
+  async getProductsById(@Param() { id }: ValidateIDDto) {
+    console.log('here');
+    const product = await this.productService.findOne({
+      relations: ['productMeta', 'categories'],
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        status: true,
+        images: true,
+        scheduledDate: true,
+        tags: true,
+        attributes: true,
+        productMeta: {
+          images: true,
+          price: true,
+          id: true,
+          isDefault: true,
+          stock: true,
+          attributes: {},
+          sku: true,
+        },
+        categories: {
+          id: true,
+          name: true,
+        },
+      },
+      where: {
+        id,
+      },
+    });
+
+    console.log(product.scheduledDate);
+    const { name, productMeta, ...rest } = product;
+    return { ...rest, title: name, variants: productMeta };
+  }
+
   @Post()
-  async create(@Body() createProductDto: CreateProductDto) {
-    const { productMetas: requestProductMetas, categoryId, ...rest } = createProductDto;
+  async create(@Req() { currentUser }: Request, @Body() createProductDto: CreateProductDto) {
+    //I havenot sent the category from frontend so i am saving this random category id to db.
+    if (!createProductDto.categoryId) {
+      createProductDto.categoryId = (await this.categoryService.find({ where: { parent: null }, take: 1 }))[0].id;
+    }
+
+    const { title, variants: requestProductMetas, categoryId, ...rest } = createProductDto;
+    if (createProductDto.status === PRODUCT_STATUS_ENUM.SCHEDULED && !createProductDto.scheduledDate) {
+      throw new BadRequestException('Scheduled date is required');
+    }
 
     const category = await this.categoryService.findOne({ where: { id: categoryId } });
     if (!category) throw new BadRequestException("Doesn't exists this category.");
-    if (!this.productService.validateVariant(createProductDto.attributeOptions, requestProductMetas))
-      throw new BadRequestException('Invalid product variant');
-    const treeCategory = await this.categoryService.findAncestorsTree(category);
 
+    if (!this.productService.validateVariant(createProductDto.attributes, requestProductMetas))
+      throw new BadRequestException('Invalid product variant');
+
+    const treeCategory = await this.categoryService.findAncestorsTree(category);
     const categoryIds = this.categoryService.getIdsFromParent(treeCategory);
     const categories = await this.categoryService.find({ where: { id: In(categoryIds) } });
 
-    const newProduct = this.productService.create({ ...rest, categories });
-    const newProductMetas = this.productMetaService.createMany(requestProductMetas);
+    let productMetas: ProductMetaEntity[];
+    let product: ProductEntity;
+    await this.dataSource.transaction(async (entityManager) => {
+      const newProduct = this.productService.create({ ...rest, categories });
+      const newProductMetas = this.productMetaService.createMany(requestProductMetas);
 
-    const product = await this.productService.save({ ...newProduct });
+      console.log(newProductMetas, requestProductMetas);
 
-    const productMetas = await this.productMetaService.save(
-      newProductMetas.map((meta) => ({ ...meta, product, price: meta.price * 100 })),
-    );
+      const product = await entityManager.save(ProductEntity, {
+        ...newProduct,
+        name: title,
+        stock: requestProductMetas.reduce((totalStock, meta) => totalStock + meta.stock, 0),
+        updatedBy: { id: currentUser.id },
+        category: { id: categoryId },
+      });
+
+      productMetas = await entityManager.save(
+        ProductMetaEntity,
+        newProductMetas.map((meta, index) => ({ ...meta, product, price: meta.price * 100, isDefault: index === 0 })),
+      );
+    });
 
     return { ...product, productMetas };
   }
 
   @Put(':id')
   async update(@Param() { id }: ValidateIDDto, @Body() updateProductDto: UpdateProductDto) {
-    const { productMetas, categoryId, ...rest } = updateProductDto;
+    //I havenot sent the category from frontend so i am saving this random category id to db.
+    if (!updateProductDto.categoryId) {
+      updateProductDto.categoryId = (await this.categoryService.find({ where: { parent: null }, take: 1 }))[0].id;
+    }
+
+    const { title, variants: requestProductMetas, categoryId, ...rest } = updateProductDto;
+    if (updateProductDto.status === PRODUCT_STATUS_ENUM.SCHEDULED && !updateProductDto.scheduledDate) {
+      throw new BadRequestException('Scheduled date is required');
+    }
 
     const product = await this.productService.findOne({ where: { id } });
+    if (!this.productService.validateVariant(updateProductDto.attributes, requestProductMetas))
+      throw new BadRequestException('Invalid product variant');
 
     if (!product) throw new BadRequestException('Product not found');
 
-    const categories = await this.categoryService.find({ where: { id: In([...categoryId]) } });
-
+    const categories = await this.categoryService.find({ where: { id: categoryId } });
     const ancestors = await Promise.all(categories.map((category) => this.categoryService.findAncestorsTree(category)));
-
     const categoryAncestoryList = getRecursiveDataArrayFromObjectOrArray({
       recursiveData: ancestors,
       recursiveObjectKey: 'parent',
@@ -145,11 +216,16 @@ export class AdminProductController {
 
     const tags = [...new Set([...categoryAncestoryList, ...product.tags])];
     const newProduct = this.productService.create({ id, ...rest, tags, categories });
-    const updatedProduct = await this.productService.save(newProduct);
-    const newProductMetas = this.productMetaService.createMany(productMetas);
+    const updatedProduct = await this.productService.save({
+      ...newProduct,
+      name: title,
+      stock: requestProductMetas.reduce((totalStock, meta) => totalStock + meta.stock, 0),
+      // category: { id: categoryId },
+    });
+    const newProductMetas = this.productMetaService.createMany(requestProductMetas);
 
     const updatedProductMetas = await this.productMetaService.save(
-      newProductMetas.map((meta) => ({ ...meta, price: Number(meta.price), product })),
+      newProductMetas.map((meta, index) => ({ ...meta, price: Number(meta.price), product, isDefault: index === 0 })),
     );
 
     return { ...updatedProduct, productMetas: updatedProductMetas };

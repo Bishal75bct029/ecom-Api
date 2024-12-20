@@ -61,10 +61,10 @@ export class ApiProductController {
           description: true,
           tags: true,
           productMeta: {
-            image: true,
+            images: true,
             price: true,
             id: true,
-            variant: {},
+            attributes: {},
             createdAt: true,
           },
           categories: {
@@ -117,10 +117,10 @@ export class ApiProductController {
             description: true,
             tags: true,
             productMeta: {
-              image: true,
+              images: true,
               price: true,
               id: true,
-              variant: {},
+              attributes: {},
               createdAt: true,
             },
             categories: {
@@ -187,10 +187,10 @@ export class ApiProductController {
           description: true,
           tags: true,
           productMeta: {
-            image: true,
+            images: true,
             price: true,
             id: true,
-            variant: {},
+            attributes: {},
             createdAt: true,
           },
           categories: {
@@ -255,10 +255,10 @@ export class ApiProductController {
         description: true,
         tags: true,
         productMeta: {
-          image: true,
+          images: true,
           price: true,
           id: true,
-          variant: {},
+          attributes: {},
         },
       },
       take: 10,
@@ -290,12 +290,12 @@ export class ApiProductController {
         tags: true,
         attributes: true,
         productMeta: {
-          image: true,
+          images: true,
           price: true,
           id: true,
           isDefault: true,
           stock: true,
-          variant: {},
+          attributes: {},
           sku: true,
         },
         categories: {
@@ -332,11 +332,11 @@ export class ApiProductController {
         name: true,
         description: true,
         productMeta: {
-          image: true,
+          images: true,
           price: true,
           id: true,
           stock: true,
-          variant: {},
+          attributes: {},
         },
       },
       relations: ['productMeta'],

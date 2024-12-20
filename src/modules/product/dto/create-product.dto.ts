@@ -1,6 +1,8 @@
 import {
   IsArray,
   IsBoolean,
+  IsDate,
+  IsEnum,
   IsNotEmpty,
   IsNumber,
   IsObject,
@@ -10,49 +12,93 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { ValidateIDDto } from '@/common/dtos';
+import { PRODUCT_STATUS_ENUM } from '../entities';
+
+export class Variant extends ValidateIDDto {
+  @IsNotEmpty()
+  @IsString()
+  value: string;
+}
 
 export class CreateProductDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  title: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   description: string;
 
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  tags: string[];
+  tags?: string[];
 
+  @IsNotEmpty()
   @IsArray()
-  attributes: string[];
-
-  @IsOptional()
-  @IsObject()
-  attributeOptions: Record<string, any>;
+  @Type(() => Attribute)
+  @ValidateNested({ each: true })
+  attributes: Attribute[];
 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateProductMetaDto)
-  productMetas: CreateProductMetaDto[];
+  variants: CreateProductMetaDto[];
 
-  @IsUUID()
-  @IsNotEmpty()
-  categoryId: string;
-}
-
-export class CreateProductMetaDto {
   @IsUUID()
   @IsOptional()
-  id?: string;
+  categoryId: string;
 
+  @IsEnum(PRODUCT_STATUS_ENUM)
+  @IsOptional()
+  status?: PRODUCT_STATUS_ENUM;
+
+  @IsOptional()
+  @IsArray()
+  @Type(() => Images)
+  @ValidateNested({ each: true })
+  images?: Images[];
+
+  @IsOptional()
+  @IsDate()
+  scheduledDate: Date;
+}
+
+export class Attribute extends ValidateIDDto {
+  @IsString()
+  @IsNotEmpty()
+  attributeName: string;
+
+  @IsArray()
+  @Type(() => AttributeValue)
+  @ValidateNested({ each: true })
+  @IsNotEmpty()
+  attributeValues: AttributeValue[];
+}
+
+export class AttributeValue extends ValidateIDDto {
+  @IsNotEmpty()
+  @IsString()
+  value: string;
+}
+
+export class Images extends ValidateIDDto {
+  @IsString()
+  @IsOptional()
+  url: string;
+}
+
+export class CreateProductMetaDto extends ValidateIDDto {
   @IsString()
   @IsNotEmpty()
   sku: string;
 
   @IsArray()
   @IsOptional()
-  image: string[];
+  @ValidateNested({ each: true })
+  @Type(() => Images)
+  images: Images[];
 
   @IsNumber()
   @IsNotEmpty()
@@ -60,7 +106,7 @@ export class CreateProductMetaDto {
 
   @IsObject()
   @IsOptional()
-  variant: Record<string, any>;
+  attributes: Record<string, string>;
 
   @IsBoolean()
   @IsOptional()
