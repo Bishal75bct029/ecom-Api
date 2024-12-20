@@ -26,6 +26,6 @@ export class PermissionEntity {
   @ManyToOne(() => UserEntity, { nullable: true, onDelete: 'SET NULL' })
   updatedBy: UserEntity;
 
-  @UpdateDateColumn({ nullable: true })
+  @UpdateDateColumn({ nullable: true, type: 'timestamptz' })
   updatedAt: Date;
 }

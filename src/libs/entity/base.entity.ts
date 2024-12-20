@@ -4,12 +4,12 @@ export class BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @DeleteDateColumn({ nullable: true })
+  @DeleteDateColumn({ nullable: true, type: 'timestamptz' })
   deletedAt: Date;
 
-  @CreateDateColumn({ nullable: false })
+  @CreateDateColumn({ nullable: false, type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn({ nullable: true })
+  @UpdateDateColumn({ nullable: true, type: 'timestamptz' })
   updatedAt: Date;
 }
