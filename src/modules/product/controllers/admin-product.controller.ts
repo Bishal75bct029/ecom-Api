@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Put, Param, BadRequestException, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, BadRequestException, Req, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ILike, In } from 'typeorm';
 import { ProductService, ProductMetaService } from '../services';
@@ -7,6 +7,7 @@ import { CategoryService } from '../../category/services/category.service';
 import { getRecursiveDataArrayFromObjectOrArray } from '../helpers';
 import { getPaginatedResponse, getRoundedOffValue } from '@/common/utils';
 import { ValidateIDDto } from '@/common/dtos';
+import { envConfig } from '@/configs/envConfig';
 
 @ApiTags('Admin Product')
 @Controller('admin/products')
@@ -18,7 +19,7 @@ export class AdminProductController {
   ) {}
 
   @Get()
-  async getAllProducts(@Query() query: AdminGetProductsDto) {
+  async getAllProducts(@Query() query: AdminGetProductsDto, @Req() req: Request) {
     const { name } = query;
     let { limit, page } = query;
 
@@ -46,7 +47,10 @@ export class AdminProductController {
       relations: ['productMeta', 'categories'],
       skip: (page - 1) * limit,
       take: limit,
-      cache: 300,
+      cache: {
+        id: `${envConfig.REDIS_PREFIX}:${req.url}`,
+        milliseconds: 600000,
+      },
     });
 
     return {
