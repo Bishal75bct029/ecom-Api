@@ -10,7 +10,11 @@ export enum CategoryStatusEnum {
 export class CreateCategoryDto {
   @IsString()
   @IsNotEmpty()
-  @Transform(({ value }) => value.replace(/\s+/g, ' ').trim())
+  @Transform(({ value }) => {
+    const val = value.replace(/\s+/g, ' ').trim();
+    if (val.length > 100) throw new Error('Category name must be less than 100 characters.');
+    return val;
+  })
   name: string;
 
   @IsString()

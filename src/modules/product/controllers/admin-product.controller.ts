@@ -10,6 +10,7 @@ import { getRoundedOffValue } from '@/common/utils';
 import { ValidateIDDto } from '@/common/dtos';
 import { GetAdminProductsQuery } from '../dto/get-products-filteredList-dto';
 import { PRODUCT_STATUS_ENUM, ProductEntity, ProductMetaEntity } from '../entities';
+import { envConfig } from '@/configs/envConfig';
 
 @ApiTags('Admin Product')
 @Controller('admin/products')
@@ -22,7 +23,7 @@ export class AdminProductController {
   ) {}
 
   @Get()
-  async getAllProducts(@Query() productQuery: GetAdminProductsQuery) {
+  async getAllProducts(@Query() productQuery: GetAdminProductsQuery, @Req() req: Request) {
     const { search, status, category, limit, page, sortBy } = productQuery;
     let { order } = productQuery;
 
@@ -64,9 +65,14 @@ export class AdminProductController {
 
     const [products, count] = await this.productService.findAndCount({
       where: whereClause,
-      relations: ['productMeta', 'categories', 'updatedBy'],
+      relations: ['productMeta', 'categories', 'user'],
       skip: (page - 1) * limit || 0,
       take: limit,
+      cache: {
+        id: `${envConfig.REDIS_PREFIX}:${req.url}`,
+        milliseconds: 600000,
+      },
+
       select: {
         id: true,
         name: true,
@@ -78,7 +84,7 @@ export class AdminProductController {
           name: true,
         },
         updatedAt: true,
-        updatedBy: { name: true },
+        user: { name: true },
       },
       order: sortBy ? { [sortBy]: order } : undefined,
     });
@@ -89,10 +95,9 @@ export class AdminProductController {
       items: products.map((product) => {
         return {
           ...product,
-          updatedBy: product.updatedBy.name,
+          user: product.user.name,
           categories: product.categories.map((category) => category.name),
           productMeta: product.productMeta.map((meta) => {
-            console.log(meta.price);
             return {
               ...meta,
               price: getRoundedOffValue(Number(meta.price) / 10000),
@@ -105,7 +110,6 @@ export class AdminProductController {
 
   @Get(':id')
   async getProductsById(@Param() { id }: ValidateIDDto) {
-    console.log('here');
     const product = await this.productService.findOne({
       relations: ['productMeta', 'categories'],
       select: {
@@ -136,7 +140,6 @@ export class AdminProductController {
       },
     });
 
-    console.log(product.scheduledDate);
     const { name, productMeta, ...rest } = product;
     return { ...rest, title: name, variants: productMeta };
   }
@@ -169,13 +172,11 @@ export class AdminProductController {
       const newProduct = this.productService.create({ ...rest, categories });
       const newProductMetas = this.productMetaService.createMany(requestProductMetas);
 
-      console.log(newProductMetas, requestProductMetas);
-
       const product = await entityManager.save(ProductEntity, {
         ...newProduct,
         name: title,
         stock: requestProductMetas.reduce((totalStock, meta) => totalStock + meta.stock, 0),
-        updatedBy: { id: currentUser.id },
+        user: { id: currentUser.id },
         category: { id: categoryId },
       });
 

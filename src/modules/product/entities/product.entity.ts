@@ -30,7 +30,7 @@ export class ProductEntity extends BaseEntity {
   status: PRODUCT_STATUS_ENUM;
 
   @ManyToOne(() => UserEntity, (user) => user.updatedCategory)
-  updatedBy: UserEntity;
+  user: UserEntity;
 
   // @Column({ type: 'jsonb', nullable: true })
   // attributeOptions: { [key: string]: string[] };

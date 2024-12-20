@@ -11,7 +11,7 @@ export enum ProductQueyTypeEnum {
   RECOMMENDED = 'recommended',
 }
 
-export class GetProductsFilteredListDto {
+export class ApiGetProductsDto {
   @IsUUID()
   @IsOptional()
   categoryId: string;

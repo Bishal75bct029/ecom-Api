@@ -6,6 +6,8 @@ import { AllExceptionFilter } from './common/filters';
 import { envConfig } from './configs/envConfig';
 import { swaggerSetup } from './configs/swagger';
 import { transformAllRoutes } from './common/utils';
+import helmet from 'helmet';
+
 declare global {
   interface BigInt {
     toJSON(): number;
@@ -28,6 +30,7 @@ BigInt.prototype.toJSON = function () {
     },
     credentials: true,
   });
+  app.use(helmet());
   app.use(cookieParser());
   app.useGlobalPipes(
     new ValidationPipe({

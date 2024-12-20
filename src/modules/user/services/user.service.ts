@@ -42,10 +42,11 @@ export class UserService extends AbstractService<UserEntity> {
   async login(loginUserDto: LoginUserDto) {
     const user = await this.findOne({ where: { email: loginUserDto.email } });
 
-    if (!user) throw new BadRequestException('Invalid Credentials');
-    if (user.role !== loginUserDto.role) throw new BadRequestException('Invalid Credentials');
+    if (!user) throw new BadRequestException('The email address or password you entered is incorrect.');
+    if (user.role !== loginUserDto.role)
+      throw new BadRequestException('The email address or password you entered is incorrect.');
     if (!(await this.comparePassword(loginUserDto.password, user.password)))
-      throw new BadRequestException('Invalid Credentials');
+      throw new BadRequestException('The email address or password you entered is incorrect.');
 
     return user;
   }

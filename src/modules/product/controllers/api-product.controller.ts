@@ -2,19 +2,13 @@ import { Controller, Get, NotFoundException, Param, Query, Req } from '@nestjs/c
 import { ProductService } from '../services';
 import { Request } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Between, FindManyOptions, ILike, In, IsNull, Not } from 'typeorm';
+import { In, IsNull, Not } from 'typeorm';
 import { SchoolDiscountService } from '@/modules/school-discount/services/schoolDiscount.service';
-import {
-  GetProductsFilteredListDto,
-  ProductQueyTypeEnum,
-  UserInteractionResponse,
-} from '../dto/get-products-filteredList-dto';
+import { ApiGetProductsDto } from '../dto/get-products-filteredList-dto';
 import { SimilarProductsDto } from '../dto/similarProducts.dto';
 import { CategoryService } from '@/modules/category/services/category.service';
-import { HttpsService } from '@/libs/https/https.service';
-import { ProductEntity } from '../entities';
-import { envConfig } from '@/configs/envConfig';
-import { shuffleArray, getAllTreeIds } from '../helpers';
+// import { HttpsService } from '@/libs/https/https.service';
+import { getAllTreeIds } from '../helpers';
 import { getPaginatedResponse } from '@/common/utils';
 import { ValidateIDDto } from '@/common/dtos';
 
@@ -26,209 +20,62 @@ export class ApiProductController {
     private readonly productService: ProductService,
     private readonly schoolDiscountService: SchoolDiscountService,
     private readonly categoryService: CategoryService,
-    private readonly httpsService: HttpsService,
+    // private readonly httpsService: HttpsService,
   ) {}
 
   @Get('')
-  async getFilteredProducts(@Req() { currentUser, headers }: Request, @Query() dto: GetProductsFilteredListDto) {
-    const { schoolId } = currentUser;
+  async getProducts(@Req() { currentUser }: Request, @Query() dto: ApiGetProductsDto) {
+    const schoolId = currentUser?.schoolId || undefined;
 
     let { limit, page } = dto;
     limit = limit ? limit : 10;
     page = page ? page : 1;
-    let products: ProductEntity[] = [];
-    let count: number;
 
-    if (dto.queryType === ProductQueyTypeEnum.RECOMMENDED && currentUser.id) {
-      const { viewProductInteractions, buyCartProductInteractions, searchInteractions } =
-        await this.httpsService.fetchData<UserInteractionResponse>(
-          `${envConfig.USER_INTERACTION_BASE_URL}/api/interactions`,
-          headers['authorization'].split(' ')[1],
-        );
-
-      const productInteractions = [...viewProductInteractions, ...buyCartProductInteractions];
-      const clickedSearchedroductsIds = searchInteractions[0].clickedProductId;
-
-      const clickedSearchedProduct = await this.productService.find({
-        relations: ['productMeta', 'categories'],
-        where: {
-          productMeta: { isDefault: true },
-          id: In(clickedSearchedroductsIds),
-        },
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          tags: true,
-          productMeta: {
-            images: true,
-            price: true,
-            id: true,
-            attributes: {},
-            createdAt: true,
-          },
-          categories: {
-            id: true,
-            name: true,
-          },
-        },
-        skip: (page - 1) * limit,
-        take: limit,
-        cache: 300,
-      });
-
-      if (productInteractions.length) {
-        const categoryIds = shuffleArray(productInteractions)
-          .slice(0, 5)
-          .map((data) => data.categoryId);
-
-        const productIds = buyCartProductInteractions.map((data) => data.productId);
-
-        const categoriesWithParents = await this.categoryService.find({
-          where: { id: In(categoryIds) },
-          relations: ['parent'],
-        });
-
-        // Extract only the parent entities or return an empty array if no parent exists
-        const parentCategories = categoriesWithParents.filter((category) => !!category.parent);
-
-        const categoryTrees = await Promise.all(
-          parentCategories.map(async (parentCategory) => {
-            return await this.categoryService.findDescendantsTree(parentCategory);
-          }),
-        );
-
-        const relatedCategoryIds = categoryTrees
-          .map((categoryTree) => {
-            return getAllTreeIds(categoryTree);
-          })
-          .flat(Infinity);
-
-        const [recommendedProducts, recommendedCount] = await this.productService.findAndCount({
-          relations: ['productMeta', 'categories'],
-          where: {
-            categories: { id: In(relatedCategoryIds) },
-            productMeta: { isDefault: true },
-            id: Not(In(productIds)),
-          },
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            tags: true,
-            productMeta: {
-              images: true,
-              price: true,
-              id: true,
-              attributes: {},
-              createdAt: true,
-            },
-            categories: {
-              id: true,
-              name: true,
-            },
-          },
-          skip: (page - 1) * limit,
-          take: limit,
-          cache: true,
-        });
-        products = [...recommendedProducts, ...clickedSearchedProduct];
-        count = recommendedCount + viewProductInteractions.length;
-      }
-    } else {
-      const whereQuery: FindManyOptions<ProductEntity>['where'] = {
+    const [products, count] = await this.productService.findAndCount({
+      relations: ['productMeta', 'categories'],
+      where: {
         productMeta: { isDefault: true },
-      };
-      const sortQuery: FindManyOptions<ProductEntity>['order'] = {};
-
-      if (dto.categoryId) {
-        const existingCategory = await this.categoryService.findOne({
-          where: { id: dto.categoryId },
-        });
-        if (!existingCategory) throw new NotFoundException('Category not found');
-        // const categoryTrees = await this.categoryService.findDescendantsTree(existingCategory);
-        // const categoryIds = getAllTreeIds(categoryTrees);
-        whereQuery['categories'] = { id: In([existingCategory.id]) };
-      }
-
-      if (dto.search) {
-        whereQuery['name'] = ILike(`%${dto.search}%`);
-      }
-
-      if (dto.sortBy) {
-        switch (dto.sortBy) {
-          case 'PHL':
-            sortQuery['productMeta'] = { price: 'DESC' };
-            break;
-          case 'PLH':
-            sortQuery['productMeta'] = { price: 'ASC' };
-            break;
-          case 'NA':
-            sortQuery['productMeta'] = { createdAt: 'DESC' };
-            break;
-          default:
-            break;
-        }
-      }
-
-      if (dto.maxPrice !== undefined && dto.minPrice !== undefined) {
-        whereQuery['productMeta'] = {
-          price: Between(dto.minPrice * 100, dto.maxPrice * 100),
-        };
-      }
-
-      const [totalProducts, totalCount] = await this.productService.findAndCount({
-        relations: ['productMeta', 'categories'],
-        where: whereQuery,
-        order: sortQuery,
-        select: {
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        tags: true,
+        productMeta: {
+          images: true,
+          price: true,
+          id: true,
+          attributes: {},
+          createdAt: true,
+        },
+        categories: {
           id: true,
           name: true,
-          description: true,
-          tags: true,
-          productMeta: {
-            images: true,
-            price: true,
-            id: true,
-            attributes: {},
-            createdAt: true,
-          },
-          categories: {
-            id: true,
-            name: true,
-          },
         },
-        skip: (page - 1) * limit,
-        take: limit,
-      });
-
-      products = [...totalProducts];
-      count = totalCount;
-    }
-
-    if (!schoolId) {
-      const discountedProducts = this.productService.getDiscountedProducts(products);
-      return {
-        items: discountedProducts,
-        ...getPaginatedResponse({ count, limit, page }),
-      };
-    }
-
-    const schoolDiscount = await this.schoolDiscountService.findOne({
-      where: { schoolId },
-      select: ['discountPercentage'],
-      cache: true,
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      cache: 300,
     });
 
-    const discountedProducts = schoolDiscount
-      ? this.productService.getDiscountedProducts(products, schoolDiscount.discountPercentage)
-      : this.productService.getDiscountedProducts(products);
+    const schoolDiscount = Number(
+      schoolId
+        ? (
+            await this.schoolDiscountService.findOne({
+              where: { schoolId },
+              select: ['discountPercentage'],
+              cache: true,
+            })
+          ).discountPercentage
+        : 0,
+    );
 
     return {
-      items: discountedProducts,
+      products: this.productService.getDiscountedProducts(products, schoolDiscount),
       ...getPaginatedResponse({ count, limit, page }),
     };
   }
+
   @Get('category')
   async getProductsByCategory(@Req() { currentUser }: Request, @Query() dto: SimilarProductsDto) {
     if (!dto.categoryId) throw new NotFoundException('Products not found');
