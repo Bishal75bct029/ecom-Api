@@ -29,13 +29,35 @@ export class ApiUserController {
   ) {}
 
   @Post('login')
-  async login(@Body() loginUserDto: LoginUserDto) {
-    const { id, role, schoolId } = await this.userService.login({ ...loginUserDto, role: UserRoleEnum.USER });
+  async login(@Body() loginUserDto: LoginUserDto, @Req() req: Request) {
+    const user = await this.userService.findOne({ where: { email: loginUserDto.email, role: UserRoleEnum.USER } });
+    if (!user) throw new BadRequestException("User doesn't exists");
 
-    const payload: UserJwtPayload = { id, role, schoolId };
-    const [token, refreshToken] = await this.userService.generateJWTs(payload);
+    if (!this.userService.comparePassword(loginUserDto.password, user.password))
+      throw new BadRequestException('User failed to login.');
 
-    return { token, refreshToken };
+    req.session.user = user;
+
+    return { message: 'logged in successfully' };
+  }
+
+  @Get('profile')
+  profile(@Req() req: Request) {
+    const user = req.session.user; // Access session data
+    if (!user) {
+      return { message: 'Not logged in!' };
+    }
+    return user;
+  }
+
+  @Get('logout')
+  logout(@Req() req: Request) {
+    req.session.destroy((err) => {
+      if (err) {
+        throw new Error('Logout failed');
+      }
+    });
+    return { message: 'Logged out successfully!' };
   }
 
   @Post('refresh')

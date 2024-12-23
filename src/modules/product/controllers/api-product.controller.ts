@@ -24,9 +24,8 @@ export class ApiProductController {
   ) {}
 
   @Get('')
-  async getProducts(@Req() { currentUser }: Request, @Query() dto: ApiGetProductsDto) {
-    console.log(currentUser);
-    const schoolId = currentUser?.schoolId || undefined;
+  async getProducts(@Req() req: Request, @Query() dto: ApiGetProductsDto) {
+    const schoolId = req.currentUser?.schoolId || undefined;
 
     let { limit, page } = dto;
     limit = limit ? limit : 10;

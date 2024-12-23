@@ -47,10 +47,12 @@ export class AdminProductController {
       relations: ['productMeta', 'categories'],
       skip: (page - 1) * limit,
       take: limit,
-      cache: {
-        id: `${envConfig.REDIS_PREFIX}:${req.url}`,
-        milliseconds: 600000,
-      },
+      cache: name
+        ? undefined
+        : {
+            id: `${envConfig.REDIS_PREFIX}:${req.url}`,
+            milliseconds: 600000,
+          },
     });
 
     return {

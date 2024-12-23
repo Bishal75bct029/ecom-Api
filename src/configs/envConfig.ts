@@ -22,7 +22,7 @@ export const envConfig = cleanEnv(process.env, {
   API_JWT_ISSUER: str(),
   API_JWT_AUDIENCE: str(),
 
-  REDIS_PORT: str(),
+  REDIS_PORT: port(),
   REDIS_HOST: str(),
   REDIS_PREFIX: str(),
 
