@@ -1,16 +1,19 @@
 import { NestFactory } from '@nestjs/core';
+import helmet from 'helmet';
+import * as session from 'express-session';
+import { RedisStore } from 'connect-redis';
+import { Redis } from 'ioredis';
 import * as cookieParser from 'cookie-parser';
 import { Logger, ValidationPipe } from '@nestjs/common';
+import { NextFunction, Request, Response } from 'express';
 import { AppModule } from './app.module';
 import { AllExceptionFilter } from './common/filters';
 import { envConfig } from './configs/envConfig';
 import { swaggerSetup } from './configs/swagger';
 import { transformAllRoutes } from './common/utils';
-import helmet from 'helmet';
-import * as session from 'express-session';
-import { RedisStore } from 'connect-redis';
-import { Redis } from 'ioredis';
-import { doubleCsrf } from 'csrf-csrf';
+import { type UserEntity } from './modules/user/entities';
+import { SESSION_COOKIE_NAME } from './app.constants';
+
 declare global {
   interface BigInt {
     toJSON(): number;
@@ -19,7 +22,7 @@ declare global {
 
 declare module 'express-session' {
   interface SessionData {
-    user: { id: string; email: string }; // Add custom fields here
+    user: Pick<UserEntity, 'id' | 'name' | 'image' | 'role' | 'email' | 'schoolId' | 'isOtpEnabled'>;
   }
 }
 
@@ -45,9 +48,6 @@ BigInt.prototype.toJSON = function () {
   // For parsing cookies
   app.use(cookieParser());
 
-  // For CSRF protection
-  app.use(doubleCsrf);
-
   // For Content Security Policy
   app.use(helmet());
 
@@ -59,22 +59,31 @@ BigInt.prototype.toJSON = function () {
 
   const redisStore = new RedisStore({
     client: redisClient,
-    prefix: 'sess:',
+    prefix: `${envConfig.REDIS_PREFIX}:sess:`,
   });
 
   app.use(
     session({
       store: redisStore,
-      secret: 'get-from-env',
+      secret: envConfig.SESSION_SECRET,
       resave: false,
       saveUninitialized: false,
       cookie: {
-        secure: false,
+        secure: envConfig.NODE_ENV !== 'local',
         httpOnly: true,
-        maxAge: 3600000,
+        path: '/',
+        maxAge: 86400 * 1000,
+        sameSite: 'strict',
+        signed: true,
       },
+      name: SESSION_COOKIE_NAME,
     }),
   );
+
+  app.use((req: Request, _res: Response, next: NextFunction) => {
+    if (req.session) req.session.touch();
+    next();
+  });
   // ----------------- End For Manging Server Session -------------------------
 
   app.useGlobalPipes(

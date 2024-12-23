@@ -1,10 +1,7 @@
 import { V3 } from 'paseto';
+import { randomBytes } from 'crypto';
 
 (async () => {
-  const keys = await Promise.all([
-    V3.generateKey('local', { format: 'paserk' }),
-    V3.generateKey('local', { format: 'paserk' }),
-  ]);
-  console.log('Admin Keys:', keys[0]);
-  console.log('Api Keys:', keys[1]);
+  console.log('Paseto JWT Secret Key:', await V3.generateKey('local', { format: 'paserk' }));
+  console.log('Session Secret Key:', randomBytes(32).toString('hex'));
 })();

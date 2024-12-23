@@ -7,18 +7,18 @@ import {
   Put,
   Param,
   Get,
-  HttpCode,
-  ForbiddenException,
+  Res,
+  InternalServerErrorException,
 } from '@nestjs/common';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { ApiTags } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
 import { LoginUserDto } from '../dto/create-user.dto';
 import { CreateAddressDto } from '../dto/address.dto';
 import { AddressService } from '../services/address.service';
 import { UserRoleEnum } from '../entities/user.entity';
-import { envConfig } from '@/configs/envConfig';
 import { ValidateIDDto } from '@/common/dtos';
+import { SESSION_COOKIE_NAME } from '@/app.constants';
 
 @ApiTags('API User')
 @Controller('api/users')
@@ -30,14 +30,17 @@ export class ApiUserController {
 
   @Post('login')
   async login(@Body() loginUserDto: LoginUserDto, @Req() req: Request) {
-    const user = await this.userService.findOne({ where: { email: loginUserDto.email, role: UserRoleEnum.USER } });
-    if (!user) throw new BadRequestException("User doesn't exists");
+    const user = await this.userService.findOne({
+      where: { email: loginUserDto.email, role: UserRoleEnum.USER },
+      select: ['id', 'name', 'image', 'role', 'email', 'schoolId', 'isOtpEnabled', 'password'],
+    });
+    if (!user) throw new BadRequestException("User doesn't exist.");
 
     if (!this.userService.comparePassword(loginUserDto.password, user.password))
       throw new BadRequestException('User failed to login.');
 
+    delete user.password;
     req.session.user = user;
-
     return { message: 'logged in successfully' };
   }
 
@@ -51,37 +54,23 @@ export class ApiUserController {
   }
 
   @Get('logout')
-  logout(@Req() req: Request) {
+  logout(@Req() req: Request, @Res() res: Response) {
     req.session.destroy((err) => {
       if (err) {
-        throw new Error('Logout failed');
+        throw new InternalServerErrorException('Logout failed.');
       }
     });
-    return { message: 'Logged out successfully!' };
-  }
-
-  @Post('refresh')
-  @HttpCode(200)
-  async refresh(@Body('refreshToken') refreshToken: string) {
-    try {
-      const [token, generatedRefreshToken] = await this.userService.refreshUser(refreshToken, {
-        secret: envConfig.API_JWT_SECRET,
-        issuer: envConfig.API_JWT_ISSUER,
-        audience: envConfig.API_JWT_AUDIENCE,
-      });
-      return { token, refreshToken: generatedRefreshToken };
-    } catch (error) {
-      throw new ForbiddenException({ message: 'Session expired. Please re-login.', needsLogin: true });
-    }
+    res.clearCookie(SESSION_COOKIE_NAME);
+    res.send({ message: 'Logged out successfully.' });
   }
 
   @Get('address')
-  async getUserAddresses(@Req() { currentUser }: Request) {
-    return this.addressService.find({ where: { user: { id: currentUser.id } } });
+  async getUserAddresses(@Req() { session: { user } }: Request) {
+    return this.addressService.find({ where: { user: { id: user.id } } });
   }
 
   @Post('address')
-  async createAddress(@Body() createAddressDto: CreateAddressDto, @Req() { currentUser }: Request) {
+  async createAddress(@Body() createAddressDto: CreateAddressDto, @Req() { session: { user: currentUser } }: Request) {
     const user = await this.userService.findOne({ where: { id: currentUser.id } });
 
     if (!user) throw new BadRequestException("User doesn't exists");
@@ -99,29 +88,7 @@ export class ApiUserController {
   }
 
   @Get('whoami')
-  async whoami(@Req() { currentUser }: Request) {
-    if (!currentUser.id) throw new BadRequestException('User is not loggedin.');
-    const user = await this.userService.findOne({
-      where: {
-        id: currentUser.id,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-        addresses: {
-          name: true,
-          type: true,
-          contact: true,
-        },
-        cart: {
-          cartItems: true,
-        },
-      },
-      relations: ['addresses', 'cart'],
-    });
-
-    return user;
+  async whoami(@Req() { session }: Request) {
+    return { user: session?.user };
   }
 }

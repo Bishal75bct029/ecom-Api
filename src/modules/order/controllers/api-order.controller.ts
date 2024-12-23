@@ -41,7 +41,7 @@ export class ApiOrderController {
   @Post()
   async create(@Body() createOrderDto: CreateOrderDto, @Req() req: Request) {
     const { paymentMethodId } = createOrderDto;
-    const { schoolId, id: userId } = req.currentUser;
+    const { schoolId, id: userId } = req.session.user;
     //initial validations
     const [paymentMethod, productMetas] = await Promise.all([
       this.paymentMethodService.findOne({
@@ -199,9 +199,9 @@ export class ApiOrderController {
   }
 
   @Get()
-  async getOrders(@Req() { currentUser }: Request, @Query() { status }: OrderQueryDto) {
+  async getOrders(@Req() { session: { user } }: Request, @Query() { status }: OrderQueryDto) {
     let whereClause: FindOptionsWhere<OrderEntity> = {
-      user: { id: currentUser.id },
+      user: { id: user.id },
       transaction: { isSuccess: true },
     };
     if (status && status == OrderQueryEnum.PENDING) {
@@ -260,10 +260,10 @@ export class ApiOrderController {
   }
 
   @Get(':id')
-  getOrderById(@Req() { currentUser }: Request, @Param() { id }: ValidateIDDto) {
+  getOrderById(@Req() { session: { user } }: Request, @Param() { id }: ValidateIDDto) {
     return this.orderService.findOne({
       where: {
-        user: { id: currentUser.id },
+        user: { id: user.id },
         id,
         transaction: { isSuccess: true },
       },

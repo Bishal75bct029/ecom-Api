@@ -12,15 +12,8 @@ export const envConfig = cleanEnv(process.env, {
 
   USER_INTERACTION_BASE_URL: str(),
 
-  ADMIN_JWT_SECRET: str(),
-  ADMIN_JWT_ISSUER: str(),
-  ADMIN_JWT_AUDIENCE: str(),
-  JWT_TTL: str(),
-  JWT_REFRESH_TOKEN_TTL: str(),
-
-  API_JWT_SECRET: str(),
-  API_JWT_ISSUER: str(),
-  API_JWT_AUDIENCE: str(),
+  PASETO_JWT_SECRET: str(),
+  SESSION_SECRET: str(),
 
   REDIS_PORT: port(),
   REDIS_HOST: str(),
