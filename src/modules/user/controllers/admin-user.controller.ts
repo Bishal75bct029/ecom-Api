@@ -150,7 +150,7 @@ export class AdminUserController {
     if (isOtpEnabled) {
       const otp = this.userService.generateOtp();
       await Promise.all([
-        this.redisService.set(email + '_OTP', otp.toString(), 60),
+        this.redisService.set(email + '_OTP', otp.toString(), 60 * 5),
         this.sqsService.sendToQueue({
           QueueUrl: envConfig.EMAIL_SQS_URL,
           MessageBody: JSON.stringify({
@@ -179,7 +179,7 @@ export class AdminUserController {
     const otp = await this.redisService.get(user.email + '_OTP');
     if (!otp || otp != otpDto.otp) throw new BadRequestException('The code you entered is incorrect.');
 
-    this.redisService.delete(user.email + '_OTP');
+    await this.redisService.delete(user.email + '_OTP');
     const [token, refreshToken] = await this.userService.generateJWTs({ id: user.id, role: user.role });
 
     return { token, refreshToken };
