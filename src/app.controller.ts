@@ -5,7 +5,6 @@ import { ApiExcludeController } from '@nestjs/swagger';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { PermissionEntity } from '@/modules/RBAC/entities';
 import { CacheKeysEnum } from './libs/redis/types';
-import { envConfig } from './configs/envConfig';
 import { RedisService } from './libs/redis/redis.service';
 
 @Controller()
@@ -45,8 +44,8 @@ export class AppController {
     await Promise.all(
       ['GET', 'POST', 'PUT', 'DELETE'].map((method) =>
         this.redisService.set(
-          `${envConfig.REDIS_PREFIX}:${method}-RBAC`,
-          JSON.stringify(routes.filter((route) => route.method === method)),
+          `${method}-RBAC`,
+          routes.filter((route) => route.method === method),
         ),
       ),
     );
