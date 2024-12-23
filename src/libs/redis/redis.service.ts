@@ -39,6 +39,6 @@ export class RedisService {
 
   async findManyAndInvalidate(key: string) {
     const keys = await this.redisClient.keys(`${this._prefix}:${key}*`);
-    return this.redisClient.del(keys.map((key) => `${key}`));
+    return this.redisClient.del(keys);
   }
 }
