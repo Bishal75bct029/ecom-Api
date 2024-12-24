@@ -195,11 +195,19 @@ export class AdminProductController {
       throw new BadRequestException('Scheduled date is required');
     }
 
-    const product = await this.productService.findOne({ where: { id } });
     if (!this.productService.validateVariant(updateProductDto.attributes, requestProductMetas))
       throw new BadRequestException('Invalid product variant');
 
+    const product = await this.productService.findOne({ where: { id }, relations: ['productMeta'] });
     if (!product) throw new BadRequestException('Product not found');
+
+    const existingMetas = product.productMeta;
+    const requestMetaIds = requestProductMetas.map((meta) => meta.id);
+
+    const metasToDelete = existingMetas.filter((meta) => !requestMetaIds.includes(meta.id));
+    if (metasToDelete.length > 0) {
+      await this.productMetaService.softRemove(metasToDelete);
+    }
 
     const categories = await this.categoryService.find({ where: { id: categoryId } });
     const ancestors = await Promise.all(categories.map((category) => this.categoryService.findAncestorsTree(category)));
