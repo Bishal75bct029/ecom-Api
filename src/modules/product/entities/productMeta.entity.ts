@@ -1,5 +1,5 @@
-import { BaseEntity } from '@/libs/entity/base.entity';
 import { Column, Entity, ManyToOne } from 'typeorm';
+import { BaseEntity } from '@/libs/entity/base.entity';
 import { ProductEntity } from './product.entity';
 
 @Entity('product_meta')
@@ -8,7 +8,7 @@ export class ProductMetaEntity extends BaseEntity {
   sku: string;
 
   @Column({ type: 'simple-array', nullable: true })
-  image: string[];
+  images: string[];
 
   @Column({
     type: 'bigint',
@@ -25,7 +25,7 @@ export class ProductMetaEntity extends BaseEntity {
   price: number;
 
   @Column({ type: 'jsonb', nullable: true, default: {} })
-  variant?: object;
+  attributes?: object;
 
   @Column({ type: 'bool', default: false, nullable: false })
   isDefault?: boolean;
@@ -33,6 +33,6 @@ export class ProductMetaEntity extends BaseEntity {
   @Column({ nullable: false })
   stock: number;
 
-  @ManyToOne(() => ProductEntity, (product) => product.productMeta)
+  @ManyToOne(() => ProductEntity, (product) => product.productMeta, { onDelete: 'CASCADE' })
   product: ProductEntity;
 }

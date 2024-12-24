@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ProductRepository } from '../repositories/product.repository';
 import combinate from 'combinate';
 import { ProductEntity } from '../entities';
-import { CreateProductMetaDto } from '../dto';
+import { Attribute, CreateProductMetaDto } from '../dto';
 import { getRoundedOffValue } from '@/common/utils';
 
 @Injectable()
@@ -37,15 +37,20 @@ export class ProductService extends ProductRepository {
     };
   }
 
-  validateVariant(attributeOptions: { [key: string]: string[] }, productMeta: CreateProductMetaDto[]): boolean {
-    const generatedVariants = combinate(attributeOptions);
+  validateVariant(attributeOptions: Attribute[], productMeta: CreateProductMetaDto[]): boolean {
+    const formattedAttribute: Record<string, string[]> = {};
+    attributeOptions.forEach((attribute) => {
+      formattedAttribute[attribute.attributeName] = attribute.attributeValues.map((value) => value.value);
+    });
+
+    const generatedVariants = combinate(formattedAttribute);
     const attributes = Object.keys(generatedVariants[0]);
 
     for (const meta of productMeta) {
-      if (!meta.variant) continue;
+      if (!meta.attributes) continue;
       const isValidVariant = generatedVariants.some((variant) => {
         return attributes.every((attribute) => {
-          return variant[attribute] === meta.variant[attribute];
+          return variant[attribute] === meta.attributes[attribute];
         });
       });
 

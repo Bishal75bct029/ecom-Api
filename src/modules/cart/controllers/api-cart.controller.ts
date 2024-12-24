@@ -45,10 +45,10 @@ export class ApiCartController {
         name: true,
         productMeta: {
           id: true,
-          image: true,
+          images: true,
           price: true,
           stock: true,
-          variant: {},
+          attributes: {},
         },
       },
       relations: ['productMeta'],

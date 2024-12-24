@@ -171,8 +171,8 @@ export class ApiOrderController {
             totalPrice: true,
             productMeta: {
               id: true,
-              image: true,
-              variant: {},
+              images: true,
+              attributes: {},
               product: {
                 id: true,
                 name: true,
@@ -227,9 +227,9 @@ export class ApiOrderController {
           totalPrice: true,
           productMeta: {
             id: true,
-            image: true,
+            images: true,
             price: true,
-            variant: {},
+            attributes: {},
             product: {
               id: true,
               name: true,
@@ -279,8 +279,8 @@ export class ApiOrderController {
           totalPrice: true,
           productMeta: {
             id: true,
-            image: true,
-            variant: {},
+            images: true,
+            attributes: {},
             product: {
               id: true,
               name: true,

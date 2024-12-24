@@ -175,6 +175,52 @@ export class Migration1721310701471 implements MigrationInterface {
             )
         `);
     await queryRunner.query(`
+            CREATE TABLE "payment_methods" (
+                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "deletedAt" TIMESTAMP,
+                "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
+                "updatedAt" TIMESTAMP DEFAULT now(),
+                "name" character varying NOT NULL,
+                "isActive" boolean NOT NULL DEFAULT true,
+                CONSTRAINT "UQ_a793d7354d7c3aaf76347ee5a66" UNIQUE ("name"),
+                CONSTRAINT "PK_34f9b8c6dfb4ac3559f7e2820d1" PRIMARY KEY ("id")
+            )
+        `);
+    await queryRunner.query(`
+            CREATE TABLE "transactions" (
+                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "deletedAt" TIMESTAMP,
+                "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
+                "updatedAt" TIMESTAMP DEFAULT now(),
+                "isSuccess" boolean NOT NULL DEFAULT false,
+                "responseJson" jsonb NOT NULL DEFAULT '{}',
+                "transactionId" character varying,
+                "remarks" character varying,
+                "transactionCode" character varying,
+                "paymentGatewayCharge" bigint,
+                "price" bigint NOT NULL,
+                "orderId" uuid,
+                "paymentMethodId" uuid,
+                "userId" uuid,
+                CONSTRAINT "REL_2fdbbae70ff802bc8b703ee7c5" UNIQUE ("orderId"),
+                CONSTRAINT "PK_a219afd8dd77ed80f5a862f1db9" PRIMARY KEY ("id")
+            );
+            COMMENT ON COLUMN "transactions"."paymentGatewayCharge" IS 'charge of paymentGateway';
+            COMMENT ON COLUMN "transactions"."price" IS 'price is in rs or cents depending on currency type'
+        `);
+    await queryRunner.query(`
+            ALTER TABLE "transactions"
+            ADD CONSTRAINT "FK_2fdbbae70ff802bc8b703ee7c5c" FOREIGN KEY ("orderId") REFERENCES "orders"("id") ON DELETE NO ACTION ON UPDATE NO ACTION
+        `);
+    await queryRunner.query(`
+            ALTER TABLE "transactions"
+            ADD CONSTRAINT "FK_50db78fa73cb72af407852b6db9" FOREIGN KEY ("paymentMethodId") REFERENCES "payment_methods"("id") ON DELETE NO ACTION ON UPDATE NO ACTION
+        `);
+    await queryRunner.query(`
+            ALTER TABLE "transactions"
+            ADD CONSTRAINT "FK_6bb58f2b6e30cb51a6504599f41" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION
+        `);
+    await queryRunner.query(`
             CREATE TABLE "product_categories" (
                 "productsId" uuid NOT NULL,
                 "categoriesId" uuid NOT NULL,
@@ -275,6 +321,18 @@ export class Migration1721310701471 implements MigrationInterface {
             ALTER TABLE "product_meta" DROP CONSTRAINT "FK_7e9accd22cc78a627c46b3daa24"
         `);
     await queryRunner.query(`
+            ALTER TABLE "transactions"
+            DROP CONSTRAINT "FK_6bb58f2b6e30cb51a6504599f41"
+        `);
+    await queryRunner.query(`
+            ALTER TABLE "transactions"
+            DROP CONSTRAINT "FK_50db78fa73cb72af407852b6db9"
+        `);
+    await queryRunner.query(`
+            ALTER TABLE "transactions"
+            DROP CONSTRAINT "FK_2fdbbae70ff802bc8b703ee7c5c"
+        `);
+    await queryRunner.query(`
             DROP INDEX "public"."IDX_c642709e6ad4582ed11aca458f"
         `);
     await queryRunner.query(`
@@ -324,6 +382,12 @@ export class Migration1721310701471 implements MigrationInterface {
         `);
     await queryRunner.query(`
             DROP TABLE "product_meta"
+        `);
+    await queryRunner.query(`
+            DROP TABLE "transactions"
+        `);
+    await queryRunner.query(`
+            DROP TABLE "payment_methods"
         `);
   }
 }

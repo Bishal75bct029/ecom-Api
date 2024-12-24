@@ -7,6 +7,7 @@ import { OrderEntity } from '@/modules/order/entities/order.entity';
 import { CartEntity } from '@/modules/cart/entities/cart.entity';
 import { TransactionEntity } from '@/modules/transaction/entities/transaction.entity';
 import { CategoryEntity } from '@/modules/category/entities/category.entity';
+import { ProductEntity } from '@/modules/product/entities';
 
 export enum UserRoleEnum {
   ADMIN = 'ADMIN',
@@ -33,6 +34,9 @@ export class UserEntity extends BaseEntity {
   @Column({ type: 'boolean', default: false })
   isOtpEnabled?: boolean;
 
+  @Column({ type: 'uuid', nullable: true })
+  schoolId: string;
+
   @OneToMany(() => ReviewEntity, (review) => review.user)
   reviews: ReviewEntity[];
 
@@ -48,9 +52,9 @@ export class UserEntity extends BaseEntity {
   @OneToMany(() => TransactionEntity, (transaction) => transaction.user)
   transactions: TransactionEntity[];
 
-  @Column({ type: 'uuid', nullable: true })
-  schoolId: string;
-
   @OneToMany(() => CategoryEntity, (category) => category.updatedAt)
   updatedCategory: CategoryEntity[];
+
+  @OneToMany(() => CategoryEntity, (category) => category.updatedAt)
+  updatedProduct: ProductEntity[];
 }

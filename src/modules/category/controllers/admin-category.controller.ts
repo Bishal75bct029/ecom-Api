@@ -3,7 +3,13 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { In } from 'typeorm';
 
 import { CategoryService } from '../services/category.service';
-import { CreateCategoryDto, UpdateCategoryDto, GetCategoryQuery, UpdateCategoryStatusDto } from '../dto';
+import {
+  CreateCategoryDto,
+  UpdateCategoryDto,
+  GetCategoryQuery,
+  UpdateCategoryStatusDto,
+  GetCategoryTypeQuery,
+} from '../dto';
 import { getPaginatedResponse } from '@/common/utils';
 import { Request } from 'express';
 import { ValidateIDDto } from '@/common/dtos';
@@ -24,6 +30,10 @@ export class AdminCategoryController {
     order = order?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
     limit = limit || undefined;
     page = page || 1;
+
+    if (!limit) {
+      return { items: await this.categoryService.findTrees() };
+    }
 
     const queryBuilder = this.categoryService
       .createQueryBuilder('categories')
@@ -78,7 +88,7 @@ export class AdminCategoryController {
   }
 
   @Get(':id')
-  async categoryByID(@Param() { id }: ValidateIDDto) {
+  async categoryByID(@Param() { id }: ValidateIDDto, @Query() { type }: GetCategoryTypeQuery) {
     const category = await this.categoryService.findOne({
       where: { id },
       select: {
@@ -89,6 +99,10 @@ export class AdminCategoryController {
       },
     });
     if (!category) throw new BadRequestException('Category not found');
+
+    if (type === 'ancestors') {
+      return this.categoryService.findAncestorsTree(category);
+    }
 
     return this.categoryService.findDescendantsTree(category);
   }
