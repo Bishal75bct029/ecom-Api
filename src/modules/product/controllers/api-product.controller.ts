@@ -24,8 +24,8 @@ export class ApiProductController {
   ) {}
 
   @Get('')
-  async getProducts(@Req() { currentUser }: Request, @Query() dto: ApiGetProductsDto) {
-    const schoolId = currentUser?.schoolId || undefined;
+  async getProducts(@Req() req: Request, @Query() dto: ApiGetProductsDto) {
+    const schoolId = req.session.user?.schoolId || undefined;
 
     let { limit, page } = dto;
     limit = limit ? limit : 10;
@@ -77,9 +77,9 @@ export class ApiProductController {
   }
 
   @Get('category')
-  async getProductsByCategory(@Req() { currentUser }: Request, @Query() dto: SimilarProductsDto) {
+  async getProductsByCategory(@Req() { session: { user } }: Request, @Query() dto: SimilarProductsDto) {
     if (!dto.categoryId) throw new NotFoundException('Products not found');
-    const { schoolId } = currentUser;
+    const { schoolId } = user;
 
     const existingCategory = await this.categoryService.findOne({
       where: { id: dto.categoryId },
@@ -125,8 +125,8 @@ export class ApiProductController {
   }
 
   @Get(':id')
-  async getProduct(@Param() { id }: ValidateIDDto, @Req() { currentUser }: Request) {
-    const { schoolId } = currentUser;
+  async getProduct(@Param() { id }: ValidateIDDto, @Req() { session: { user } }: Request) {
+    const { schoolId } = user;
 
     const product = await this.productService.findOne({
       relations: ['productMeta', 'categories'],
@@ -169,8 +169,8 @@ export class ApiProductController {
   }
 
   @Get('meta/:id')
-  async getProductByMetaId(@Param() { id }: ValidateIDDto, @Req() { currentUser }: Request) {
-    const { schoolId } = currentUser;
+  async getProductByMetaId(@Param() { id }: ValidateIDDto, @Req() { session: { user } }: Request) {
+    const { schoolId } = user;
 
     const product = await this.productService.findOne({
       where: { productMeta: { id } },

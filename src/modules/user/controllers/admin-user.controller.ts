@@ -6,12 +6,12 @@ import {
   Query,
   Get,
   GoneException,
-  HttpCode,
-  ForbiddenException,
   Req,
+  Res,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
 import {
@@ -27,14 +27,17 @@ import { UserRoleEnum } from '../entities/user.entity';
 import { RedisService } from '@/libs/redis/redis.service';
 import { envConfig } from '@/configs/envConfig';
 import { SQSService } from '@/common/module/aws/sqs.service';
+import { PasetoJwtService } from '@/libs/pasetoJwt/pasetoJwt.service';
+import { SESSION_COOKIE_NAME } from '@/app.constants';
 
 @ApiTags('Admin User')
 @Controller('admin/users')
 export class AdminUserController {
   constructor(
     private readonly userService: UserService,
-    private redisService: RedisService,
-    private sqsService: SQSService,
+    private readonly redisService: RedisService,
+    private readonly sqsService: SQSService,
+    private readonly jwtService: PasetoJwtService,
   ) {}
 
   @Post('create')
@@ -52,26 +55,6 @@ export class AdminUserController {
     return user;
   }
 
-  // @Post('logout')
-  // async logoutAdmin(@Res() res: Response) {
-  //   return res.status(200).send();
-  // }
-
-  @Post('refresh')
-  @HttpCode(200)
-  async refreshAdmin(@Body('refreshToken') refreshToken: string) {
-    try {
-      const [token, generatedRefreshToken] = await this.userService.refreshUser(refreshToken, {
-        secret: envConfig.ADMIN_JWT_SECRET,
-        issuer: envConfig.ADMIN_JWT_ISSUER,
-        audience: envConfig.ADMIN_JWT_AUDIENCE,
-      });
-      return { token, refreshToken: generatedRefreshToken };
-    } catch (error) {
-      throw new ForbiddenException({ message: 'Session expired. Please re-login.', needsLogin: true });
-    }
-  }
-
   @Post('forgot-password')
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto, @Req() req: Request) {
     const { email } = forgotPasswordDto;
@@ -79,7 +62,10 @@ export class AdminUserController {
 
     if (!user) return true;
 
-    const [token] = await this.userService.generateJWTs({ email, role: UserRoleEnum.ADMIN });
+    const token = await this.jwtService.pasetoSign(
+      { email, role: UserRoleEnum.ADMIN },
+      { expiresIn: '5m', secret: envConfig.PASETO_JWT_SECRET },
+    );
     const url = req.headers.origin + '/reset-password?token=' + token;
     await Promise.all([
       this.redisService.set(email + '_PW_RESET_TOKEN', token, 300),
@@ -108,7 +94,9 @@ export class AdminUserController {
   @Get('validate-password-link')
   async validateOtp(@Query() { token }: ValidatePasswordResetTokenQuery) {
     try {
-      const { email } = await this.userService.verifyJWT(token, UserRoleEnum.ADMIN);
+      const { email } = await this.jwtService.pasetoVerify<UserJwtPayload>(token, {
+        secret: envConfig.PASETO_JWT_SECRET,
+      });
       const redisPasswordResetToken = await this.redisService.get(email + '_PW_RESET_TOKEN');
       if (!redisPasswordResetToken || redisPasswordResetToken !== token) throw new Error();
       return true;
@@ -119,8 +107,9 @@ export class AdminUserController {
 
   @Post('reset-password')
   async changePassword(@Body() { token, password }: ChangePasswordDto) {
-    const { email } = await this.userService.verifyJWT(token, UserRoleEnum.ADMIN);
-
+    const { email } = await this.jwtService.pasetoVerify<UserJwtPayload>(token, {
+      secret: envConfig.PASETO_JWT_SECRET,
+    });
     const user = await this.userService.findOne({ where: { email } });
     if (!user) throw new GoneException('Your link has expired.');
 
@@ -141,48 +130,55 @@ export class AdminUserController {
   }
 
   @Post('authenticate')
-  async authenticate(@Body() loginUserDto: LoginUserDto) {
-    const { email, role, name, isOtpEnabled, id } = await this.userService.login({
-      ...loginUserDto,
-      role: UserRoleEnum.ADMIN,
+  async authenticate(@Body() loginUserDto: LoginUserDto, @Req() req: Request) {
+    const user = await this.userService.findOne({
+      where: { email: loginUserDto.email, role: UserRoleEnum.ADMIN },
+      select: ['id', 'name', 'image', 'role', 'email', 'schoolId', 'isOtpEnabled', 'password'],
     });
+    if (!user) throw new BadRequestException('The email address or password you entered is incorrect.');
 
-    if (isOtpEnabled) {
+    if (!this.userService.comparePassword(loginUserDto.password, user.password))
+      throw new BadRequestException('The email address or password you entered is incorrect.');
+
+    if (user.isOtpEnabled) {
       const otp = this.userService.generateOtp();
       await Promise.all([
-        this.redisService.set(email + '_OTP', otp.toString(), 60),
+        this.redisService.set(user.email + '_OTP', otp.toString(), 60 * 5),
         this.sqsService.sendToQueue({
           QueueUrl: envConfig.EMAIL_SQS_URL,
           MessageBody: JSON.stringify({
             emailTemplateName: 'NepalOTP',
             templateData: {
-              fullName: name,
+              fullName: user.name,
               OTPCode: otp,
             },
             emailFrom: 'Ecommerce<noreply@innovatetech.io>',
-            toAddress: email,
+            toAddress: user.email,
           }),
         }),
       ]);
-      return { message: 'OTP sent successfully.', isOtpEnabled };
+      return { message: 'OTP sent successfully.', isOtpEnabled: true };
     }
-
-    const [token, refreshToken] = await this.userService.generateJWTs({ id, role });
-    return { token, refreshToken };
+    delete user.password;
+    req.session.user = user;
+    return { message: 'Logged in successfully.' };
   }
 
   @Post('validate-otp')
-  async validateLoginOtp(@Body() otpDto: ValidateOtpDto) {
-    const user = await this.userService.findOne({ where: { email: otpDto.email, role: UserRoleEnum.ADMIN } });
+  async validateLoginOtp(@Body() otpDto: ValidateOtpDto, @Req() req: Request) {
+    const user = await this.userService.findOne({
+      where: { email: otpDto.email, role: UserRoleEnum.ADMIN },
+      select: ['id', 'name', 'image', 'role', 'email', 'schoolId', 'isOtpEnabled'],
+    });
     if (!user) throw new BadRequestException('Invalid credentials.');
 
     const otp = await this.redisService.get(user.email + '_OTP');
     if (!otp || otp != otpDto.otp) throw new BadRequestException('The code you entered is incorrect.');
 
-    this.redisService.delete(user.email + '_OTP');
-    const [token, refreshToken] = await this.userService.generateJWTs({ id: user.id, role: user.role });
-
-    return { token, refreshToken };
+    await this.redisService.delete(user.email + '_OTP');
+    delete user.password;
+    req.session.user = user;
+    return { message: 'Logged in successfully.' };
   }
 
   @Post('resend-otp')
@@ -191,7 +187,7 @@ export class AdminUserController {
     if (!user) throw new BadRequestException('Cannot resend OTP.');
 
     const redisOtp = await this.redisService.get(email + '_OTP');
-    if (redisOtp) throw new BadRequestException('Cannot resend OTP');
+    if (redisOtp) throw new BadRequestException('Cannot resend OTP.');
 
     const otp = this.userService.generateOtp();
 
@@ -212,5 +208,21 @@ export class AdminUserController {
     ]);
 
     return true;
+  }
+
+  @Get('whoami')
+  async whoami(@Req() { session }: Request) {
+    return { user: session?.user };
+  }
+
+  @Get('logout')
+  logout(@Req() req: Request, @Res() res: Response) {
+    req.session.destroy((err) => {
+      if (err) {
+        throw new InternalServerErrorException('Logout failed.');
+      }
+    });
+    res.clearCookie(SESSION_COOKIE_NAME);
+    res.send({ message: 'Logged out successfully.' });
   }
 }
