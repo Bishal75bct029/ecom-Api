@@ -11,6 +11,7 @@ import { ValidateIDDto } from '@/common/dtos';
 import { GetAdminProductsQuery } from '../dto/get-products-filteredList-dto';
 import { PRODUCT_STATUS_ENUM, ProductEntity, ProductMetaEntity } from '../entities';
 import { envConfig } from '@/configs/envConfig';
+import { UserEntity } from '@/modules/user/entities';
 
 @ApiTags('Admin Product')
 @Controller('admin/products')
@@ -144,7 +145,7 @@ export class AdminProductController {
   }
 
   @Post()
-  async create(@Req() { currentUser }: Request, @Body() createProductDto: CreateProductDto) {
+  async create(@Req() { session: { user } }: Request, @Body() createProductDto: CreateProductDto) {
     const { title, variants: requestProductMetas, categoryId, ...rest } = createProductDto;
     if (createProductDto.status === PRODUCT_STATUS_ENUM.SCHEDULED && !createProductDto.scheduledDate) {
       throw new BadRequestException('Scheduled date is required');
@@ -170,7 +171,7 @@ export class AdminProductController {
         ...newProduct,
         name: title,
         stock: requestProductMetas.reduce((totalStock, meta) => totalStock + meta.stock, 0),
-        updatedBy: { id: currentUser.id },
+        updatedBy: { id: user.id },
         category: { id: categoryId },
       });
 
@@ -184,7 +185,11 @@ export class AdminProductController {
   }
 
   @Put(':id')
-  async update(@Param() { id }: ValidateIDDto, @Body() updateProductDto: UpdateProductDto) {
+  async update(
+    @Param() { id }: ValidateIDDto,
+    @Req() { session: { user } }: Request,
+    @Body() updateProductDto: UpdateProductDto,
+  ) {
     const { title, variants: requestProductMetas, categoryId, ...rest } = updateProductDto;
     if (updateProductDto.status === PRODUCT_STATUS_ENUM.SCHEDULED && !updateProductDto.scheduledDate) {
       throw new BadRequestException('Scheduled date is required');
@@ -210,6 +215,8 @@ export class AdminProductController {
       ...newProduct,
       name: title,
       stock: requestProductMetas.reduce((totalStock, meta) => totalStock + meta.stock, 0),
+      updatedBy: { id: user.id } as UserEntity,
+
       // category: { id: categoryId },
     });
     const newProductMetas = this.productMetaService.createMany(requestProductMetas);
