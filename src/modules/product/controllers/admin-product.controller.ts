@@ -65,7 +65,7 @@ export class AdminProductController {
 
     const [products, count] = await this.productService.findAndCount({
       where: whereClause,
-      relations: ['productMeta', 'categories', 'user'],
+      relations: ['productMeta', 'categories', 'updatedBy'],
       skip: (page - 1) * limit || 0,
       take: limit,
       cache: {
@@ -84,9 +84,9 @@ export class AdminProductController {
           name: true,
         },
         updatedAt: true,
-        user: { name: true },
+        updatedBy: { name: true },
       },
-      order: sortBy ? { [sortBy]: order } : undefined,
+      order: sortBy ? { [sortBy]: order } : { updatedAt: 'DESC' },
     });
 
     return {
@@ -95,7 +95,7 @@ export class AdminProductController {
       items: products.map((product) => {
         return {
           ...product,
-          user: product.user.name,
+          updatedBy: product.updatedBy.name,
           categories: product.categories.map((category) => category.name),
           productMeta: product.productMeta.map((meta) => {
             return {
@@ -132,7 +132,6 @@ export class AdminProductController {
         },
         categories: {
           id: true,
-          name: true,
         },
       },
       where: {
@@ -140,17 +139,12 @@ export class AdminProductController {
       },
     });
 
-    const { name, productMeta, ...rest } = product;
-    return { ...rest, title: name, variants: productMeta };
+    const { name, productMeta, categories, ...rest } = product;
+    return { ...rest, title: name, variants: productMeta, categoryId: categories[0].id };
   }
 
   @Post()
   async create(@Req() { currentUser }: Request, @Body() createProductDto: CreateProductDto) {
-    //I havenot sent the category from frontend so i am saving this random category id to db.
-    if (!createProductDto.categoryId) {
-      createProductDto.categoryId = (await this.categoryService.find({ where: { parent: null }, take: 1 }))[0].id;
-    }
-
     const { title, variants: requestProductMetas, categoryId, ...rest } = createProductDto;
     if (createProductDto.status === PRODUCT_STATUS_ENUM.SCHEDULED && !createProductDto.scheduledDate) {
       throw new BadRequestException('Scheduled date is required');
@@ -176,7 +170,7 @@ export class AdminProductController {
         ...newProduct,
         name: title,
         stock: requestProductMetas.reduce((totalStock, meta) => totalStock + meta.stock, 0),
-        user: { id: currentUser.id },
+        updatedBy: { id: currentUser.id },
         category: { id: categoryId },
       });
 
@@ -191,11 +185,6 @@ export class AdminProductController {
 
   @Put(':id')
   async update(@Param() { id }: ValidateIDDto, @Body() updateProductDto: UpdateProductDto) {
-    //I havenot sent the category from frontend so i am saving this random category id to db.
-    if (!updateProductDto.categoryId) {
-      updateProductDto.categoryId = (await this.categoryService.find({ where: { parent: null }, take: 1 }))[0].id;
-    }
-
     const { title, variants: requestProductMetas, categoryId, ...rest } = updateProductDto;
     if (updateProductDto.status === PRODUCT_STATUS_ENUM.SCHEDULED && !updateProductDto.scheduledDate) {
       throw new BadRequestException('Scheduled date is required');

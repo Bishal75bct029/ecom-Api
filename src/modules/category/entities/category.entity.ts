@@ -26,7 +26,7 @@ export class CategoryEntity extends BaseEntity {
   description: string;
 
   @ManyToOne(() => UserEntity, (user) => user.updatedCategory)
-  user: UserEntity;
+  updatedBy: UserEntity;
 
   @ManyToMany(() => ProductEntity, (product) => product.categories)
   products: ProductEntity[];

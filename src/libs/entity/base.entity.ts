@@ -7,9 +7,9 @@ export class BaseEntity {
   @DeleteDateColumn({ nullable: true, type: 'timestamptz', select: false })
   deletedAt: Date;
 
-  @CreateDateColumn({ nullable: false, type: 'timestamptz', select: false })
+  @CreateDateColumn({ nullable: false, type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn({ nullable: true, type: 'timestamptz', select: false })
+  @UpdateDateColumn({ nullable: true, type: 'timestamptz' })
   updatedAt: Date;
 }

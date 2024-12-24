@@ -60,3 +60,9 @@ export class GetCategoryQuery extends PaginationDto {
   @IsOptional()
   status?: 'active' | 'inactive';
 }
+
+export class GetCategoryTypeQuery {
+  @IsString()
+  @IsOptional()
+  type: 'ancestors';
+}

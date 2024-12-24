@@ -3,7 +3,13 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { In } from 'typeorm';
 
 import { CategoryService } from '../services/category.service';
-import { CreateCategoryDto, UpdateCategoryDto, GetCategoryQuery, UpdateCategoryStatusDto } from '../dto';
+import {
+  CreateCategoryDto,
+  UpdateCategoryDto,
+  GetCategoryQuery,
+  UpdateCategoryStatusDto,
+  GetCategoryTypeQuery,
+} from '../dto';
 import { getPaginatedResponse } from '@/common/utils';
 import { Request } from 'express';
 import { ValidateIDDto } from '@/common/dtos';
@@ -25,16 +31,20 @@ export class AdminCategoryController {
     limit = limit || undefined;
     page = page || 1;
 
+    if (!limit) {
+      return { items: await this.categoryService.findTrees() };
+    }
+
     const queryBuilder = this.categoryService
       .createQueryBuilder('categories')
       .leftJoin('categories.products', 'product')
-      .innerJoin('categories.user', 'users')
+      .innerJoin('categories.updatedBy', 'users')
       .loadRelationCountAndMap('categories.productCount', 'categories.products')
       .select([
         'categories.id as id',
         'categories.name AS "name"',
         'categories.status as "status"',
-        'users.name as "user"',
+        'users.name as "updatedBy"',
         'categories.updatedAt as "updatedAt"',
         'COUNT(product.id) AS "productCount"',
       ])
@@ -78,7 +88,7 @@ export class AdminCategoryController {
   }
 
   @Get(':id')
-  async categoryByID(@Param() { id }: ValidateIDDto) {
+  async categoryByID(@Param() { id }: ValidateIDDto, @Query() { type }: GetCategoryTypeQuery) {
     const category = await this.categoryService.findOne({
       where: { id },
       select: {
@@ -89,6 +99,10 @@ export class AdminCategoryController {
       },
     });
     if (!category) throw new BadRequestException('Category not found');
+
+    if (type === 'ancestors') {
+      return this.categoryService.findAncestorsTree(category);
+    }
 
     return this.categoryService.findDescendantsTree(category);
   }
@@ -112,7 +126,7 @@ export class AdminCategoryController {
         description,
         status,
         children,
-        user: { id: currentUser.id },
+        updatedBy: { id: currentUser.id },
       },
       { transaction: true },
     );
@@ -157,7 +171,7 @@ export class AdminCategoryController {
         description,
         status,
         children,
-        user: { id: currentUser.id },
+        updatedBy: { id: currentUser.id },
       },
       { transaction: true },
     );

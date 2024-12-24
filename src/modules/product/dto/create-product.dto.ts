@@ -47,7 +47,7 @@ export class CreateProductDto {
   variants: CreateProductMetaDto[];
 
   @IsUUID()
-  @IsOptional()
+  @IsNotEmpty()
   categoryId: string;
 
   @IsEnum(PRODUCT_STATUS_ENUM)
