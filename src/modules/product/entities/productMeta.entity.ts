@@ -1,5 +1,5 @@
-import { BaseEntity } from '@/libs/entity/base.entity';
 import { Column, Entity, ManyToOne } from 'typeorm';
+import { BaseEntity } from '@/libs/entity/base.entity';
 import { ProductEntity } from './product.entity';
 
 @Entity('product_meta')

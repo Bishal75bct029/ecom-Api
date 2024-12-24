@@ -8,16 +8,16 @@ import { UserEntity } from '@/modules/user/entities';
 import { Attribute } from '../dto';
 
 export enum PRODUCT_STATUS_ENUM {
-  PUBLISHED = 'published',
-  DRAFT = 'draft',
-  SCHEDULED = 'scheduled',
+  PUBLISHED = 'PUBLISHED',
+  DRAFT = 'DRAFT',
+  SCHEDULED = 'SCHEDULED',
 }
 @Entity({ name: 'products' })
 export class ProductEntity extends BaseEntity {
   @Column()
   name: string;
 
-  @Column({ type: 'varchar', length: 5000, nullable: false })
+  @Column({ type: 'text', nullable: false })
   description: string;
 
   @Column({ type: 'simple-array', default: [] })
@@ -29,27 +29,27 @@ export class ProductEntity extends BaseEntity {
   @Column({ type: 'enum', enum: PRODUCT_STATUS_ENUM, default: PRODUCT_STATUS_ENUM.DRAFT })
   status: PRODUCT_STATUS_ENUM;
 
-  @ManyToOne(() => UserEntity, (user) => user.updatedCategory)
-  updatedBy: UserEntity;
-
   // @Column({ type: 'jsonb', nullable: true })
   // attributeOptions: { [key: string]: string[] };
 
-  @ManyToMany(() => CategoryEntity, (category) => category.products)
-  @JoinTable({ name: 'product_categories' })
-  categories: CategoryEntity[];
-
-  @Column({ type: 'timestamp with time zone', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   scheduledDate: Date;
 
   @Column({ type: 'int', default: 0 })
   stock: number;
 
+  @Column({ type: 'simple-array', nullable: true })
+  images: string[];
+
   @OneToMany(() => ProductMetaEntity, (productMeta) => productMeta.product, { cascade: ['soft-remove'] })
   productMeta: ProductMetaEntity[];
 
-  @Column({ type: 'simple-array', nullable: true })
-  images: string[];
+  @ManyToMany(() => CategoryEntity, (category) => category.products)
+  @JoinTable({ name: 'product_categories' })
+  categories: CategoryEntity[];
+
+  @ManyToOne(() => UserEntity, (user) => user.updatedCategory)
+  updatedBy: UserEntity;
 
   @OneToMany(() => ReviewEntity, (review) => review.product)
   reviews: ReviewEntity[];

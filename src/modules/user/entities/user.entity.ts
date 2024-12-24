@@ -34,6 +34,9 @@ export class UserEntity extends BaseEntity {
   @Column({ type: 'boolean', default: false })
   isOtpEnabled?: boolean;
 
+  @Column({ type: 'uuid', nullable: true })
+  schoolId: string;
+
   @OneToMany(() => ReviewEntity, (review) => review.user)
   reviews: ReviewEntity[];
 
@@ -48,9 +51,6 @@ export class UserEntity extends BaseEntity {
 
   @OneToMany(() => TransactionEntity, (transaction) => transaction.user)
   transactions: TransactionEntity[];
-
-  @Column({ type: 'uuid', nullable: true })
-  schoolId: string;
 
   @OneToMany(() => CategoryEntity, (category) => category.updatedAt)
   updatedCategory: CategoryEntity[];
