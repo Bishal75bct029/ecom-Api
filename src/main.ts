@@ -73,7 +73,7 @@ BigInt.prototype.toJSON = function () {
         httpOnly: true,
         path: '/',
         maxAge: 86400 * 1000,
-        sameSite: 'strict',
+        sameSite: undefined,
         signed: true,
       },
       name: SESSION_COOKIE_NAME,
