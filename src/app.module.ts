@@ -5,11 +5,10 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { TransformResponseInterceptor } from './common/interceptors';
-import { AdminMiddleware, ApiMiddleware, PermissionMiddleware } from './common/middlewares';
+import { AuthorizationMiddleware, PermissionMiddleware } from './common/middlewares';
 import { ProductModule, CategoryModule, ReviewModule, UserModule, CartModule, OrderModule } from '@/modules';
 import { RedisModule } from './libs/redis/redis.module';
 import { ADMIN_PUBLIC_ROUTES, API_PUBLIC_ROUTES } from './app.constants';
-import { ApiAuthorizationMiddleware } from './common/middlewares/api/api-authorization.middleware';
 import { PaymentMethodModule } from './modules/payment-method/payment-method.module';
 import { TransactionModule } from './modules/transaction/transaction.module';
 import { HttpsModule } from './libs/https/https.module';
@@ -53,13 +52,12 @@ import { FileUploadModule } from './modules/file-upload/file-upload.module';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(AdminMiddleware, PermissionMiddleware)
+      .apply(AuthorizationMiddleware, PermissionMiddleware)
       .exclude(...ADMIN_PUBLIC_ROUTES)
       .forRoutes({ path: 'admin/*', method: RequestMethod.ALL });
     consumer
-      .apply(ApiMiddleware, PermissionMiddleware)
+      .apply(AuthorizationMiddleware, PermissionMiddleware)
       .exclude(...API_PUBLIC_ROUTES)
       .forRoutes({ path: 'api/*', method: RequestMethod.ALL });
-    consumer.apply(ApiAuthorizationMiddleware).forRoutes(...['api/carts', 'api/orders']);
   }
 }

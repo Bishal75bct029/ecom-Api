@@ -94,7 +94,7 @@ export class AdminCategoryController {
   }
 
   @Post()
-  async saveCategory(@Req() { currentUser }: Request, @Body() createCategoryDto: CreateCategoryDto) {
+  async saveCategory(@Req() { session: { user } }: Request, @Body() createCategoryDto: CreateCategoryDto) {
     const { name, description, status } = createCategoryDto;
     let { children } = createCategoryDto;
 
@@ -104,7 +104,7 @@ export class AdminCategoryController {
       throw new BadRequestException('Parent category name must be unique.');
     }
 
-    children = addPropertiesToNestedTree(children, { updatedBy: { id: currentUser.id }, status });
+    children = addPropertiesToNestedTree(children, { updatedBy: { id: user.id }, status });
 
     await this.categoryService.createAndSave(
       {
@@ -112,7 +112,7 @@ export class AdminCategoryController {
         description,
         status,
         children,
-        updatedBy: { id: currentUser.id },
+        updatedBy: { id: user.id },
       },
       { transaction: true },
     );
@@ -120,7 +120,7 @@ export class AdminCategoryController {
   }
 
   @Put()
-  async updateCategory(@Req() { currentUser }: Request, @Body() updateCategoryDto: UpdateCategoryDto) {
+  async updateCategory(@Req() { session: { user } }: Request, @Body() updateCategoryDto: UpdateCategoryDto) {
     const { id, name, description, status } = updateCategoryDto;
     let { children } = updateCategoryDto;
 
@@ -149,7 +149,7 @@ export class AdminCategoryController {
     }
 
     // update
-    children = addPropertiesToNestedTree(children, { updatedBy: { id: currentUser.id }, status });
+    children = addPropertiesToNestedTree(children, { updatedBy: { id: user.id }, status });
     await this.categoryService.createAndSave(
       {
         id,
@@ -157,7 +157,7 @@ export class AdminCategoryController {
         description,
         status,
         children,
-        updatedBy: { id: currentUser.id },
+        updatedBy: { id: user.id },
       },
       { transaction: true },
     );

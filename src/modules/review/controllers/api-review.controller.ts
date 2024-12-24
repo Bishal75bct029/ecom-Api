@@ -18,7 +18,7 @@ export class ApiReviewController {
 
   @Post()
   async create(@Body() createReviewDto: CreateReviewDto, @Req() req: Request) {
-    const { id } = req.currentUser;
+    const { id } = req.session.user;
     const [user, product] = await Promise.all([
       this.userService.findOne({ where: { id }, select: { id: true, name: true, email: true } }),
       this.productService.findOne({ where: { id: createReviewDto.productId } }),

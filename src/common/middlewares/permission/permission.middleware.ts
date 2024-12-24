@@ -2,7 +2,6 @@ import { NextFunction, Request, Response } from 'express';
 import { ForbiddenException, Injectable, NestMiddleware, NotFoundException } from '@nestjs/common';
 import { getPatternMatchingRoute } from '@/common/utils';
 import { PermissionService } from '@/modules/RBAC/services/permission.service';
-import { UserRoleEnum } from '@/modules/user/entities';
 import { RedisService } from '@/libs/redis/redis.service';
 import { type PermissionEntity } from '@/modules/RBAC/entities';
 
@@ -31,7 +30,7 @@ export class PermissionMiddleware implements NestMiddleware {
 
     if (!isRoutePresent) throw new NotFoundException('Route not found.');
 
-    if (!isRoutePresent.allowedRoles.includes(req.currentUser.role as UserRoleEnum))
+    if (!isRoutePresent.allowedRoles.includes(req.session.user.role))
       throw new ForbiddenException('You do not have permission to perform this action.');
     next();
   }

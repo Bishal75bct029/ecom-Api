@@ -1,3 +1,2 @@
-export * from './admin/admin.middleware';
-export * from './api/api.middleware';
+export * from './authorization/authorization.middleware';
 export * from './permission/permission.middleware';

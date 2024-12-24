@@ -20,11 +20,11 @@ export class ApiCartController {
 
   @Get()
   async getAllCartItems(@Req() req: Request) {
-    const { schoolId } = req.currentUser;
+    const { schoolId } = req.session.user;
     const userCarts = await this.cartService.findOne({
       where: {
         user: {
-          id: req.currentUser.id,
+          id: req.session.user.id,
         },
       },
     });
@@ -94,7 +94,7 @@ export class ApiCartController {
     const isUserCartAvailable = await this.cartService.findOne({
       where: {
         user: {
-          id: req.currentUser.id,
+          id: req.session.user.id,
         },
       },
     });
@@ -122,7 +122,7 @@ export class ApiCartController {
     }
 
     return this.cartService.createAndSave({
-      user: { id: req.currentUser.id },
+      user: { id: req.session.user.id },
       cartItems: [{ productMetaId, quantity }],
     });
   }
@@ -132,7 +132,7 @@ export class ApiCartController {
     const isUserCartAvailable = await this.cartService.findOne({
       where: {
         user: {
-          id: req.currentUser.id,
+          id: req.session.user.id,
         },
       },
     });
