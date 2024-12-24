@@ -237,7 +237,7 @@ export class AdminProductController {
   }
 
   @Delete(':id')
-  async deleteProduct(@Param('id') id: string) {
+  async deleteProduct(@Param() { id }: ValidateIDDto) {
     const product = await this.productService.findOne({
       where: { id },
       relations: ['productMeta'],
@@ -249,6 +249,7 @@ export class AdminProductController {
       },
     });
 
+    if (!product) throw new BadRequestException('Product not found');
     await this.productService.softRemove(product);
 
     return true;

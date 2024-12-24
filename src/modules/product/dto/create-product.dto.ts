@@ -56,9 +56,7 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsArray()
-  @Type(() => Images)
-  @ValidateNested({ each: true })
-  images?: Images[];
+  images?: string[];
 
   @IsOptional()
   @IsDate()
@@ -83,12 +81,6 @@ export class AttributeValue extends ValidateIDDto {
   value: string;
 }
 
-export class Images extends ValidateIDDto {
-  @IsString()
-  @IsOptional()
-  url: string;
-}
-
 export class CreateProductMetaDto extends ValidateIDDto {
   @IsString()
   @IsNotEmpty()
@@ -96,9 +88,7 @@ export class CreateProductMetaDto extends ValidateIDDto {
 
   @IsArray()
   @IsOptional()
-  @ValidateNested({ each: true })
-  @Type(() => Images)
-  images: Images[];
+  images: string[];
 
   @IsNumber()
   @IsNotEmpty()

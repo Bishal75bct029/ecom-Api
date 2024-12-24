@@ -5,7 +5,7 @@ import { ProductMetaEntity } from './productMeta.entity';
 import { CategoryEntity } from '@/modules/category/entities/category.entity';
 import { ReviewEntity } from '@/modules/review/entities/review.entity';
 import { UserEntity } from '@/modules/user/entities';
-import { Attribute, Images } from '../dto';
+import { Attribute } from '../dto';
 
 export enum PRODUCT_STATUS_ENUM {
   PUBLISHED = 'published',
@@ -48,8 +48,8 @@ export class ProductEntity extends BaseEntity {
   @OneToMany(() => ProductMetaEntity, (productMeta) => productMeta.product, { cascade: ['soft-remove'] })
   productMeta: ProductMetaEntity[];
 
-  @Column({ type: 'jsonb', nullable: true })
-  images: Images[];
+  @Column({ type: 'simple-array', nullable: true })
+  images: string[];
 
   @OneToMany(() => ReviewEntity, (review) => review.product)
   reviews: ReviewEntity[];
