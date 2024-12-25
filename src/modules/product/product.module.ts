@@ -6,6 +6,7 @@ import { CategoryModule } from '../category/category.module';
 import { SchoolDiscountModule } from '../school-discount/school-discount.module';
 import { HttpsModule } from '@/libs/https/https.module';
 import { ProductEntity, ProductMetaEntity } from './entities';
+import { RedisService } from '@/libs/redis/redis.service';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { ProductEntity, ProductMetaEntity } from './entities';
     HttpsModule,
   ],
   controllers: [ApiProductController, AdminProductController],
-  providers: [ProductService, ProductMetaService],
+  providers: [ProductService, ProductMetaService, RedisService],
   exports: [ProductService, ProductMetaService],
 })
 export class ProductModule {}

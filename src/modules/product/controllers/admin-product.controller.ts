@@ -11,6 +11,8 @@ import { ValidateIDDto } from '@/common/dtos';
 import { GetAdminProductsQuery } from '../dto/get-products-filteredList-dto';
 import { PRODUCT_STATUS_ENUM, ProductEntity, ProductMetaEntity } from '../entities';
 import { UserEntity } from '@/modules/user/entities';
+import { envConfig } from '@/configs/envConfig';
+import { RedisService } from '@/libs/redis/redis.service';
 
 @ApiTags('Admin Product')
 @Controller('admin/products')
@@ -20,10 +22,11 @@ export class AdminProductController {
     private readonly productService: ProductService,
     private readonly productMetaService: ProductMetaService,
     private readonly categoryService: CategoryService,
+    private readonly redisService: RedisService,
   ) {}
 
   @Get()
-  async getAllProducts(@Query() productQuery: GetAdminProductsQuery) {
+  async listProducts(@Query() productQuery: GetAdminProductsQuery, @Req() req: Request) {
     const { search, status, category, limit, page, sortBy } = productQuery;
     let { order } = productQuery;
 
@@ -82,6 +85,13 @@ export class AdminProductController {
         updatedBy: { name: true, id: true },
       },
       order: sortBy ? { [sortBy]: order } : { updatedAt: 'DESC' },
+      cache:
+        status || category || search || sortBy
+          ? undefined
+          : {
+              id: `${envConfig.REDIS_PREFIX}:${req.url}`,
+              milliseconds: 1000 * 60 * 60,
+            },
     });
 
     return {
@@ -103,7 +113,7 @@ export class AdminProductController {
   }
 
   @Get(':id')
-  async getProductsById(@Param() { id }: ValidateIDDto) {
+  async getProduct(@Param() { id }: ValidateIDDto) {
     const product = await this.productService.findOne({
       relations: ['productMeta', 'categories'],
       select: {
@@ -138,7 +148,7 @@ export class AdminProductController {
   }
 
   @Post()
-  async create(@Req() { session: { user } }: Request, @Body() createProductDto: CreateProductDto) {
+  async createProduct(@Req() { session: { user } }: Request, @Body() createProductDto: CreateProductDto) {
     const { title, variants: requestProductMetas, categoryId, ...rest } = createProductDto;
     if (createProductDto.status === PRODUCT_STATUS_ENUM.SCHEDULED && !createProductDto.scheduledDate) {
       throw new BadRequestException('Scheduled date is required');
@@ -174,11 +184,13 @@ export class AdminProductController {
       );
     });
 
+    await this.redisService.invalidateProducts();
+
     return { ...product, productMetas };
   }
 
   @Put(':id')
-  async update(
+  async updateProduct(
     @Param() { id }: ValidateIDDto,
     @Req() { session: { user } }: Request,
     @Body() updateProductDto: UpdateProductDto,
@@ -226,6 +238,8 @@ export class AdminProductController {
       newProductMetas.map((meta, index) => ({ ...meta, price: Number(meta.price), product, isDefault: index === 0 })),
     );
 
+    await this.redisService.invalidateProducts();
+
     return { ...updatedProduct, productMetas: updatedProductMetas };
   }
 
@@ -243,7 +257,8 @@ export class AdminProductController {
     });
 
     if (!product) throw new BadRequestException('Product not found');
-    await this.productService.softRemove(product);
+
+    await Promise.all([this.productService.softRemove(product), this.redisService.invalidateProducts()]);
 
     return true;
   }

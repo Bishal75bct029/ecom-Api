@@ -41,4 +41,8 @@ export class RedisService {
     const keys = await this.redisClient.keys(`${this._prefix}:${key}*`);
     return this.redisClient.del(keys);
   }
+
+  async invalidateProducts() {
+    return Promise.all([this.findManyAndInvalidate('/api/products'), this.findManyAndInvalidate('admin/products')]);
+  }
 }
