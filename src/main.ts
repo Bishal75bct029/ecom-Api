@@ -81,6 +81,7 @@ BigInt.prototype.toJSON = function () {
   );
 
   app.use((req: Request, _res: Response, next: NextFunction) => {
+    console.log(req.headers);
     if (req.session) req.session.touch();
     next();
   });
