@@ -69,12 +69,14 @@ BigInt.prototype.toJSON = function () {
       resave: false,
       saveUninitialized: false,
       cookie: {
-        // secure: envConfig.NODE_ENV !== 'local',
-        httpOnly: true,
-        path: '/',
-        maxAge: 86400 * 1000,
-        // sameSite: undefined,
-        // signed: true,
+        // httpOnly: true,
+        // path: '/',
+        // maxAge: 86400 * 1000,
+        //
+        httpOnly: true, // Prevent client-side JavaScript access to cookies
+        secure: true, // Ensure cookies are sent over HTTPS only
+        sameSite: 'strict', // Helps mitigate CSRF attacks
+        maxAge: 1000 * 60 * 60 * 24, // 1-day cookie expiration
       },
       name: SESSION_COOKIE_NAME,
     }),
