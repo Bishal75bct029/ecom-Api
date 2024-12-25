@@ -75,7 +75,7 @@ BigInt.prototype.toJSON = function () {
         //
         httpOnly: true, // Prevent client-side JavaScript access to cookies
         secure: true, // Ensure cookies are sent over HTTPS only
-        sameSite: 'strict', // Helps mitigate CSRF attacks
+        sameSite: 'none', // Helps mitigate CSRF attacks
         maxAge: 1000 * 60 * 60 * 24, // 1-day cookie expiration
       },
       name: SESSION_COOKIE_NAME,
