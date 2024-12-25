@@ -10,7 +10,6 @@ import { getRoundedOffValue } from '@/common/utils';
 import { ValidateIDDto } from '@/common/dtos';
 import { GetAdminProductsQuery } from '../dto/get-products-filteredList-dto';
 import { PRODUCT_STATUS_ENUM, ProductEntity, ProductMetaEntity } from '../entities';
-import { envConfig } from '@/configs/envConfig';
 import { UserEntity } from '@/modules/user/entities';
 
 @ApiTags('Admin Product')
@@ -24,7 +23,7 @@ export class AdminProductController {
   ) {}
 
   @Get()
-  async getAllProducts(@Query() productQuery: GetAdminProductsQuery, @Req() req: Request) {
+  async getAllProducts(@Query() productQuery: GetAdminProductsQuery) {
     const { search, status, category, limit, page, sortBy } = productQuery;
     let { order } = productQuery;
 
@@ -69,11 +68,6 @@ export class AdminProductController {
       relations: ['productMeta', 'categories', 'updatedBy'],
       skip: (page - 1) * limit || 0,
       take: limit,
-      cache: {
-        id: `${envConfig.REDIS_PREFIX}:${req.url}`,
-        milliseconds: 600000,
-      },
-
       select: {
         id: true,
         name: true,
