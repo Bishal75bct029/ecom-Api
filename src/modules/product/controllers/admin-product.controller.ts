@@ -61,9 +61,14 @@ export class AdminProductController {
       }
     }
 
+    const categories = await this.categoryService.find({
+      where: { parent: null },
+      select: ['name', 'id'],
+    });
+
     const [products, count] = await this.productService.findAndCount({
       where: whereClause,
-      relations: ['productMeta', 'categories', 'updatedBy'],
+      relations: ['productMeta', 'updatedBy'],
       skip: (page - 1) * limit || 0,
       take: limit,
       select: {
@@ -73,10 +78,6 @@ export class AdminProductController {
         images: true,
         productMeta: true,
         stock: true,
-        categories: {
-          name: true,
-          id: true,
-        },
         updatedAt: true,
         updatedBy: { name: true, id: true },
       },
@@ -87,6 +88,7 @@ export class AdminProductController {
       count,
       items: products.map((product) => {
         return {
+          categories,
           ...product,
           updatedBy: product.updatedBy.name,
           productMeta: product.productMeta.map((meta) => {
