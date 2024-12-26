@@ -74,7 +74,6 @@ BigInt.prototype.toJSON = function () {
         httpOnly: true,
         path: '/',
         maxAge: 86400 * 1000,
-        domain: '.innovatetech.io', // Allow cookie across subdomains
         secure: true, // Ensure cookies are sent over HTTPS only
         sameSite: 'none', // Helps mitigate CSRF attacks
         // maxAge: 1000 * 60 * 60 * 24, // 1-day cookie expiration
@@ -83,8 +82,8 @@ BigInt.prototype.toJSON = function () {
     }),
   );
 
-  app.use((req: Request, _res: Response, next: NextFunction) => {
-    console.log(req.headers);
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    res.set('Access-Control-Expose-Headers', 'Set-Cookie');
     if (req.session) req.session.touch();
     next();
   });
