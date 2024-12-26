@@ -73,9 +73,9 @@ BigInt.prototype.toJSON = function () {
         httpOnly: true,
         path: '/',
         maxAge: 86400 * 1000,
-        // domain: 'ecom-api.innovatetech.io', // Allow cookie across subdomains
-        // secure: true, // Ensure cookies are sent over HTTPS only
-        // sameSite: 'none', // Helps mitigate CSRF attacks
+        domain: 'd6df-110-34-5-16.ngrok-free.app', // Allow cookie across subdomains
+        secure: true, // Ensure cookies are sent over HTTPS only
+        sameSite: 'none', // Helps mitigate CSRF attacks
         // maxAge: 1000 * 60 * 60 * 24, // 1-day cookie expiration
       },
       name: SESSION_COOKIE_NAME,
