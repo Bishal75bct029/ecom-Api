@@ -13,6 +13,7 @@ import { swaggerSetup } from './configs/swagger';
 import { transformAllRoutes } from './common/utils';
 import { type UserEntity } from './modules/user/entities';
 import { SESSION_COOKIE_NAME } from './app.constants';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 declare global {
   interface BigInt {
@@ -31,8 +32,8 @@ BigInt.prototype.toJSON = function () {
 };
 
 (async () => {
-  const app = await NestFactory.create(AppModule);
-
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.set('trust proxy', true);
   // For cross origin resource sharing
   app.enableCors({
     origin: function (origin, callback) {
