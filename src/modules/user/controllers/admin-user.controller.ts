@@ -129,7 +129,7 @@ export class AdminUserController {
   }
 
   @Post('authenticate')
-  async authenticate(@Body() loginUserDto: LoginUserDto, @Req() req: Request) {
+  async authenticate(@Body() loginUserDto: LoginUserDto, @Req() req: Request, @Res() res: Response) {
     const user = await this.userService.findOne({
       where: { email: loginUserDto.email, role: UserRoleEnum.ADMIN },
       select: ['id', 'name', 'image', 'role', 'email', 'schoolId', 'isOtpEnabled', 'password'],
@@ -160,7 +160,15 @@ export class AdminUserController {
     }
     delete user.password;
     req.session.user = user;
-    return { message: 'Logged in successfully.' };
+    res.cookie('custom-cookue', 'custom-value', {
+      httpOnly: true,
+      path: '/',
+      secure: true,
+      maxAge: 86400 * 1000,
+      sameSite: 'none',
+    });
+    // return { message: 'Logged in successfully.' };
+    return res.status(200).send({});
   }
 
   @Post('validate-otp')
