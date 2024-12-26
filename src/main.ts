@@ -37,17 +37,10 @@ BigInt.prototype.toJSON = function () {
 
   app.set('trust proxy', 1);
   // For cross origin resource sharing
+
   app.enableCors({
-    origin: function (origin, callback) {
-      console.log(origin);
-      // if (!origin || envConfig.NODE_ENV === 'local' || JSON.parse(envConfig.ALLOWED_ORIGINS).indexOf(origin) !== -1) {
-      //   callback(null, true);
-      // } else {
-      //   callback(new Error('Not allowed by CORS.'));
-      // }
-      callback(null, true);
-    },
-    credentials: true,
+    origin: 'https://ecom-backoffice.innovatetech.io', // Front-end origin
+    credentials: true, // Allow cookies
   });
 
   // For parsing cookies
