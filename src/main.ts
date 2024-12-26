@@ -36,12 +36,13 @@ BigInt.prototype.toJSON = function () {
   app.set('trust proxy', true);
   // For cross origin resource sharing
   app.enableCors({
-    origin: function (origin, callback) {
-      if (!origin || envConfig.NODE_ENV === 'local' || JSON.parse(envConfig.ALLOWED_ORIGINS).indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS.'));
-      }
+    origin: function (_origin, callback) {
+      // if (!origin || envConfig.NODE_ENV === 'local' || JSON.parse(envConfig.ALLOWED_ORIGINS).indexOf(origin) !== -1) {
+      //   callback(null, true);
+      // } else {
+      //   callback(new Error('Not allowed by CORS.'));
+      // }
+      callback(null, true);
     },
     credentials: true,
   });
