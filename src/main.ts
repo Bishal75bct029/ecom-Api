@@ -36,12 +36,13 @@ BigInt.prototype.toJSON = function () {
   app.set('trust proxy', true);
   // For cross origin resource sharing
   app.enableCors({
-    origin: function (origin, callback) {
-      if (!origin || envConfig.NODE_ENV === 'local' || JSON.parse(envConfig.ALLOWED_ORIGINS).indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS.'));
-      }
+    origin: function (_origin, callback) {
+      // if (!origin || envConfig.NODE_ENV === 'local' || JSON.parse(envConfig.ALLOWED_ORIGINS).indexOf(origin) !== -1) {
+      //   callback(null, true);
+      // } else {
+      //   callback(new Error('Not allowed by CORS.'));
+      // }
+      callback(null, true);
     },
     credentials: true,
   });
@@ -73,7 +74,7 @@ BigInt.prototype.toJSON = function () {
         httpOnly: true,
         path: '/',
         maxAge: 86400 * 1000,
-        domain: 'd6df-110-34-5-16.ngrok-free.app', // Allow cookie across subdomains
+        domain: '.innovatetech.io', // Allow cookie across subdomains
         secure: true, // Ensure cookies are sent over HTTPS only
         sameSite: 'none', // Helps mitigate CSRF attacks
         // maxAge: 1000 * 60 * 60 * 24, // 1-day cookie expiration
