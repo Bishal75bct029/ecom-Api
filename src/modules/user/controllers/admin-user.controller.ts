@@ -158,16 +158,15 @@ export class AdminUserController {
       ]);
       return { message: 'OTP sent successfully.', isOtpEnabled: true };
     }
-    res.cookie('custom-cookue', 'custom-value', {
-      httpOnly: true,
-      path: '/',
-      secure: true,
-      maxAge: 86400 * 1000,
-      sameSite: 'none',
-    });
     delete user.password;
     req.session.user = user;
-    // return { message: 'Logged in successfully.' };
+    res.cookie(SESSION_COOKIE_NAME, req.session.cookie, {
+      httpOnly: true,
+      path: '/',
+      maxAge: 86400 * 1000,
+      secure: true,
+      sameSite: 'none',
+    });
     return res.status(200).send({});
   }
 
