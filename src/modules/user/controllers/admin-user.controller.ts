@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
 import {
   ChangePasswordDto,
@@ -41,7 +41,6 @@ export class AdminUserController {
   ) {}
 
   @Post('create')
-  @ApiBearerAuth()
   async createAdmin(@Body() createAdminUserDto: CreateAdminUserDto) {
     createAdminUserDto.password = await bcrypt.hash(createAdminUserDto.password, 10);
 

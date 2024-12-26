@@ -1,5 +1,5 @@
 import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { RedisService } from '@/libs/redis/redis.service';
 import { envConfig } from '@/configs/envConfig';
 import { FileUploadTypeEnum, GetFileUploadSignedTokenDto } from '../dto/file-upload.dto';
@@ -9,7 +9,6 @@ import { CacheKeysEnum } from '@/libs/redis/types';
 
 @ApiTags('Admin File Upload')
 @Controller('admin/file-upload')
-@ApiBearerAuth()
 export class AdminFileUploadController {
   constructor(
     private readonly redisService: RedisService,
