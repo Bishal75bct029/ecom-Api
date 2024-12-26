@@ -14,7 +14,6 @@ import { transformAllRoutes } from './common/utils';
 import { type UserEntity } from './modules/user/entities';
 import { SESSION_COOKIE_NAME } from './app.constants';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import cors from 'cors';
 
 declare global {
   interface BigInt {
@@ -35,25 +34,21 @@ BigInt.prototype.toJSON = function () {
 (async () => {
   process.env.NODE_ENV = 'production';
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  app.use(
-    cors({
-      origin: 'https://ecom-backoffice.innovatetech.io',
-      credentials: true,
-    }),
-  );
+
   app.set('trust proxy', 1);
   // For cross origin resource sharing
-  // app.enableCors({
-  //   origin: function (_origin, callback) {
-  //     // if (!origin || envConfig.NODE_ENV === 'local' || JSON.parse(envConfig.ALLOWED_ORIGINS).indexOf(origin) !== -1) {
-  //     //   callback(null, true);
-  //     // } else {
-  //     //   callback(new Error('Not allowed by CORS.'));
-  //     // }
-  //     callback(null, true);
-  //   },
-  //   credentials: true,
-  // });
+  app.enableCors({
+    origin: function (_origin, callback) {
+      console.log(origin);
+      // if (!origin || envConfig.NODE_ENV === 'local' || JSON.parse(envConfig.ALLOWED_ORIGINS).indexOf(origin) !== -1) {
+      //   callback(null, true);
+      // } else {
+      //   callback(new Error('Not allowed by CORS.'));
+      // }
+      callback(null, true);
+    },
+    credentials: true,
+  });
 
   // For parsing cookies
   app.use(cookieParser());
