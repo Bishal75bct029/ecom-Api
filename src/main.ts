@@ -12,7 +12,6 @@ import { envConfig } from './configs/envConfig';
 import { swaggerSetup } from './configs/swagger';
 import { transformAllRoutes } from './common/utils';
 import { type UserEntity } from './modules/user/entities';
-import { SESSION_COOKIE_NAME } from './app.constants';
 import { NestExpressApplication } from '@nestjs/platform-express';
 
 declare global {
@@ -75,7 +74,7 @@ BigInt.prototype.toJSON = function () {
         domain: '.innovatetech.io',
         // maxAge: 1000 * 60 * 60 * 24, // 1-day cookie expiration
       },
-      name: SESSION_COOKIE_NAME,
+      // name: SESSION_COOKIE_NAME,
     }),
   );
 
