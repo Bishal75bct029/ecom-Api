@@ -1,4 +1,4 @@
-import { envConfig } from './configs/envConfig';
+// import { envConfig } from './configs/envConfig';
 
 export const ADMIN_PUBLIC_ROUTES = [
   'admin/users/authenticate',
@@ -14,4 +14,5 @@ export const API_PUBLIC_ROUTES = ['api/users/login', 'api/users/whoami', 'api/ca
 
 export const REDIS_CLIENT = Symbol('REDIS_CLIENT');
 
-export const SESSION_COOKIE_NAME = `${envConfig.NODE_ENV === 'local' ? '' : '__Secure-'}ecom.x-session-id`;
+export const SESSION_COOKIE_NAME = `ecom.x-session-id`;
+// export const SESSION_COOKIE_NAME = `${envConfig.NODE_ENV === 'local' ? '' : '__Secure-'}ecom.x-session-id`;
