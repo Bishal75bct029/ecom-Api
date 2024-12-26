@@ -1,5 +1,5 @@
 import { Controller, Post, Body, Req, Get, BadRequestException, Put } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { CartService } from '../services/cart.service';
 import { CreateCartDto, RemoveCartDto } from '../dto';
 import { Request } from 'express';
@@ -8,7 +8,6 @@ import { ProductMetaService, ProductService } from '@/modules/product/services';
 import { SchoolDiscountService } from '@/modules/school-discount/services/schoolDiscount.service';
 
 @ApiTags('API Cart')
-@ApiBearerAuth()
 @Controller('api/carts')
 export class ApiCartController {
   constructor(

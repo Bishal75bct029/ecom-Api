@@ -4,7 +4,7 @@ import { DataSource, FindOptionsWhere, In, Not } from 'typeorm';
 import { CreateOrderDto, OrderQueryDto, OrderQueryEnum } from '../dto/create-order.dto';
 
 import { CapturePaymentDto } from '@/modules/transaction/dto/capture-payment.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { OrderItemService } from '../services/order-item.service';
 import { SchoolDiscountService } from '@/modules/school-discount/services/schoolDiscount.service';
 import { ProductMetaService } from '@/modules/product/services';
@@ -23,7 +23,6 @@ import { getRoundedOffValue } from '@/common/utils';
 import { ValidateIDDto } from '@/common/dtos';
 
 @ApiTags('API Order')
-@ApiBearerAuth()
 @Controller('api/orders')
 export class ApiOrderController {
   constructor(

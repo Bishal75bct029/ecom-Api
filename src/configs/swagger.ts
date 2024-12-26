@@ -6,7 +6,6 @@ export const swaggerSetup = (app: INestApplication) => {
     .setTitle('Ecommerce API')
     .setDescription('API routes for Ecommerce Application')
     .setVersion('1.0')
-    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
