@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Get, Param, Delete, Query, Req, Put, BadRequestException } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { In, IsNull } from 'typeorm';
+import { In } from 'typeorm';
 import { Request } from 'express';
 
 import { CategoryService } from '../services/category.service';
@@ -10,10 +10,11 @@ import {
   GetCategoryQuery,
   UpdateCategoryStatusDto,
   GetCategoryTypeQuery,
+  GetCategoryDropdownQuery,
 } from '../dto';
 import { getPaginatedResponse } from '@/common/utils';
 import { ValidateIDDto } from '@/common/dtos';
-import { addPropertiesToNestedTree } from '../helpers';
+import { addPropertiesToNestedTree, pickPropertiesFromNestedTree } from '../helpers';
 import { type CategoryEntity } from '../entities/category.entity';
 
 @ApiTags('Admin Category')
@@ -83,12 +84,9 @@ export class AdminCategoryController {
   }
 
   @Get('dropdown')
-  async listCategoriesForDropdown() {
-    return this.categoryService.find({
-      where: { parent: IsNull() },
-      select: { id: true, name: true },
-      order: { createdAt: 'DESC' },
-    });
+  async listCategoriesForDropdown(@Query() { depth }: GetCategoryDropdownQuery) {
+    const categories = await this.categoryService.findTrees(depth ? { depth: depth - 1 } : undefined);
+    return pickPropertiesFromNestedTree(categories, ['id', 'name']);
   }
 
   @Get(':id')
