@@ -57,15 +57,17 @@ export class AdminUserController {
   @Post('forgot-password')
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto, @Req() req: Request) {
     const { email } = forgotPasswordDto;
-    const user = await this.userService.findOne({ where: { email } });
 
+    const user = await this.userService.findOne({ where: { email } });
     if (!user) return true;
 
     const token = await this.jwtService.pasetoSign(
       { email, role: UserRoleEnum.ADMIN },
       { expiresIn: '5m', secret: envConfig.PASETO_JWT_SECRET },
     );
+
     const url = req.headers.origin + '/reset-password?token=' + token;
+
     await Promise.all([
       this.redisService.set(email + '_PW_RESET_TOKEN', token, 300),
       this.sqsService.sendToQueue({
@@ -96,8 +98,10 @@ export class AdminUserController {
       const { email } = await this.jwtService.pasetoVerify<UserJwtPayload>(token, {
         secret: envConfig.PASETO_JWT_SECRET,
       });
+
       const redisPasswordResetToken = await this.redisService.get(email + '_PW_RESET_TOKEN');
       if (!redisPasswordResetToken || redisPasswordResetToken !== token) throw new Error();
+
       return true;
     } catch (error) {
       throw new GoneException('Your link has expired.');
@@ -109,6 +113,7 @@ export class AdminUserController {
     const { email } = await this.jwtService.pasetoVerify<UserJwtPayload>(token, {
       secret: envConfig.PASETO_JWT_SECRET,
     });
+
     const user = await this.userService.findOne({ where: { email } });
     if (!user) throw new GoneException('Your link has expired.');
 
@@ -117,19 +122,20 @@ export class AdminUserController {
       throw new GoneException('Your link has expired.');
 
     const isOldPassword = await bcrypt.compare(password, user.password);
-
     if (isOldPassword) {
       throw new BadRequestException("You can't use your old password.");
     }
+
     await Promise.all([
       this.userService.update({ id: user.id }, { password: await bcrypt.hash(password, 10) }),
       this.redisService.delete(email + '_PW_RESET_TOKEN'),
     ]);
+
     return { message: 'Password changed successfully' };
   }
 
   @Post('authenticate')
-  async authenticate(@Body() loginUserDto: LoginUserDto, @Req() req: Request, @Res() res: Response) {
+  async authenticate(@Body() loginUserDto: LoginUserDto, @Req() req: Request) {
     const user = await this.userService.findOne({
       where: { email: loginUserDto.email, role: UserRoleEnum.ADMIN },
       select: ['id', 'name', 'image', 'role', 'email', 'schoolId', 'isOtpEnabled', 'password'],
@@ -141,6 +147,7 @@ export class AdminUserController {
 
     if (user.isOtpEnabled) {
       const otp = this.userService.generateOtp();
+
       await Promise.all([
         this.redisService.set(user.email + '_OTP', otp.toString(), 60 * 5),
         this.sqsService.sendToQueue({
@@ -158,16 +165,12 @@ export class AdminUserController {
       ]);
       return { message: 'OTP sent successfully.', isOtpEnabled: true };
     }
+
     delete user.password;
+
     req.session.user = user;
-    res.cookie(SESSION_COOKIE_NAME, req.session.cookie, {
-      httpOnly: true,
-      path: '/',
-      maxAge: 86400 * 1000,
-      secure: true,
-      sameSite: 'none',
-    });
-    return res.status(200).send({});
+
+    return { message: 'Logged in successfully.' };
   }
 
   @Post('validate-otp')
@@ -228,6 +231,7 @@ export class AdminUserController {
         throw new InternalServerErrorException('Logout failed.');
       }
     });
+
     res.clearCookie(SESSION_COOKIE_NAME);
     res.send({ message: 'Logged out successfully.' });
   }
