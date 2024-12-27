@@ -14,6 +14,13 @@ export enum UserRoleEnum {
   USER = 'USER',
 }
 
+export enum UserStatusEnum {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  INVITED = 'INVITED',
+  EXPIRED = 'EXPIRED', //invite expired
+}
+
 @Entity('users')
 export class UserEntity extends BaseEntity {
   @Column({ type: 'varchar', nullable: false, unique: true })
@@ -36,6 +43,9 @@ export class UserEntity extends BaseEntity {
 
   @Column({ type: 'uuid', nullable: true })
   schoolId: string;
+
+  @Column({ type: 'varchar', default: UserStatusEnum.INVITED, enum: UserStatusEnum })
+  status: UserStatusEnum;
 
   @OneToMany(() => ReviewEntity, (review) => review.user)
   reviews: ReviewEntity[];
