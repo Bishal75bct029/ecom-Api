@@ -32,7 +32,7 @@ BigInt.prototype.toJSON = function () {
 (async () => {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.set('trust proxy', 1);
+  app.set('trust proxy', true);
   // For cross origin resource sharing
 
   app.enableCors({
