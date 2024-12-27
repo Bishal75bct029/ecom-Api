@@ -5,13 +5,16 @@ import { Redis } from 'ioredis';
 import * as cookieParser from 'cookie-parser';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
+import helmet from 'helmet';
+import { NestExpressApplication } from '@nestjs/platform-express';
+
 import { AppModule } from './app.module';
 import { AllExceptionFilter } from './common/filters';
 import { envConfig } from './configs/envConfig';
 import { swaggerSetup } from './configs/swagger';
 import { transformAllRoutes } from './common/utils';
 import { type UserEntity } from './modules/user/entities';
-import { NestExpressApplication } from '@nestjs/platform-express';
+import { SESSION_COOKIE_NAME } from './app.constants';
 
 declare global {
   interface BigInt {
@@ -33,8 +36,8 @@ BigInt.prototype.toJSON = function () {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.set('trust proxy', true);
-  // For cross origin resource sharing
 
+  // For cross origin resource sharing
   app.enableCors({
     origin: function (origin, callback) {
       if (!origin || envConfig.NODE_ENV === 'local' || JSON.parse(envConfig.ALLOWED_ORIGINS).indexOf(origin) !== -1) {
@@ -50,7 +53,7 @@ BigInt.prototype.toJSON = function () {
   app.use(cookieParser());
 
   // For Content Security Policy
-  // app.use(helmet());
+  app.use(helmet());
 
   // ----------------- Start For Manging Server Session -------------------------
   const redisClient = new Redis({
@@ -63,31 +66,31 @@ BigInt.prototype.toJSON = function () {
     prefix: `${envConfig.REDIS_PREFIX}:sess:`,
   });
 
-  app.use(
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    // Dynamically set the domain based on the incoming request while checking for allowed origins
+    const origin = req.headers.origin || '';
+    const isAllowedOrigin = JSON.parse(envConfig.ALLOWED_ORIGINS).includes(origin);
+    const domain = isAllowedOrigin ? new URL(origin).hostname : undefined;
+
     session({
       store: redisStore,
       secret: envConfig.SESSION_SECRET,
       resave: false,
       saveUninitialized: false,
       cookie: {
-        httpOnly: true,
-        maxAge: 86400 * 1000,
-        // secure: true, // Ensure cookies are sent over HTTPS only
-        // sameSite: 'none', // Helps mitigate CSRF attacks
-        // domain: '.innovatetech.io',
+        httpOnly: true, // Prevent client-side JavaScript from accessing the cookie
+        maxAge: 86400 * 1000, // 1-day cookie expiration
+        secure: true, // Use secure cookies only for non-localhost
+        sameSite: 'none', // Helps mitigate CSRF attacks
+        domain, // Dynamically set the domain
         path: '/',
-        // maxAge: 1000 * 60 * 60 * 24, // 1-day cookie expiration
       },
-      // name: SESSION_COOKIE_NAME,
-    }),
-  );
+      name: SESSION_COOKIE_NAME,
+    })(req, res, next);
+  });
 
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    console.log(req.headers, req.headers['X-Forwarded-Proto']);
+  app.use((req: Request, _res: Response, next: NextFunction) => {
     if (req.session) req.session.touch();
-    res.on('finish', () => {
-      console.log(`Response headers`, res.getHeaders());
-    });
     next();
   });
   // ----------------- End For Manging Server Session -------------------------
