@@ -66,7 +66,6 @@ BigInt.prototype.toJSON = function () {
       saveUninitialized: false,
       cookie: {
         httpOnly: true,
-        path: '/',
         maxAge: 86400 * 1000,
         secure: true, // Ensure cookies are sent over HTTPS only
         sameSite: 'none', // Helps mitigate CSRF attacks
