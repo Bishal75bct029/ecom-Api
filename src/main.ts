@@ -36,11 +36,12 @@ BigInt.prototype.toJSON = function () {
   // For cross origin resource sharing
 
   app.enableCors({
-    origin: (origin, callback) => {
-      if (origin === 'https://ecom-backoffice.innovatetech.io') {
-        return callback(null, true);
+    origin: function (origin, callback) {
+      if (!origin || envConfig.NODE_ENV === 'local' || JSON.parse(envConfig.ALLOWED_ORIGINS).indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS.'));
       }
-      return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
   });
