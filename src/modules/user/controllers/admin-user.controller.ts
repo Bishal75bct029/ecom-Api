@@ -249,10 +249,10 @@ export class AdminUserController {
       select: ['id', 'name', 'email', 'image', 'isActive', 'lastLogInDate'],
       skip: (page - 1) * limit,
       take: limit,
-      where: [{ name: ILike(`%${search}%`) }, { email: ILike(`%${search}%`) }],
+      where: !!search ? [{ name: ILike(`%${search}%`) }, { email: ILike(`%${search}%`) }] : undefined,
       order: { createdAt: 'DESC' },
     });
 
-    return { ...users, ...getPaginatedResponse({ count, limit, page }) };
+    return { items: users, ...getPaginatedResponse({ count, limit, page }) };
   }
 }
