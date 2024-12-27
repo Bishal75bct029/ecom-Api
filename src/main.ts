@@ -30,15 +30,19 @@ BigInt.prototype.toJSON = function () {
 };
 
 (async () => {
-  process.env.NODE_ENV = 'production';
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.set('trust proxy', 1);
   // For cross origin resource sharing
 
   app.enableCors({
-    origin: 'https://ecom-backoffice.innovatetech.io', // Front-end origin
-    credentials: true, // Allow cookies
+    origin: (origin, callback) => {
+      if (origin === 'https://ecom-backoffice.innovatetech.io') {
+        return callback(null, true);
+      }
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
   });
 
   // For parsing cookies
@@ -70,13 +74,14 @@ BigInt.prototype.toJSON = function () {
         secure: true, // Ensure cookies are sent over HTTPS only
         sameSite: 'none', // Helps mitigate CSRF attacks
         domain: '.innovatetech.io',
+        path: '/',
         // maxAge: 1000 * 60 * 60 * 24, // 1-day cookie expiration
       },
       // name: SESSION_COOKIE_NAME,
     }),
   );
 
-  app.use((req: Request, res: Response, next: NextFunction) => {
+  app.use((req: Request, _res: Response, next: NextFunction) => {
     if (req.session) req.session.touch();
     next();
   });
