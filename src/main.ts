@@ -1,5 +1,4 @@
 import { NestFactory } from '@nestjs/core';
-import helmet from 'helmet';
 import * as session from 'express-session';
 import { RedisStore } from 'connect-redis';
 import { Redis } from 'ioredis';
@@ -46,7 +45,7 @@ BigInt.prototype.toJSON = function () {
   app.use(cookieParser());
 
   // For Content Security Policy
-  app.use(helmet());
+  // app.use(helmet());
 
   // ----------------- Start For Manging Server Session -------------------------
   const redisClient = new Redis({
@@ -79,7 +78,6 @@ BigInt.prototype.toJSON = function () {
   );
 
   app.use((req: Request, res: Response, next: NextFunction) => {
-    res.set('Access-Control-Expose-Headers', 'Set-Cookie');
     if (req.session) req.session.touch();
     next();
   });
