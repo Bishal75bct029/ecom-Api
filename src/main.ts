@@ -72,9 +72,9 @@ BigInt.prototype.toJSON = function () {
       cookie: {
         httpOnly: true,
         maxAge: 86400 * 1000,
-        secure: true, // Ensure cookies are sent over HTTPS only
-        sameSite: 'none', // Helps mitigate CSRF attacks
-        domain: '.innovatetech.io',
+        // secure: true, // Ensure cookies are sent over HTTPS only
+        // sameSite: 'none', // Helps mitigate CSRF attacks
+        // domain: '.innovatetech.io',
         path: '/',
         // maxAge: 1000 * 60 * 60 * 24, // 1-day cookie expiration
       },
