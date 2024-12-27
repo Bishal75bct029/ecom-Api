@@ -84,8 +84,12 @@ BigInt.prototype.toJSON = function () {
     }),
   );
 
-  app.use((req: Request, _res: Response, next: NextFunction) => {
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    console.log(req.headers);
     if (req.session) req.session.touch();
+    res.on('finish', () => {
+      console.log(res.getHeaders());
+    });
     next();
   });
   // ----------------- End For Manging Server Session -------------------------
