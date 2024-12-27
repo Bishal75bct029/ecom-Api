@@ -53,7 +53,7 @@ BigInt.prototype.toJSON = function () {
   app.use(cookieParser());
 
   // For Content Security Policy
-  app.use(helmet());
+  app.use(helmet({ strictTransportSecurity: false }));
 
   // ----------------- Start For Manging Server Session -------------------------
   const redisClient = new Redis({
