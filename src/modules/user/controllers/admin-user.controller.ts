@@ -1,19 +1,25 @@
+import { SESSION_COOKIE_NAME } from '@/app.constants';
+import { SQSService } from '@/common/module/aws/sqs.service';
+import { getPaginatedResponse } from '@/common/utils';
+import { envConfig } from '@/configs/envConfig';
+import { PasetoJwtService } from '@/libs/pasetoJwt/pasetoJwt.service';
+import { RedisService } from '@/libs/redis/redis.service';
 import {
-  Controller,
-  Post,
-  Body,
   BadRequestException,
-  Query,
+  Body,
+  Controller,
   Get,
   GoneException,
+  InternalServerErrorException,
+  Post,
+  Query,
   Req,
   Res,
-  InternalServerErrorException,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
-import { ApiTags } from '@nestjs/swagger';
-import { UserService } from '../services/user.service';
+import { ILike } from 'typeorm';
 import {
   ChangePasswordDto,
   CreateAdminUserDto,
@@ -23,12 +29,9 @@ import {
   ValidateOtpDto,
   ValidatePasswordResetTokenQuery,
 } from '../dto/create-user.dto';
+import { GetUserListQueryDto } from '../dto/get-user.dto';
 import { UserRoleEnum } from '../entities/user.entity';
-import { RedisService } from '@/libs/redis/redis.service';
-import { envConfig } from '@/configs/envConfig';
-import { SQSService } from '@/common/module/aws/sqs.service';
-import { PasetoJwtService } from '@/libs/pasetoJwt/pasetoJwt.service';
-import { SESSION_COOKIE_NAME } from '@/app.constants';
+import { UserService } from '../services/user.service';
 
 @ApiTags('Admin User')
 @Controller('admin/users')
@@ -234,5 +237,19 @@ export class AdminUserController {
 
     res.clearCookie(SESSION_COOKIE_NAME);
     res.send({ message: 'Logged out successfully.' });
+  }
+
+  @Get()
+  async getUsersList(@Query() query: GetUserListQueryDto) {
+    const { page = 1, limit = 10, search } = query;
+
+    const [users, count] = await this.userService.findAndCount({
+      select: ['id', 'name', 'email', 'image'],
+      skip: (page - 1) * limit,
+      take: limit,
+      where: [{ name: ILike(`%${search}%`) }, { email: ILike(`%${search}%`) }],
+    });
+
+    return { ...users, ...getPaginatedResponse({ count, limit, page }) };
   }
 }
