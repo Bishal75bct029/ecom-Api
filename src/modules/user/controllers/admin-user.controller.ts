@@ -173,6 +173,8 @@ export class AdminUserController {
 
     req.session.user = user;
 
+    await this.userService.update({ id: user.id }, { lastLogInDate: new Date() });
+
     return { message: 'Logged in successfully.' };
   }
 
@@ -244,10 +246,11 @@ export class AdminUserController {
     const { page = 1, limit = 10, search } = query;
 
     const [users, count] = await this.userService.findAndCount({
-      select: ['id', 'name', 'email', 'image'],
+      select: ['id', 'name', 'email', 'image', 'isActive', 'lastLogInDate'],
       skip: (page - 1) * limit,
       take: limit,
       where: [{ name: ILike(`%${search}%`) }, { email: ILike(`%${search}%`) }],
+      order: { createdAt: 'DESC' },
     });
 
     return { ...users, ...getPaginatedResponse({ count, limit, page }) };

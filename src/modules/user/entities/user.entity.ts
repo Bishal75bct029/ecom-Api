@@ -44,8 +44,14 @@ export class UserEntity extends BaseEntity {
   @Column({ type: 'uuid', nullable: true })
   schoolId: string;
 
-  @Column({ type: 'varchar', default: UserStatusEnum.INVITED, enum: UserStatusEnum })
-  status: UserStatusEnum;
+  @Column({ type: 'bool', default: true })
+  isActive: boolean;
+
+  @Column({ type: 'varchar', nullable: true })
+  phone: string;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  lastLogInDate: Date;
 
   @OneToMany(() => ReviewEntity, (review) => review.user)
   reviews: ReviewEntity[];
