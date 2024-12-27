@@ -66,12 +66,7 @@ BigInt.prototype.toJSON = function () {
     prefix: `${envConfig.REDIS_PREFIX}:sess:`,
   });
 
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    // Dynamically set the domain based on the incoming request while checking for allowed origins
-    const origin = req.headers.origin || '';
-    const isAllowedOrigin = JSON.parse(envConfig.ALLOWED_ORIGINS).includes(origin);
-    const domain = isAllowedOrigin ? new URL(origin).hostname : undefined;
-
+  app.use(
     session({
       store: redisStore,
       secret: envConfig.SESSION_SECRET,
@@ -82,12 +77,12 @@ BigInt.prototype.toJSON = function () {
         maxAge: 86400 * 1000, // 1-day cookie expiration
         secure: true, // Use secure cookies only for non-localhost
         sameSite: 'none', // Helps mitigate CSRF attacks
-        domain, // Dynamically set the domain
+        // domain, // Dynamically set the domain
         path: '/',
       },
       name: SESSION_COOKIE_NAME,
-    })(req, res, next);
-  });
+    }),
+  );
 
   app.use((req: Request, _res: Response, next: NextFunction) => {
     if (req.session) req.session.touch();
