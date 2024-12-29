@@ -6,6 +6,7 @@ import { CategoryModule } from '../category/category.module';
 import { SchoolDiscountModule } from '../school-discount/school-discount.module';
 import { HttpsModule } from '@/libs/https/https.module';
 import { ProductEntity, ProductMetaEntity } from './entities';
+import { QueueModule } from '@/libs/queue/queue.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { ProductEntity, ProductMetaEntity } from './entities';
     CategoryModule,
     SchoolDiscountModule,
     HttpsModule,
+    QueueModule,
   ],
   controllers: [ApiProductController, AdminProductController],
   providers: [ProductService, ProductMetaService],
