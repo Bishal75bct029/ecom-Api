@@ -67,10 +67,13 @@ BigInt.prototype.toJSON = function () {
   });
 
   app.use((req: Request, _res: Response, next: NextFunction) => {
-    if (req.protocol === 'https' || JSON.parse(envConfig.ALLOWED_ORIGINS).includes(req.headers?.origin)) {
+    if (
+      (req.protocol === 'https' || JSON.parse(envConfig.ALLOWED_ORIGINS).includes(req.headers?.origin)) &&
+      envConfig.NODE_ENV !== 'local'
+    ) {
       req.headers['x-forwarded-proto'] = 'https';
       sessionConfig.cookie.secure = true;
-      sessionConfig.cookie.domain = '.innovatetech.io';
+      sessionConfig.cookie.domain = envConfig.SESSION_DOMAIN;
     } else {
       sessionConfig.cookie.secure = false;
     }
@@ -80,11 +83,8 @@ BigInt.prototype.toJSON = function () {
   sessionConfig.store = redisStore;
   app.use(session(sessionConfig));
 
-  app.use((req: Request, res: Response, next: NextFunction) => {
+  app.use((req: Request, _res: Response, next: NextFunction) => {
     if (req.session) req.session.touch();
-    res.on('finish', () => {
-      console.log(res.getHeaders());
-    });
     next();
   });
 
