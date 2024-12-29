@@ -16,6 +16,7 @@ import { PasetoJwtModule } from './libs/pasetoJwt/pasetoJwt.module';
 import { RbacModule } from './modules/RBAC/rbac.module';
 import { SchoolDiscountModule } from './modules/school-discount/school-discount.module';
 import { FileUploadModule } from './modules/file-upload/file-upload.module';
+import { QueueModule } from './libs/queue/queue.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { FileUploadModule } from './modules/file-upload/file-upload.module';
     PasetoJwtModule,
     RbacModule,
     FileUploadModule,
+    QueueModule,
   ],
   controllers: [AppController],
   providers: [

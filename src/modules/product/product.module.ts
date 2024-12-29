@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminProductController, ApiProductController } from './controllers';
 import { ProductService, ProductMetaService } from './services';
@@ -14,7 +14,7 @@ import { QueueModule } from '@/libs/queue/queue.module';
     CategoryModule,
     SchoolDiscountModule,
     HttpsModule,
-    QueueModule,
+    forwardRef(() => QueueModule),
   ],
   controllers: [ApiProductController, AdminProductController],
   providers: [ProductService, ProductMetaService],

@@ -1,5 +1,6 @@
 import { SessionOptions } from 'express-session';
 import { envConfig } from './envConfig';
+import { SESSION_COOKIE_NAME } from '@/app.constants';
 
 export const sessionConfig: SessionOptions = {
   secret: envConfig.SESSION_SECRET,
@@ -8,7 +9,7 @@ export const sessionConfig: SessionOptions = {
   cookie: {
     httpOnly: true, // Prevent client-side JavaScript from accessing the cookie
     maxAge: 86400 * 1000, // 1-day cookie expiration
-    sameSite: 'none', // Helps mitigate CSRF attacks
     path: '/',
   },
+  name: SESSION_COOKIE_NAME,
 };
