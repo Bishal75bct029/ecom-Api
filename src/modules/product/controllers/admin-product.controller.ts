@@ -59,7 +59,7 @@ export class AdminProductController {
           categories: { name: category },
         }));
       } else {
-        whereClause = [{ categories: { name: category } }];
+        whereClause = [{ categories: { id: category } }];
       }
     }
 
