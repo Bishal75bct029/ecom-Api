@@ -43,6 +43,9 @@ export class UserEntity extends BaseEntity {
   @OneToMany(() => AddressEntity, (address) => address.user)
   addresses: AddressEntity[];
 
+  @Column({ type: 'text', nullable: true })
+  phone: string;
+
   @OneToMany(() => OrderEntity, (order) => order.user)
   orders: OrderEntity[];
 
