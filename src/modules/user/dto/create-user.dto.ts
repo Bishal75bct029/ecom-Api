@@ -1,6 +1,6 @@
 import { ApiHideProperty, OmitType, PickType } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsAlphanumeric, IsEmail, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
 
 export class CreateAdminUserDto {
   @IsNotEmpty()
@@ -10,7 +10,6 @@ export class CreateAdminUserDto {
 
   @IsNotEmpty()
   @IsString()
-  @IsAlphanumeric()
   @Transform(({ value }) => value.replace(/\s+/g, ' ').trim())
   name: string;
 
