@@ -1,13 +1,13 @@
 import { Column, Entity, OneToMany, OneToOne } from 'typeorm';
 
 import { BaseEntity } from '@/libs/entity/base.entity';
-import { ReviewEntity } from '@/modules/review/entities/review.entity';
-import { AddressEntity } from './address.entity';
-import { OrderEntity } from '@/modules/order/entities/order.entity';
 import { CartEntity } from '@/modules/cart/entities/cart.entity';
-import { TransactionEntity } from '@/modules/transaction/entities/transaction.entity';
 import { CategoryEntity } from '@/modules/category/entities/category.entity';
+import { OrderEntity } from '@/modules/order/entities/order.entity';
 import { ProductEntity } from '@/modules/product/entities';
+import { ReviewEntity } from '@/modules/review/entities/review.entity';
+import { TransactionEntity } from '@/modules/transaction/entities/transaction.entity';
+import { AddressEntity } from './address.entity';
 
 export enum UserRoleEnum {
   ADMIN = 'ADMIN',
@@ -36,6 +36,15 @@ export class UserEntity extends BaseEntity {
 
   @Column({ type: 'uuid', nullable: true })
   schoolId: string;
+
+  @Column({ type: 'bool', default: true })
+  isActive: boolean;
+
+  @Column({ type: 'varchar', nullable: true })
+  phone: string;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  lastLogInDate: Date;
 
   @OneToMany(() => ReviewEntity, (review) => review.user)
   reviews: ReviewEntity[];

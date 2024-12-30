@@ -14,6 +14,7 @@ export const envConfig = cleanEnv(process.env, {
 
   PASETO_JWT_SECRET: str(),
   SESSION_SECRET: str(),
+  SESSION_DOMAIN: str(),
 
   REDIS_PORT: port(),
   REDIS_HOST: str(),

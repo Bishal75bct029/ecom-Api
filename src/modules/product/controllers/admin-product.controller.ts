@@ -11,6 +11,7 @@ import { ValidateIDDto } from '@/common/dtos';
 import { GetAdminProductsQuery } from '../dto/get-products-filteredList-dto';
 import { PRODUCT_STATUS_ENUM, ProductEntity, ProductMetaEntity } from '../entities';
 import { UserEntity } from '@/modules/user/entities';
+import { ProductQueueService } from '@/libs/queue/product/product-queue.service';
 import { envConfig } from '@/configs/envConfig';
 import { RedisService } from '@/libs/redis/redis.service';
 
@@ -22,6 +23,7 @@ export class AdminProductController {
     private readonly productService: ProductService,
     private readonly productMetaService: ProductMetaService,
     private readonly categoryService: CategoryService,
+    private readonly _productQueueService: ProductQueueService,
     private readonly redisService: RedisService,
   ) {}
 
@@ -60,7 +62,7 @@ export class AdminProductController {
           categories: { name: category },
         }));
       } else {
-        whereClause = [{ categories: { name: category } }];
+        whereClause = [{ categories: { id: category } }];
       }
     }
 

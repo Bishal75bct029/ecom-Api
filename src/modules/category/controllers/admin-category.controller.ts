@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Get, Param, Delete, Query, Req, Put, BadRequestException } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { In } from 'typeorm';
+import { Request } from 'express';
 
 import { CategoryService } from '../services/category.service';
 import {
@@ -9,15 +10,14 @@ import {
   GetCategoryQuery,
   UpdateCategoryStatusDto,
   GetCategoryTypeQuery,
+  GetCategoryDropdownQuery,
 } from '../dto';
 import { getPaginatedResponse } from '@/common/utils';
-import { Request } from 'express';
 import { ValidateIDDto } from '@/common/dtos';
-import { addPropertiesToNestedTree } from '../helpers';
+import { addPropertiesToNestedTree, pickPropertiesFromNestedTree } from '../helpers';
 import { type CategoryEntity } from '../entities/category.entity';
 
 @ApiTags('Admin Category')
-@ApiBearerAuth()
 @Controller('admin/categories')
 export class AdminCategoryController {
   constructor(private readonly categoryService: CategoryService) {}
@@ -30,10 +30,6 @@ export class AdminCategoryController {
     order = order?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
     limit = limit || undefined;
     page = page || 1;
-
-    if (!limit) {
-      return { items: await this.categoryService.findTrees() };
-    }
 
     const queryBuilder = this.categoryService
       .createQueryBuilder('categories')
@@ -85,6 +81,12 @@ export class AdminCategoryController {
       items: categories,
       ...getPaginatedResponse({ count, limit, page }),
     };
+  }
+
+  @Get('dropdown')
+  async listCategoriesForDropdown(@Query() { depth }: GetCategoryDropdownQuery) {
+    const categories = await this.categoryService.findTrees(depth ? { depth: depth - 1 } : undefined);
+    return pickPropertiesFromNestedTree(categories, ['id', 'name']);
   }
 
   @Get(':id')
