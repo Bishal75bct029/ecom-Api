@@ -44,10 +44,13 @@ export class RedisService {
   }
 
   async invalidateProducts() {
-    return Promise.all([this.findManyAndInvalidate('api/products'), this.findManyAndInvalidate('admin/products')]);
+    return Promise.all([this.findManyAndInvalidate('/api/products'), this.findManyAndInvalidate('/admin/products')]);
   }
 
   async invalidateCategories() {
-    return Promise.all([this.findManyAndInvalidate('api/categories'), this.findManyAndInvalidate('admin/categories')]);
+    return Promise.all([
+      this.findManyAndInvalidate('/api/categories'),
+      this.findManyAndInvalidate('/admin/categories'),
+    ]);
   }
 }

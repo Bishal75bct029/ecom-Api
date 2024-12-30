@@ -164,13 +164,12 @@ export class AdminProductController {
     const treeCategory = await this.categoryService.findAncestorsTree(category);
     const categoryIds = this.categoryService.getIdsFromParent(treeCategory);
 
-    let productMetas: ProductMetaEntity[];
     let product: ProductEntity;
     await this.dataSource.transaction(async (entityManager) => {
       const newProduct = this.productService.create({ ...rest, categories: categoryIds.map((id) => ({ id })) });
       const newProductMetas = this.productMetaService.createMany(requestProductMetas);
 
-      const product = await entityManager.save(ProductEntity, {
+      product = await entityManager.save(ProductEntity, {
         ...newProduct,
         name: title,
         stock: requestProductMetas.reduce((totalStock, meta) => totalStock + meta.stock, 0),
@@ -180,7 +179,7 @@ export class AdminProductController {
         scheduledDate,
       });
 
-      productMetas = await entityManager.save(
+      product.productMeta = await entityManager.save(
         ProductMetaEntity,
         newProductMetas.map((meta, index) => ({ ...meta, product, price: meta.price * 100, isDefault: index === 0 })),
       );
@@ -196,7 +195,7 @@ export class AdminProductController {
 
     await this.redisService.invalidateProducts();
 
-    return { ...product, productMetas };
+    return true;
   }
 
   @Put(':id')
@@ -225,8 +224,6 @@ export class AdminProductController {
     const category = await this.categoryService.findOne({ where: { id: categoryId } });
     if (!category) throw new BadRequestException("This category doesn't exist.");
 
-    let updatedProduct: ProductEntity;
-    let updatedProductMetas: ProductMetaEntity[];
     // transaction
     await this.dataSource.transaction(async (entityManager) => {
       // updating categories
@@ -256,7 +253,7 @@ export class AdminProductController {
       );
 
       // updating product and product metas
-      [updatedProduct, updatedProductMetas] = await Promise.all([
+      await Promise.all([
         entityManager.save(ProductEntity, newProduct),
         entityManager.save(ProductMetaEntity, newProductMetas),
         productMetasToDelete.length > 0 && entityManager.softRemove(ProductMetaEntity, productMetasToDelete),
@@ -296,7 +293,7 @@ export class AdminProductController {
     }
     await this.redisService.invalidateProducts();
 
-    return { ...updatedProduct, productMetas: updatedProductMetas };
+    return true;
   }
 
   @Delete(':id')
