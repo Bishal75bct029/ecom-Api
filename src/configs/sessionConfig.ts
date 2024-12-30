@@ -5,6 +5,7 @@ import { SESSION_COOKIE_NAME } from '@/app.constants';
 export const sessionConfig: SessionOptions = {
   secret: envConfig.SESSION_SECRET,
   resave: false,
+  rolling: true,
   saveUninitialized: false,
   cookie: {
     httpOnly: true, // Prevent client-side JavaScript from accessing the cookie

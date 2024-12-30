@@ -174,6 +174,7 @@ export class AdminUserController {
     delete user.password;
 
     req.session.user = user;
+    await this.userService.update({ id: user.id }, { lastLogInDate: new Date() });
 
     await this.userService.update({ id: user.id }, { lastLogInDate: new Date() });
 

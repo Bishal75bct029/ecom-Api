@@ -83,12 +83,6 @@ BigInt.prototype.toJSON = function () {
 
   sessionConfig.store = redisStore;
   app.use(session(sessionConfig));
-
-  app.use((req: Request, _res: Response, next: NextFunction) => {
-    if (req.session) req.session.touch();
-    next();
-  });
-
   // ----------------- End For Manging Server Session -------------------------
 
   app.useGlobalPipes(
