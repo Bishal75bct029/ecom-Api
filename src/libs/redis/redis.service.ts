@@ -39,6 +39,15 @@ export class RedisService {
 
   async findManyAndInvalidate(key: string) {
     const keys = await this.redisClient.keys(`${this._prefix}:${key}*`);
+    if (keys.length === 0) return;
     return this.redisClient.del(keys);
+  }
+
+  async invalidateProducts() {
+    return Promise.all([this.findManyAndInvalidate('api/products'), this.findManyAndInvalidate('admin/products')]);
+  }
+
+  async invalidateCategories() {
+    return Promise.all([this.findManyAndInvalidate('api/categories'), this.findManyAndInvalidate('admin/categories')]);
   }
 }

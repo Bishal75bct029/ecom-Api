@@ -16,16 +16,23 @@ import { getPaginatedResponse } from '@/common/utils';
 import { ValidateIDDto } from '@/common/dtos';
 import { addPropertiesToNestedTree, pickPropertiesFromNestedTree } from '../helpers';
 import { type CategoryEntity } from '../entities/category.entity';
+import { envConfig } from '@/configs/envConfig';
+import { RedisService } from '@/libs/redis/redis.service';
 
 @ApiTags('Admin Category')
 @Controller('admin/categories')
 export class AdminCategoryController {
-  constructor(private readonly categoryService: CategoryService) {}
+  constructor(
+    private readonly categoryService: CategoryService,
+    private readonly redisService: RedisService,
+  ) {}
 
   @Get()
-  async getAll(@Query() categoryQuery: GetCategoryQuery) {
+  async getAll(@Query() categoryQuery: GetCategoryQuery, @Req() req: Request) {
     const { search, sortBy, status } = categoryQuery;
     let { order, limit, page } = categoryQuery;
+
+    const isCacheable = !search && !status && !sortBy && !order;
 
     order = order?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
     limit = limit || undefined;
@@ -69,14 +76,22 @@ export class AdminCategoryController {
       queryBuilder.orderBy('categories.createdAt', 'DESC');
     }
 
-    const [categories, count] = await Promise.all([
-      queryBuilder
-        .offset((page - 1) * limit || 0)
-        .limit(limit)
-        .getRawMany(),
-      queryBuilder.getCount(),
-    ]);
+    const categoriesQueryBuilder = queryBuilder
+      .clone()
+      .offset((page - 1) * limit || 0)
+      .limit(limit);
 
+    if (isCacheable) {
+      categoriesQueryBuilder.cache(`${envConfig.REDIS_PREFIX}:${req.url}`, 86400 * 1000);
+    }
+
+    const countQueryBuilder = queryBuilder.clone();
+
+    if (isCacheable) {
+      countQueryBuilder.cache(`${envConfig.REDIS_PREFIX}:${req.url}-count`, 86400 * 1000);
+    }
+
+    const [categories, count] = await Promise.all([categoriesQueryBuilder.getRawMany(), countQueryBuilder.getCount()]);
     return {
       items: categories,
       ...getPaginatedResponse({ count, limit, page }),
@@ -122,16 +137,19 @@ export class AdminCategoryController {
 
     children = addPropertiesToNestedTree(children, { updatedBy: { id: user.id }, status });
 
-    await this.categoryService.createAndSave(
-      {
-        name,
-        description,
-        status,
-        children,
-        updatedBy: { id: user.id },
-      },
-      { transaction: true },
-    );
+    await Promise.all([
+      this.categoryService.createAndSave(
+        {
+          name,
+          description,
+          status,
+          children,
+          updatedBy: { id: user.id },
+        },
+        { transaction: true },
+      ),
+      this.redisService.invalidateCategories(),
+    ]);
     return true;
   }
 
@@ -166,17 +184,20 @@ export class AdminCategoryController {
 
     // update
     children = addPropertiesToNestedTree(children, { updatedBy: { id: user.id }, status });
-    await this.categoryService.createAndSave(
-      {
-        id,
-        name,
-        description,
-        status,
-        children,
-        updatedBy: { id: user.id },
-      },
-      { transaction: true },
-    );
+    await Promise.all([
+      this.categoryService.createAndSave(
+        {
+          id,
+          name,
+          description,
+          status,
+          children,
+          updatedBy: { id: user.id },
+        },
+        { transaction: true },
+      ),
+      this.redisService.invalidateCategories(),
+    ]);
     return true;
   }
 
@@ -185,7 +206,10 @@ export class AdminCategoryController {
     const category = await this.categoryService.findOne({ where: { id } });
     await this.categoryService.findDescendantsTree(category);
     const categoriesId = this.categoryService.getIdsFromParent(category);
-    return this.categoryService.update({ id: In(categoriesId) }, { status });
+    return Promise.all([
+      this.categoryService.update({ id: In(categoriesId) }, { status }),
+      this.redisService.invalidateCategories(),
+    ]);
   }
 
   @Delete(':id')
@@ -197,12 +221,13 @@ export class AdminCategoryController {
       },
     });
 
-    if (category) {
-      const categoryWithChildren = await this.categoryService.findDescendantsTree(category);
-      await this.categoryService.softRemove([categoryWithChildren]);
-      return true;
-    }
+    if (!category) throw new BadRequestException('Category not found.');
 
-    throw new BadRequestException('Category not found');
+    const categoryWithChildren = await this.categoryService.findDescendantsTree(category);
+    await Promise.all([
+      this.categoryService.softRemove([categoryWithChildren]),
+      this.redisService.invalidateCategories(),
+    ]);
+    return true;
   }
 }
