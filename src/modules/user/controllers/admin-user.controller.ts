@@ -169,7 +169,6 @@ export class AdminUserController {
             toAddress: user.email,
           }),
         }),
-        this.userService.update({ id: user.id }, { lastLogInDate: new Date() }),
       ]);
       return { message: 'OTP sent successfully.', isOtpEnabled: true };
     }
@@ -177,6 +176,7 @@ export class AdminUserController {
     delete user.password;
 
     req.session.user = user;
+    await this.userService.update({ id: user.id }, { lastLogInDate: new Date() });
 
     return { message: 'Logged in successfully.' };
   }

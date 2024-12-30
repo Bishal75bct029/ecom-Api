@@ -15,10 +15,10 @@ export class ProductMetaEntity extends BaseEntity {
     nullable: false,
     transformer: {
       to(value: any) {
-        return BigInt(value);
+        return BigInt(value ?? 0);
       },
       from(value: any) {
-        return BigInt(value);
+        return BigInt(value ?? 0);
       },
     },
   })

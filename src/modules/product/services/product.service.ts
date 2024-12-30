@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ProductRepository } from '../repositories/product.repository';
 import combinate from 'combinate';
-import { ProductEntity } from '../entities';
+import { PRODUCT_STATUS_ENUM, ProductEntity } from '../entities';
 import { Attribute, CreateProductMetaDto } from '../dto';
 import { getRoundedOffValue } from '@/common/utils';
 
@@ -60,5 +60,21 @@ export class ProductService extends ProductRepository {
     }
 
     return true;
+  }
+
+  validateStatusChange(currentStatus: PRODUCT_STATUS_ENUM, statusToChange: PRODUCT_STATUS_ENUM) {
+    if (currentStatus === statusToChange) {
+      return true;
+    }
+    switch (currentStatus) {
+      case PRODUCT_STATUS_ENUM.DRAFT:
+        return [PRODUCT_STATUS_ENUM.SCHEDULED, PRODUCT_STATUS_ENUM.PUBLISHED].includes(statusToChange);
+      case PRODUCT_STATUS_ENUM.SCHEDULED:
+        return [PRODUCT_STATUS_ENUM.DRAFT, PRODUCT_STATUS_ENUM.PUBLISHED].includes(statusToChange);
+      case PRODUCT_STATUS_ENUM.PUBLISHED:
+        return false;
+      default:
+        return false;
+    }
   }
 }
