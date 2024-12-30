@@ -248,8 +248,6 @@ export class AdminUserController {
   async getUsersList(@Query() query: GetUserListQueryDto) {
     const { page = 1, limit = 10, search, status } = query;
 
-    console.log(!status ? (undefined ? status === 'active' : true) : false);
-    console.log(!status ? undefined : status === 'active');
     const [users, count] = await this.userService.findAndCount({
       select: ['id', 'name', 'email', 'image', 'isActive', 'lastLogInDate'],
       skip: (page - 1) * limit,
@@ -264,7 +262,7 @@ export class AdminUserController {
           isActive: !status ? undefined : status === 'active',
         },
       ],
-      order: { updatedAt: 'DESC', createdAt: 'DESC' },
+      order: { updatedAt: 'DESC' },
     });
 
     return { items: users, ...getPaginatedResponse({ count, limit, page }) };
