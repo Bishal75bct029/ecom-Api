@@ -62,7 +62,7 @@ export class ValidatePasswordResetTokenQuery {
   token: string;
 }
 
-export class ChangePasswordDto {
+export class ResetPasswordDto {
   @IsString()
   @IsNotEmpty()
   token: string;

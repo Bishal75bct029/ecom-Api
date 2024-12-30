@@ -1,34 +1,39 @@
+import { SESSION_COOKIE_NAME } from '@/app.constants';
+import { SQSService } from '@/common/module/aws/sqs.service';
+import { getPaginatedResponse } from '@/common/utils';
+import { envConfig } from '@/configs/envConfig';
+import { PasetoJwtService } from '@/libs/pasetoJwt/pasetoJwt.service';
+import { RedisService } from '@/libs/redis/redis.service';
 import {
-  Controller,
-  Post,
-  Body,
   BadRequestException,
-  Query,
+  Body,
+  Controller,
   Get,
   GoneException,
+  InternalServerErrorException,
+  Post,
+  Query,
   Req,
   Res,
-  InternalServerErrorException,
+  Put,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
-import { ApiTags } from '@nestjs/swagger';
-import { UserService } from '../services/user.service';
+import { ILike } from 'typeorm';
 import {
-  ChangePasswordDto,
   CreateAdminUserDto,
   ForgotPasswordDto,
   LoginUserDto,
   ResendOtpDto,
+  ResetPasswordDto,
   ValidateOtpDto,
   ValidatePasswordResetTokenQuery,
 } from '../dto/create-user.dto';
+import { GetUserListQueryDto } from '../dto/get-user.dto';
 import { UserRoleEnum } from '../entities/user.entity';
-import { RedisService } from '@/libs/redis/redis.service';
-import { envConfig } from '@/configs/envConfig';
-import { SQSService } from '@/common/module/aws/sqs.service';
-import { PasetoJwtService } from '@/libs/pasetoJwt/pasetoJwt.service';
-import { SESSION_COOKIE_NAME } from '@/app.constants';
+import { UserService } from '../services/user.service';
+import { PasswordChangeDto, EditProfileDto } from '../dto';
 
 @ApiTags('Admin User')
 @Controller('admin/users')
@@ -109,7 +114,7 @@ export class AdminUserController {
   }
 
   @Post('reset-password')
-  async changePassword(@Body() { token, password }: ChangePasswordDto) {
+  async resetPassword(@Body() { token, password }: ResetPasswordDto) {
     const { email } = await this.jwtService.pasetoVerify<UserJwtPayload>(token, {
       secret: envConfig.PASETO_JWT_SECRET,
     });
@@ -131,14 +136,14 @@ export class AdminUserController {
       this.redisService.delete(email + '_PW_RESET_TOKEN'),
     ]);
 
-    return { message: 'Password changed successfully' };
+    return { message: 'Password reset successfully' };
   }
 
   @Post('authenticate')
   async authenticate(@Body() loginUserDto: LoginUserDto, @Req() req: Request) {
     const user = await this.userService.findOne({
       where: { email: loginUserDto.email, role: UserRoleEnum.ADMIN },
-      select: ['id', 'name', 'image', 'role', 'email', 'schoolId', 'isOtpEnabled', 'password'],
+      select: ['id', 'name', 'image', 'role', 'email', 'schoolId', 'isOtpEnabled', 'password', 'phone'],
     });
     if (!user) throw new BadRequestException('The email address or password you entered is incorrect.');
 
@@ -162,6 +167,7 @@ export class AdminUserController {
             toAddress: user.email,
           }),
         }),
+        this.userService.update({ id: user.id }, { lastLogInDate: new Date() }),
       ]);
       return { message: 'OTP sent successfully.', isOtpEnabled: true };
     }
@@ -234,5 +240,47 @@ export class AdminUserController {
 
     res.clearCookie(SESSION_COOKIE_NAME);
     res.send({ message: 'Logged out successfully.' });
+  }
+
+  @Get()
+  async getUsersList(@Query() query: GetUserListQueryDto) {
+    const { page = 1, limit = 10, search } = query;
+
+    const [users, count] = await this.userService.findAndCount({
+      select: ['id', 'name', 'email', 'image', 'isActive', 'lastLogInDate'],
+      skip: (page - 1) * limit,
+      take: limit,
+      where: !!search ? [{ name: ILike(`%${search}%`) }, { email: ILike(`%${search}%`) }] : undefined,
+      order: { createdAt: 'DESC' },
+    });
+
+    return { items: users, ...getPaginatedResponse({ count, limit, page }) };
+  }
+
+  @Put('change-password')
+  async changePassword(@Req() { session: { user } }: Request, @Body() passwordChangeDto: PasswordChangeDto) {
+    const { currentPassword, newPassword } = passwordChangeDto;
+    const userDetail = await this.userService.findOne({ where: { id: user.id }, select: ['id', 'password'] });
+
+    if (!this.userService.comparePassword(currentPassword, userDetail.password)) {
+      throw new BadRequestException('Invalid current password');
+    }
+    await this.userService.update({ id: user.id }, { password: await bcrypt.hash(newPassword, 10) });
+
+    return { message: 'Password change successfully' };
+  }
+
+  @Put('edit-profile')
+  async editProfile(@Req() req: Request, @Body() editProfileDto: EditProfileDto) {
+    const { phone, image, name } = editProfileDto;
+    await this.userService.update({ id: req.session.user.id }, { ...editProfileDto });
+    req.session.user = {
+      ...req.session.user,
+      phone,
+      image,
+      name,
+    };
+
+    return { message: 'Profile updated successfully' };
   }
 }
