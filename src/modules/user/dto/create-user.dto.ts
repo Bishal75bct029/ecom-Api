@@ -12,7 +12,7 @@ export class CreateAdminUserDto {
   @IsString()
   @Transform(({ value }) => value.replace(/\s+/g, ' ').trim())
   @Matches(/^([A-Za-z]+( [A-Za-z]+)*)$/, {
-    message: 'Name should only contain alphabets and have one space between words.',
+    message: 'Name should only contain alphabets',
   })
   name: string;
 
