@@ -256,11 +256,11 @@ export class AdminUserController {
       take: limit,
       where: [
         {
-          name: ILike(`%${search}%`),
+          name: search ? ILike(`%${search}%`) : undefined,
           isActive: !status ? undefined : status === 'active',
         },
         {
-          email: ILike(`%${search}%`),
+          email: search ? ILike(`%${search}%`) : undefined,
           isActive: !status ? undefined : status === 'active',
         },
       ],
