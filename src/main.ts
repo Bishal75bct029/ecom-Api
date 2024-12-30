@@ -73,6 +73,7 @@ BigInt.prototype.toJSON = function () {
     ) {
       req.headers['x-forwarded-proto'] = 'https';
       sessionConfig.cookie.secure = true;
+      sessionConfig.cookie.sameSite = 'none';
       sessionConfig.cookie.domain = envConfig.SESSION_DOMAIN;
     } else {
       sessionConfig.cookie.secure = false;
