@@ -1,5 +1,4 @@
 import { NestFactory } from '@nestjs/core';
-import * as session from 'express-session';
 import { RedisStore } from 'connect-redis';
 import { Redis } from 'ioredis';
 import * as cookieParser from 'cookie-parser';
@@ -14,7 +13,8 @@ import { envConfig } from './configs/envConfig';
 import { swaggerSetup } from './configs/swagger';
 import { transformAllRoutes } from './common/utils';
 import { type UserEntity } from './modules/user/entities';
-import { SESSION_COOKIE_NAME } from './app.constants';
+import * as session from 'express-session';
+import { sessionConfig } from './configs/sessionConfig';
 
 declare global {
   interface BigInt {
@@ -53,7 +53,7 @@ BigInt.prototype.toJSON = function () {
   app.use(cookieParser());
 
   // For Content Security Policy
-  app.use(helmet({ strictTransportSecurity: false }));
+  app.use(helmet());
 
   // ----------------- Start For Manging Server Session -------------------------
   const redisClient = new Redis({
@@ -66,32 +66,28 @@ BigInt.prototype.toJSON = function () {
     prefix: `${envConfig.REDIS_PREFIX}:sess:`,
   });
 
-  app.use(
-    session({
-      store: redisStore,
-      secret: envConfig.SESSION_SECRET,
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        httpOnly: true, // Prevent client-side JavaScript from accessing the cookie
-        maxAge: 86400 * 1000, // 1-day cookie expiration
-        secure: true, // Use secure cookies only for non-localhost
-        sameSite: 'none', // Helps mitigate CSRF attacks
-        // domain, // Dynamically set the domain
-        path: '/',
-      },
-      name: SESSION_COOKIE_NAME,
-    }),
-  );
-
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    console.log(req.headers);
-    if (req.session) req.session.touch();
-    res.on('finish', () => {
-      console.log(res.getHeaders());
-    });
+  app.use((req: Request, _res: Response, next: NextFunction) => {
+    if (
+      (req.protocol === 'https' || JSON.parse(envConfig.ALLOWED_ORIGINS).includes(req.headers?.origin)) &&
+      envConfig.NODE_ENV !== 'local'
+    ) {
+      req.headers['x-forwarded-proto'] = 'https';
+      sessionConfig.cookie.secure = true;
+      sessionConfig.cookie.domain = envConfig.SESSION_DOMAIN;
+    } else {
+      sessionConfig.cookie.secure = false;
+    }
     next();
   });
+
+  sessionConfig.store = redisStore;
+  app.use(session(sessionConfig));
+
+  app.use((req: Request, _res: Response, next: NextFunction) => {
+    if (req.session) req.session.touch();
+    next();
+  });
+
   // ----------------- End For Manging Server Session -------------------------
 
   app.useGlobalPipes(
