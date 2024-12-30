@@ -1,17 +1,16 @@
 import { Controller, Get, Post, Body, Put, Param, BadRequestException, Query, Delete, Req } from '@nestjs/common';
 import { Request } from 'express';
 import { ApiTags } from '@nestjs/swagger';
-import { DataSource, FindManyOptions, ILike, In } from 'typeorm';
+import { DataSource, FindManyOptions, ILike } from 'typeorm';
 import { ProductService, ProductMetaService } from '../services';
 import { CreateProductDto, UpdateProductDto } from '../dto';
 import { CategoryService } from '../../category/services/category.service';
-import { getRecursiveDataArrayFromObjectOrArray } from '../helpers';
 import { getRoundedOffValue } from '@/common/utils';
 import { ValidateIDDto } from '@/common/dtos';
 import { GetAdminProductsQuery } from '../dto/get-products-filteredList-dto';
 import { PRODUCT_STATUS_ENUM, ProductEntity, ProductMetaEntity } from '../entities';
 import { UserEntity } from '@/modules/user/entities';
-import { ProductQueueService } from '@/libs/queue/product/product-queue.service';
+import { ProductScheduleQueueService } from '@/libs/queue/product/product-queue.service';
 import { envConfig } from '@/configs/envConfig';
 import { RedisService } from '@/libs/redis/redis.service';
 
@@ -23,7 +22,7 @@ export class AdminProductController {
     private readonly productService: ProductService,
     private readonly productMetaService: ProductMetaService,
     private readonly categoryService: CategoryService,
-    private readonly _productQueueService: ProductQueueService,
+    private readonly productScheduleQueueService: ProductScheduleQueueService,
     private readonly redisService: RedisService,
   ) {}
 
@@ -151,25 +150,24 @@ export class AdminProductController {
 
   @Post()
   async createProduct(@Req() { session: { user } }: Request, @Body() createProductDto: CreateProductDto) {
-    const { title, variants: requestProductMetas, categoryId, ...rest } = createProductDto;
+    const { title, variants: requestProductMetas, categoryId, scheduledDate, status, ...rest } = createProductDto;
     if (createProductDto.status === PRODUCT_STATUS_ENUM.SCHEDULED && !createProductDto.scheduledDate) {
       throw new BadRequestException('Scheduled date is required');
     }
 
     const category = await this.categoryService.findOne({ where: { id: categoryId } });
-    if (!category) throw new BadRequestException("Doesn't exists this category.");
+    if (!category) throw new BadRequestException("This category doesn't exist.");
 
     if (!this.productService.validateVariant(createProductDto.attributes, requestProductMetas))
-      throw new BadRequestException('Invalid product variant');
+      throw new BadRequestException('Invalid product variant.');
 
     const treeCategory = await this.categoryService.findAncestorsTree(category);
     const categoryIds = this.categoryService.getIdsFromParent(treeCategory);
-    const categories = await this.categoryService.find({ where: { id: In(categoryIds) } });
 
     let productMetas: ProductMetaEntity[];
     let product: ProductEntity;
     await this.dataSource.transaction(async (entityManager) => {
-      const newProduct = this.productService.create({ ...rest, categories });
+      const newProduct = this.productService.create({ ...rest, categories: categoryIds.map((id) => ({ id })) });
       const newProductMetas = this.productMetaService.createMany(requestProductMetas);
 
       const product = await entityManager.save(ProductEntity, {
@@ -178,6 +176,8 @@ export class AdminProductController {
         stock: requestProductMetas.reduce((totalStock, meta) => totalStock + meta.stock, 0),
         updatedBy: { id: user.id },
         category: { id: categoryId },
+        status,
+        scheduledDate,
       });
 
       productMetas = await entityManager.save(
@@ -185,6 +185,14 @@ export class AdminProductController {
         newProductMetas.map((meta, index) => ({ ...meta, product, price: meta.price * 100, isDefault: index === 0 })),
       );
     });
+
+    // if product is scheduled
+    if (status === PRODUCT_STATUS_ENUM.SCHEDULED) {
+      await this.productScheduleQueueService.addJob(
+        { productId: product.id, scheduledDate },
+        { delay: new Date(scheduledDate).getTime() - Date.now(), jobId: product.id },
+      );
+    }
 
     await this.redisService.invalidateProducts();
 
@@ -197,49 +205,95 @@ export class AdminProductController {
     @Req() { session: { user } }: Request,
     @Body() updateProductDto: UpdateProductDto,
   ) {
-    const { title, variants: requestProductMetas, categoryId, ...rest } = updateProductDto;
+    const { title, variants: requestProductMetas, categoryId, scheduledDate, ...rest } = updateProductDto;
     if (updateProductDto.status === PRODUCT_STATUS_ENUM.SCHEDULED && !updateProductDto.scheduledDate) {
-      throw new BadRequestException('Scheduled date is required');
+      throw new BadRequestException('Scheduled date is required.');
     }
 
     if (!this.productService.validateVariant(updateProductDto.attributes, requestProductMetas))
-      throw new BadRequestException('Invalid product variant');
+      throw new BadRequestException('Invalid product variant.');
 
     const product = await this.productService.findOne({ where: { id }, relations: ['productMeta'] });
-    if (!product) throw new BadRequestException('Product not found');
+    if (!product) throw new BadRequestException('Product not found.');
 
-    const existingMetas = product.productMeta;
-    const requestMetaIds = requestProductMetas.map((meta) => meta.id);
+    const isValidStatusChange = this.productService.validateStatusChange(product.status, updateProductDto.status);
+    if (!isValidStatusChange)
+      throw new BadRequestException(
+        `Product status cannot be changed from ${product.status} to ${updateProductDto.status}.`,
+      );
 
-    const metasToDelete = existingMetas.filter((meta) => !requestMetaIds.includes(meta.id));
-    if (metasToDelete.length > 0) {
-      await this.productMetaService.softRemove(metasToDelete);
+    const category = await this.categoryService.findOne({ where: { id: categoryId } });
+    if (!category) throw new BadRequestException("This category doesn't exist.");
+
+    let updatedProduct: ProductEntity;
+    let updatedProductMetas: ProductMetaEntity[];
+    // transaction
+    await this.dataSource.transaction(async (entityManager) => {
+      // updating categories
+      const treeCategory = await this.categoryService.findAncestorsTree(category);
+      const categoryIds = this.categoryService.getIdsFromParent(treeCategory);
+      const newProduct = this.productService.create({
+        id,
+        ...rest,
+        categories: categoryIds.map((id) => ({ id })),
+        name: title,
+        stock: requestProductMetas.reduce((totalStock, meta) => totalStock + meta.stock, 0),
+        updatedBy: { id: user.id } as UserEntity,
+        scheduledDate,
+      });
+
+      // updating metas and deleting old metas
+      const requestMetaIds = requestProductMetas.map((meta) => meta.id);
+      const productMetasToDelete = product.productMeta.filter((meta) => !requestMetaIds.includes(meta.id));
+
+      const newProductMetas = this.productMetaService.createMany(
+        requestProductMetas.map((meta, index) => ({
+          ...meta,
+          product: { id },
+          price: Number(meta.price),
+          isDefault: index === 0,
+        })),
+      );
+
+      // updating product and product metas
+      [updatedProduct, updatedProductMetas] = await Promise.all([
+        entityManager.save(ProductEntity, newProduct),
+        entityManager.save(ProductMetaEntity, newProductMetas),
+        productMetasToDelete.length > 0 && entityManager.softRemove(ProductMetaEntity, productMetasToDelete),
+      ]);
+    });
+
+    // handling status update for queue
+    switch (updateProductDto.status) {
+      case PRODUCT_STATUS_ENUM.SCHEDULED: {
+        const currentJob = (await this.productScheduleQueueService.findJobs(['active', 'delayed', 'waiting'])).find(
+          (job) => job.id === product.id,
+        );
+
+        const isRescheduleRequired =
+          product.status === PRODUCT_STATUS_ENUM.SCHEDULED &&
+          currentJob &&
+          new Date(currentJob.data.scheduledDate).getTime() !== new Date(scheduledDate).getTime();
+
+        if (isRescheduleRequired) {
+          await this.productScheduleQueueService.removeJob(product.id);
+        }
+
+        await this.productScheduleQueueService.addJob(
+          {
+            productId: product.id,
+            scheduledDate,
+          },
+          { delay: new Date(scheduledDate).getTime() - Date.now(), jobId: product.id },
+        );
+        break;
+      }
+      default:
+        if (product.status === PRODUCT_STATUS_ENUM.SCHEDULED) {
+          await this.productScheduleQueueService.removeJob(product.id);
+        }
+        break;
     }
-
-    const categories = await this.categoryService.find({ where: { id: categoryId } });
-    const ancestors = await Promise.all(categories.map((category) => this.categoryService.findAncestorsTree(category)));
-    const categoryAncestoryList = getRecursiveDataArrayFromObjectOrArray({
-      recursiveData: ancestors,
-      recursiveObjectKey: 'parent',
-      dataKey: 'name',
-    });
-
-    const tags = [...new Set([...categoryAncestoryList, ...product.tags])];
-    const newProduct = this.productService.create({ id, ...rest, tags, categories });
-    const updatedProduct = await this.productService.save({
-      ...newProduct,
-      name: title,
-      stock: requestProductMetas.reduce((totalStock, meta) => totalStock + meta.stock, 0),
-      updatedBy: { id: user.id } as UserEntity,
-
-      // category: { id: categoryId },
-    });
-    const newProductMetas = this.productMetaService.createMany(requestProductMetas);
-
-    const updatedProductMetas = await this.productMetaService.save(
-      newProductMetas.map((meta, index) => ({ ...meta, price: Number(meta.price), product, isDefault: index === 0 })),
-    );
-
     await this.redisService.invalidateProducts();
 
     return { ...updatedProduct, productMetas: updatedProductMetas };

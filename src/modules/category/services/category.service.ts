@@ -5,7 +5,7 @@ import { CategoryEntity } from '../entities/category.entity';
 
 @Injectable()
 export class CategoryService extends CategoryRepository {
-  getIdsFromParent(category: CategoryEntity) {
+  getIdsFromParent(category: CategoryEntity): string[] {
     return this.extractIds(category);
   }
 
