@@ -285,7 +285,9 @@ export class AdminUserController {
   }
 
   @Delete(':id')
-  async deleteUser(@Param('id') id: string) {
+  async deleteUser(@Req() { session: { user: reqUserDetail } }: Request, @Param('id') id: string) {
+    if (id === reqUserDetail.id) throw new BadRequestException('Cannot delete logged in user.');
+
     const userDetail = await this.userService.findOne({ where: { id } });
 
     if (!userDetail) throw new BadRequestException('User not found');
