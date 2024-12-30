@@ -11,7 +11,7 @@ import { ValidateIDDto } from '@/common/dtos';
 import { GetAdminProductsQuery } from '../dto/get-products-filteredList-dto';
 import { PRODUCT_STATUS_ENUM, ProductEntity, ProductMetaEntity } from '../entities';
 import { UserEntity } from '@/modules/user/entities';
-import { ProductQueueService } from '@/libs/queue/product-queue.service';
+import { ProductQueueService } from '@/libs/queue/product/product-queue.service';
 
 @ApiTags('Admin Product')
 @Controller('admin/products')
