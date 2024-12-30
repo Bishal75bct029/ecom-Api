@@ -24,7 +24,7 @@ declare global {
 
 declare module 'express-session' {
   interface SessionData {
-    user: Pick<UserEntity, 'id' | 'name' | 'image' | 'role' | 'email' | 'schoolId' | 'isOtpEnabled'>;
+    user: Pick<UserEntity, 'id' | 'name' | 'image' | 'role' | 'email' | 'schoolId' | 'isOtpEnabled' | 'phone'>;
   }
 }
 

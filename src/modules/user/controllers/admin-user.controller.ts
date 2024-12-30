@@ -140,7 +140,7 @@ export class AdminUserController {
   async authenticate(@Body() loginUserDto: LoginUserDto, @Req() req: Request) {
     const user = await this.userService.findOne({
       where: { email: loginUserDto.email, role: UserRoleEnum.ADMIN },
-      select: ['id', 'name', 'image', 'role', 'email', 'schoolId', 'isOtpEnabled', 'password'],
+      select: ['id', 'name', 'image', 'role', 'email', 'schoolId', 'isOtpEnabled', 'password', 'phone'],
     });
     if (!user) throw new BadRequestException('The email address or password you entered is incorrect.');
 
@@ -238,11 +238,6 @@ export class AdminUserController {
     res.send({ message: 'Logged out successfully.' });
   }
 
-  @Get('profile')
-  async getUser(@Req() { session: { user } }: Request) {
-    return this.userService.findOne({ where: { id: user.id }, select: ['id', 'phone', 'email', 'image', 'name'] });
-  }
-
   @Put('change-password')
   async changePassword(@Req() { session: { user } }: Request, @Body() passwordChangeDto: PasswordChangeDto) {
     const { currentPassword, newPassword } = passwordChangeDto;
@@ -257,8 +252,15 @@ export class AdminUserController {
   }
 
   @Put('edit-profile')
-  async editProfile(@Req() { session: { user } }: Request, @Body() editProfileDto: EditProfileDto) {
-    await this.userService.update({ id: user.id }, { ...editProfileDto });
+  async editProfile(@Req() req: Request, @Body() editProfileDto: EditProfileDto) {
+    const { phone, image, name } = editProfileDto;
+    await this.userService.update({ id: req.session.user.id }, { ...editProfileDto });
+    req.session.user = {
+      ...req.session.user,
+      phone,
+      image,
+      name,
+    };
 
     return { message: 'Profile updated successfully' };
   }
