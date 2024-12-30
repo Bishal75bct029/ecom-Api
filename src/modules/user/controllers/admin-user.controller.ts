@@ -1,20 +1,26 @@
+import { SESSION_COOKIE_NAME } from '@/app.constants';
+import { SQSService } from '@/common/module/aws/sqs.service';
+import { getPaginatedResponse } from '@/common/utils';
+import { envConfig } from '@/configs/envConfig';
+import { PasetoJwtService } from '@/libs/pasetoJwt/pasetoJwt.service';
+import { RedisService } from '@/libs/redis/redis.service';
 import {
-  Controller,
-  Post,
-  Body,
   BadRequestException,
-  Query,
+  Body,
+  Controller,
   Get,
   GoneException,
+  InternalServerErrorException,
+  Post,
+  Query,
   Req,
   Res,
-  InternalServerErrorException,
   Put,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
-import { ApiTags } from '@nestjs/swagger';
-import { UserService } from '../services/user.service';
+import { ILike } from 'typeorm';
 import {
   CreateAdminUserDto,
   ForgotPasswordDto,
@@ -24,12 +30,9 @@ import {
   ValidateOtpDto,
   ValidatePasswordResetTokenQuery,
 } from '../dto/create-user.dto';
+import { GetUserListQueryDto } from '../dto/get-user.dto';
 import { UserRoleEnum } from '../entities/user.entity';
-import { RedisService } from '@/libs/redis/redis.service';
-import { envConfig } from '@/configs/envConfig';
-import { SQSService } from '@/common/module/aws/sqs.service';
-import { PasetoJwtService } from '@/libs/pasetoJwt/pasetoJwt.service';
-import { SESSION_COOKIE_NAME } from '@/app.constants';
+import { UserService } from '../services/user.service';
 import { PasswordChangeDto, EditProfileDto } from '../dto';
 
 @ApiTags('Admin User')
@@ -164,6 +167,7 @@ export class AdminUserController {
             toAddress: user.email,
           }),
         }),
+        this.userService.update({ id: user.id }, { lastLogInDate: new Date() }),
       ]);
       return { message: 'OTP sent successfully.', isOtpEnabled: true };
     }
@@ -236,6 +240,21 @@ export class AdminUserController {
 
     res.clearCookie(SESSION_COOKIE_NAME);
     res.send({ message: 'Logged out successfully.' });
+  }
+
+  @Get()
+  async getUsersList(@Query() query: GetUserListQueryDto) {
+    const { page = 1, limit = 10, search } = query;
+
+    const [users, count] = await this.userService.findAndCount({
+      select: ['id', 'name', 'email', 'image', 'isActive', 'lastLogInDate'],
+      skip: (page - 1) * limit,
+      take: limit,
+      where: !!search ? [{ name: ILike(`%${search}%`) }, { email: ILike(`%${search}%`) }] : undefined,
+      order: { createdAt: 'DESC' },
+    });
+
+    return { items: users, ...getPaginatedResponse({ count, limit, page }) };
   }
 
   @Put('change-password')
