@@ -21,7 +21,7 @@ export class AdminPaymentMethodController {
 
   @Put()
   async update(@Body() paymentIsActive: UpdatePaymentIsActiveDto) {
-    const { id } = paymentIsActive;
+    const { id, isActive } = paymentIsActive;
     if (!id) throw new BadRequestException('Invalid payment method');
 
     const paymentMethod = await this.paymentMethodService.findOne({ where: { id } });
@@ -30,10 +30,10 @@ export class AdminPaymentMethodController {
     }
 
     const activePaymentMethodCount = await this.paymentMethodService.count({ where: { isActive: true } });
-    if (activePaymentMethodCount < 2) {
+    if (!isActive && activePaymentMethodCount < 2) {
       throw new BadRequestException('Atleast one payment method need to be active');
     }
 
-    await this.paymentMethodService.update({ id }, { ...paymentIsActive });
+    return this.paymentMethodService.update({ id }, { ...paymentIsActive });
   }
 }

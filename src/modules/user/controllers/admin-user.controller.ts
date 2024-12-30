@@ -176,8 +176,6 @@ export class AdminUserController {
     req.session.user = user;
     await this.userService.update({ id: user.id }, { lastLogInDate: new Date() });
 
-    await this.userService.update({ id: user.id }, { lastLogInDate: new Date() });
-
     return { message: 'Logged in successfully.' };
   }
 
