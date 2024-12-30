@@ -106,7 +106,7 @@ export class AdminProductController {
   @Get(':id')
   async getProductsById(@Param() { id }: ValidateIDDto) {
     const product = await this.productService.findOne({
-      relations: ['productMeta', 'categories'],
+      relations: ['productMeta', 'categories', 'categories.children', 'categories.parent'],
       select: {
         id: true,
         name: true,
@@ -127,6 +127,8 @@ export class AdminProductController {
         },
         categories: {
           id: true,
+          parent: { id: true, children: true },
+          children: { id: true, children: true },
         },
       },
       where: {
@@ -135,7 +137,9 @@ export class AdminProductController {
     });
 
     const { name, productMeta, categories, ...rest } = product;
-    return { ...rest, title: name, variants: productMeta, categoryId: categories[0].id };
+    const categoryId = this.productService.findLastCategory(categories);
+
+    return { ...rest, title: name, variants: productMeta, categoryId };
   }
 
   @Post()
