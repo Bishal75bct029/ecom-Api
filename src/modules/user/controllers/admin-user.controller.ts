@@ -269,6 +269,33 @@ export class AdminUserController {
     return { items: users, ...getPaginatedResponse({ count, limit, page }) };
   }
 
+  @Put('edit-profile')
+  async editProfile(@Req() req: Request, @Body() editProfileDto: EditProfileDto) {
+    const { phone, image, name } = editProfileDto;
+    await this.userService.update({ id: req.session.user.id }, { ...editProfileDto });
+    req.session.user = {
+      ...req.session.user,
+      phone,
+      image,
+      name,
+    };
+
+    return { message: 'Profile updated successfully' };
+  }
+
+  @Put('change-password')
+  async changePassword(@Req() { session: { user } }: Request, @Body() passwordChangeDto: PasswordChangeDto) {
+    const { currentPassword, newPassword } = passwordChangeDto;
+    const userDetail = await this.userService.findOne({ where: { id: user.id }, select: ['id', 'password'] });
+
+    if (!this.userService.comparePassword(currentPassword, userDetail.password)) {
+      throw new BadRequestException('Invalid current password');
+    }
+    await this.userService.update({ id: user.id }, { password: await bcrypt.hash(newPassword, 10) });
+
+    return { message: 'Password change successfully' };
+  }
+
   @Put(':id')
   async updateUser(@Param() { id }: ValidateIDDto, @Body() updateUserDto: UpdateUserDto) {
     const userDetail = await this.userService.findOne({ where: { id } });
@@ -295,32 +322,5 @@ export class AdminUserController {
 
     await this.userService.softDelete(userDetail.id);
     return;
-  }
-
-  @Put('change-password')
-  async changePassword(@Req() { session: { user } }: Request, @Body() passwordChangeDto: PasswordChangeDto) {
-    const { currentPassword, newPassword } = passwordChangeDto;
-    const userDetail = await this.userService.findOne({ where: { id: user.id }, select: ['id', 'password'] });
-
-    if (!this.userService.comparePassword(currentPassword, userDetail.password)) {
-      throw new BadRequestException('Invalid current password');
-    }
-    await this.userService.update({ id: user.id }, { password: await bcrypt.hash(newPassword, 10) });
-
-    return { message: 'Password change successfully' };
-  }
-
-  @Put('edit-profile')
-  async editProfile(@Req() req: Request, @Body() editProfileDto: EditProfileDto) {
-    const { phone, image, name } = editProfileDto;
-    await this.userService.update({ id: req.session.user.id }, { ...editProfileDto });
-    req.session.user = {
-      ...req.session.user,
-      phone,
-      image,
-      name,
-    };
-
-    return { message: 'Profile updated successfully' };
   }
 }

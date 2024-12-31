@@ -1,6 +1,6 @@
 import { OmitType, PartialType } from '@nestjs/swagger';
 import { CreateUserDto } from './create-user.dto';
-import { IsBoolean, IsNotEmpty, IsOptional, IsString, Length, Matches } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
 
 export class PasswordChangeDto {
   @IsString()
@@ -27,7 +27,7 @@ export class EditProfileDto {
 
   @IsOptional()
   @IsString()
-  @Length(10, 10, { message: 'Phone number must be equal to 10 digit' })
+  @Matches(/^$|^\d{10}$/, { message: 'Phone number must be empty or exactly 10 digits' })
   phone: string;
 }
 

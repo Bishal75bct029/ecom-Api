@@ -9,6 +9,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Min,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -92,10 +93,11 @@ export class CreateProductMetaDto extends ValidateIDDto {
 
   @IsNumber()
   @IsNotEmpty()
+  @Min(0, { message: 'Price must be greater than 0' })
   price: number;
 
   @IsObject()
-  @IsOptional()
+  @IsNotEmpty()
   attributes: Record<string, string>;
 
   @IsBoolean()
@@ -104,5 +106,6 @@ export class CreateProductMetaDto extends ValidateIDDto {
 
   @IsNumber()
   @IsNotEmpty()
+  @Min(0, { message: 'Stock must be greater than 0' })
   stock: number;
 }
