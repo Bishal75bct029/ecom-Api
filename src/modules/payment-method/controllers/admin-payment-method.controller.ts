@@ -11,7 +11,7 @@ export class AdminPaymentMethodController {
 
   @Get()
   get() {
-    return this.paymentMethodService.find({ order: { createdAt: 'DESC' } });
+    return this.paymentMethodService.find();
   }
 
   @Post()
