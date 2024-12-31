@@ -1,6 +1,11 @@
-import { PaginationDto, STATUS_ENUM } from '@/common/dtos';
+import { PaginationDto } from '@/common/dtos';
 import { Transform, Type } from 'class-transformer';
 import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, ValidateNested } from 'class-validator';
+
+export enum CategoryStatusEnum {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+}
 
 export class CreateCategoryDto {
   @IsString()
@@ -21,8 +26,8 @@ export class CreateCategoryDto {
   @Transform(({ value }) => value.replace(/\s+/g, ' ').trim())
   description?: string;
 
-  @IsEnum(STATUS_ENUM)
-  status: STATUS_ENUM;
+  @IsEnum(CategoryStatusEnum)
+  status: CategoryStatusEnum;
 
   @ValidateNested({ each: true })
   @Type(() => SubCategory)
@@ -53,8 +58,8 @@ export class GetCategoryQuery extends PaginationDto {
   search?: string;
 
   @IsOptional()
-  @IsEnum(STATUS_ENUM)
-  status?: STATUS_ENUM;
+  @IsEnum(CategoryStatusEnum)
+  status?: CategoryStatusEnum;
 }
 
 export class GetCategoryTypeQuery {
