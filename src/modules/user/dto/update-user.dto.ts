@@ -1,6 +1,6 @@
-import { PartialType } from '@nestjs/swagger';
+import { OmitType, PartialType } from '@nestjs/swagger';
 import { CreateUserDto } from './create-user.dto';
-import { IsNotEmpty, IsOptional, IsString, Length, Matches } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, Length, Matches } from 'class-validator';
 
 export class PasswordChangeDto {
   @IsString()
@@ -31,4 +31,8 @@ export class EditProfileDto {
   phone: string;
 }
 
-export class UpdateUserDto extends PartialType(CreateUserDto) {}
+export class UpdateUserDto extends PartialType(OmitType(CreateUserDto, ['password'])) {
+  @IsBoolean()
+  @IsOptional()
+  isActive: boolean;
+}

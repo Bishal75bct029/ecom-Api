@@ -5,4 +5,8 @@ export class GetUserListQueryDto extends PaginationDto {
   @IsString()
   @IsOptional()
   search?: string;
+
+  @IsString()
+  @IsOptional()
+  status?: 'active' | 'inactive';
 }

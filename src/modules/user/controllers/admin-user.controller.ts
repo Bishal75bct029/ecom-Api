@@ -16,6 +16,8 @@ import {
   Req,
   Res,
   Put,
+  Param,
+  Delete,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
@@ -33,7 +35,7 @@ import {
 import { GetUserListQueryDto } from '../dto/get-user.dto';
 import { UserRoleEnum } from '../entities/user.entity';
 import { UserService } from '../services/user.service';
-import { PasswordChangeDto, EditProfileDto } from '../dto';
+import { PasswordChangeDto, EditProfileDto, UpdateUserDto } from '../dto';
 
 @ApiTags('Admin User')
 @Controller('admin/users')
@@ -244,17 +246,54 @@ export class AdminUserController {
 
   @Get()
   async getUsersList(@Query() query: GetUserListQueryDto) {
-    const { page = 1, limit = 10, search } = query;
+    const { page = 1, limit = 10, search, status } = query;
 
     const [users, count] = await this.userService.findAndCount({
       select: ['id', 'name', 'email', 'image', 'isActive', 'lastLogInDate'],
       skip: (page - 1) * limit,
       take: limit,
-      where: !!search ? [{ name: ILike(`%${search}%`) }, { email: ILike(`%${search}%`) }] : undefined,
-      order: { createdAt: 'DESC' },
+      where: [
+        {
+          name: search ? ILike(`%${search}%`) : undefined,
+          isActive: !status ? undefined : status === 'active',
+        },
+        {
+          email: search ? ILike(`%${search}%`) : undefined,
+          isActive: !status ? undefined : status === 'active',
+        },
+      ],
+      order: { updatedAt: 'DESC' },
     });
 
     return { items: users, ...getPaginatedResponse({ count, limit, page }) };
+  }
+
+  @Put(':id')
+  async updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    const userDetail = await this.userService.findOne({ where: { id } });
+
+    if (!userDetail) throw new BadRequestException('User not found');
+
+    if (!!updateUserDto?.email && userDetail?.email !== updateUserDto?.email) {
+      if (await this.userService.findOne({ where: { email: updateUserDto?.email } })) {
+        throw new BadRequestException('Email already in use');
+      }
+    }
+
+    await this.userService.update({ id: userDetail.id }, { ...updateUserDto });
+    return { message: 'Profile updated successfully' };
+  }
+
+  @Delete(':id')
+  async deleteUser(@Req() { session: { user: reqUserDetail } }: Request, @Param('id') id: string) {
+    if (id === reqUserDetail.id) throw new BadRequestException('Cannot delete logged in user.');
+
+    const userDetail = await this.userService.findOne({ where: { id } });
+
+    if (!userDetail) throw new BadRequestException('User not found');
+
+    await this.userService.softDelete(userDetail.id);
+    return;
   }
 
   @Put('change-password')
