@@ -1,12 +1,12 @@
-import { PaginationDto } from '@/common/dtos';
-import { IsOptional, IsString } from 'class-validator';
+import { PaginationDto, STATUS_ENUM } from '@/common/dtos';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class GetUserListQueryDto extends PaginationDto {
   @IsString()
   @IsOptional()
   search?: string;
 
-  @IsString()
   @IsOptional()
-  status?: 'active' | 'inactive';
+  @IsEnum(STATUS_ENUM)
+  status?: STATUS_ENUM;
 }

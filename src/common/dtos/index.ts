@@ -11,11 +11,16 @@ export class ValidateIDDto {
 export class PaginationDto {
   @IsOptional()
   @IsNumber()
-  @Min(1, { message: 'Ivalid limit: Please provide value greater than 0.' })
+  @Min(1, { message: 'Invalid limit: Please provide value greater than 0.' })
   limit?: number;
 
   @IsOptional()
   @IsNumber()
-  @Min(1, { message: 'Ivalid limit: Please provide value greater than 0.' })
+  @Min(1, { message: 'Invalid limit: Please provide value greater than 0.' })
   page?: number;
+}
+
+export enum STATUS_ENUM {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
 }
