@@ -1,4 +1,5 @@
 import { SESSION_COOKIE_NAME } from '@/app.constants';
+import { ValidateIDDto } from '@/common/dtos';
 import { SQSService } from '@/common/module/aws/sqs.service';
 import { getPaginatedResponse } from '@/common/utils';
 import { envConfig } from '@/configs/envConfig';
@@ -8,21 +9,22 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   GoneException,
   InternalServerErrorException,
+  Param,
   Post,
+  Put,
   Query,
   Req,
   Res,
-  Put,
-  Param,
-  Delete,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
 import { ILike } from 'typeorm';
+import { EditProfileDto, PasswordChangeDto, UpdateUserDto } from '../dto';
 import {
   CreateAdminUserDto,
   ForgotPasswordDto,
@@ -32,10 +34,9 @@ import {
   ValidateOtpDto,
   ValidatePasswordResetTokenQuery,
 } from '../dto/create-user.dto';
-import { GetUserListQueryDto } from '../dto/get-user.dto';
+import { GET_USER_STATUS_ENUM, GetUserListQueryDto } from '../dto/get-user.dto';
 import { UserRoleEnum } from '../entities/user.entity';
 import { UserService } from '../services/user.service';
-import { PasswordChangeDto, EditProfileDto, UpdateUserDto } from '../dto';
 
 @ApiTags('Admin User')
 @Controller('admin/users')
@@ -255,11 +256,11 @@ export class AdminUserController {
       where: [
         {
           name: search ? ILike(`%${search}%`) : undefined,
-          isActive: !status ? undefined : status === 'active',
+          isActive: !status ? undefined : status.toLowerCase() === GET_USER_STATUS_ENUM.ACTIVE.toLowerCase(),
         },
         {
           email: search ? ILike(`%${search}%`) : undefined,
-          isActive: !status ? undefined : status === 'active',
+          isActive: !status ? undefined : status.toLowerCase() === GET_USER_STATUS_ENUM.ACTIVE.toLowerCase(),
         },
       ],
       order: { updatedAt: 'DESC' },
@@ -269,7 +270,7 @@ export class AdminUserController {
   }
 
   @Put(':id')
-  async updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+  async updateUser(@Param() { id }: ValidateIDDto, @Body() updateUserDto: UpdateUserDto) {
     const userDetail = await this.userService.findOne({ where: { id } });
 
     if (!userDetail) throw new BadRequestException('User not found');
@@ -285,7 +286,7 @@ export class AdminUserController {
   }
 
   @Delete(':id')
-  async deleteUser(@Req() { session: { user: reqUserDetail } }: Request, @Param('id') id: string) {
+  async deleteUser(@Req() { session: { user: reqUserDetail } }: Request, @Param() { id }: ValidateIDDto) {
     if (id === reqUserDetail.id) throw new BadRequestException('Cannot delete logged in user.');
 
     const userDetail = await this.userService.findOne({ where: { id } });

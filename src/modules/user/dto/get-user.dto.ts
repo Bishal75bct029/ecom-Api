@@ -1,6 +1,11 @@
 import { PaginationDto } from '@/common/dtos';
 import { IsOptional, IsString } from 'class-validator';
 
+export enum GET_USER_STATUS_ENUM {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+}
+
 export class GetUserListQueryDto extends PaginationDto {
   @IsString()
   @IsOptional()
@@ -8,5 +13,5 @@ export class GetUserListQueryDto extends PaginationDto {
 
   @IsString()
   @IsOptional()
-  status?: 'active' | 'inactive';
+  status?: GET_USER_STATUS_ENUM;
 }
