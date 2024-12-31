@@ -1,5 +1,5 @@
 import { SESSION_COOKIE_NAME } from '@/app.constants';
-import { ValidateIDDto } from '@/common/dtos';
+import { STATUS_ENUM, ValidateIDDto } from '@/common/dtos';
 import { SQSService } from '@/common/module/aws/sqs.service';
 import { getPaginatedResponse } from '@/common/utils';
 import { envConfig } from '@/configs/envConfig';
@@ -34,7 +34,7 @@ import {
   ValidateOtpDto,
   ValidatePasswordResetTokenQuery,
 } from '../dto/create-user.dto';
-import { GET_USER_STATUS_ENUM, GetUserListQueryDto } from '../dto/get-user.dto';
+import { GetUserListQueryDto } from '../dto/get-user.dto';
 import { UserRoleEnum } from '../entities/user.entity';
 import { UserService } from '../services/user.service';
 
@@ -256,11 +256,11 @@ export class AdminUserController {
       where: [
         {
           name: search ? ILike(`%${search}%`) : undefined,
-          isActive: !status ? undefined : status.toLowerCase() === GET_USER_STATUS_ENUM.ACTIVE.toLowerCase(),
+          isActive: !status ? undefined : status.toLowerCase() === STATUS_ENUM.ACTIVE.toLowerCase(),
         },
         {
           email: search ? ILike(`%${search}%`) : undefined,
-          isActive: !status ? undefined : status.toLowerCase() === GET_USER_STATUS_ENUM.ACTIVE.toLowerCase(),
+          isActive: !status ? undefined : status.toLowerCase() === STATUS_ENUM.ACTIVE.toLowerCase(),
         },
       ],
       order: { updatedAt: 'DESC' },

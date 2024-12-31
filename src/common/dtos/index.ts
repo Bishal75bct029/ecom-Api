@@ -19,3 +19,8 @@ export class PaginationDto {
   @Min(1, { message: 'Invalid limit: Please provide value greater than 0.' })
   page?: number;
 }
+
+export enum STATUS_ENUM {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+}

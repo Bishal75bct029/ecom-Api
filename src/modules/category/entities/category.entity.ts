@@ -1,8 +1,8 @@
 import { BaseEntity } from '@/libs/entity/base.entity';
 import { ProductEntity } from '@/modules/product/entities';
 import { Entity, Tree, Column, TreeChildren, TreeParent, ManyToMany, ManyToOne } from 'typeorm';
-import { CategoryStatusEnum } from '../dto';
 import { UserEntity } from '@/modules/user/entities';
+import { STATUS_ENUM } from '@/common/dtos';
 
 @Entity({ name: 'categories' })
 @Tree('materialized-path')
@@ -13,8 +13,8 @@ export class CategoryEntity extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   image: string;
 
-  @Column({ type: 'enum', enum: CategoryStatusEnum, default: CategoryStatusEnum.INACTIVE })
-  status: CategoryStatusEnum;
+  @Column({ type: 'enum', enum: STATUS_ENUM, default: STATUS_ENUM.INACTIVE })
+  status: STATUS_ENUM;
 
   @TreeChildren({ cascade: true })
   children: CategoryEntity[];
