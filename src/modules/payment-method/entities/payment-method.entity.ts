@@ -8,6 +8,12 @@ export class PaymentMethodEntity extends BaseEntity {
   @Column({ name: 'name', nullable: false, unique: true })
   name: string;
 
+  @Column({ name: 'description', type: 'text', nullable: true })
+  description: string;
+
+  @Column({ name: 'image', type: 'varchar', nullable: true })
+  image: string;
+
   @Column({ name: 'isActive', type: 'bool', nullable: false, default: true })
   isActive: boolean;
 
