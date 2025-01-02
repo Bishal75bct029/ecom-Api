@@ -12,7 +12,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { ValidateIDDto } from '@/common/dtos';
 import { PRODUCT_STATUS_ENUM } from '../entities';
 
@@ -25,10 +25,16 @@ export class Variant extends ValidateIDDto {
 export class CreateProductDto {
   @IsString()
   @IsNotEmpty()
+  @Transform(({ value }) => {
+    const val = value.replace(/\s+/g, ' ').trim();
+    if (val.length > 50) throw new Error('Product name must be less than 50 characters.');
+    return val;
+  })
   title: string;
 
   @IsString()
   @IsOptional()
+  @Transform(({ value }) => value?.trim())
   description: string;
 
   @IsOptional()
@@ -83,9 +89,9 @@ export class AttributeValue extends ValidateIDDto {
 }
 
 export class CreateProductMetaDto extends ValidateIDDto {
-  @IsString()
-  @IsNotEmpty()
-  sku: string;
+  // @IsString()
+  // @IsNotEmpty()
+  // sku: string;
 
   @IsArray()
   @IsOptional()

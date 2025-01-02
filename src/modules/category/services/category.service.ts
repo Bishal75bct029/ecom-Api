@@ -121,4 +121,37 @@ export class CategoryService extends CategoryRepository {
     }
     return array;
   }
+
+  findLastCategory(categories: CategoryEntity[]) {
+    if (categories.length === 0) return null;
+
+    const categoryMap = new Map<string, CategoryEntity[]>();
+    let rootCategory: CategoryEntity | null = null;
+
+    for (const category of categories) {
+      if (!category.id) continue;
+
+      if (category.parent === null) {
+        rootCategory = category;
+      } else {
+        const parentId = category.parent.id;
+        if (!categoryMap.has(parentId)) {
+          categoryMap.set(parentId, []);
+        }
+        categoryMap.get(parentId)!.push(category);
+      }
+    }
+
+    if (!rootCategory) return null;
+
+    const findLast = (category: CategoryEntity): string => {
+      const children = categoryMap.get(category.id) || [];
+      if (children.length === 0) {
+        return category.id;
+      }
+      return findLast(children[children.length - 1]);
+    };
+
+    return findLast(rootCategory);
+  }
 }

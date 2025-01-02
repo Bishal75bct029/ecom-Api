@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ProductRepository } from '../repositories/product.repository';
 import combinate from 'combinate';
-import { PRODUCT_STATUS_ENUM, ProductEntity } from '../entities';
+import { PRODUCT_STATUS_ENUM, type ProductEntity, type ProductMetaEntity } from '../entities';
 import { Attribute, CreateProductMetaDto } from '../dto';
 import { getRoundedOffValue } from '@/common/utils';
-import type { CategoryEntity } from '@/modules/category/entities/category.entity';
 
 @Injectable()
 export class ProductService extends ProductRepository {
@@ -78,36 +77,18 @@ export class ProductService extends ProductRepository {
         return false;
     }
   }
-  findLastCategory(categories: CategoryEntity[]) {
-    if (categories.length === 0) return null;
 
-    const categoryMap = new Map<string, CategoryEntity[]>();
-    let rootCategory: CategoryEntity | null = null;
+  async findNewMetaIdsForProduct(existingMetas: ProductMetaEntity[], updatedMetas: CreateProductMetaDto[]) {
+    const existingVariantsMap = new Map(existingMetas.map((variant) => [variant.id, variant]));
+    const newMetaIds = [];
 
-    for (const category of categories) {
-      if (!category.id) continue;
-
-      if (category.parent === null) {
-        rootCategory = category;
-      } else {
-        const parentId = category.parent.id;
-        if (!categoryMap.has(parentId)) {
-          categoryMap.set(parentId, []);
-        }
-        categoryMap.get(parentId)!.push(category);
+    for (const variant of updatedMetas) {
+      const existingVariant = existingVariantsMap.get(variant.id);
+      if (!existingVariant) {
+        newMetaIds.push(variant.id);
       }
     }
 
-    if (!rootCategory) return null;
-
-    const findLast = (category: CategoryEntity): string => {
-      const children = categoryMap.get(category.id) || [];
-      if (children.length === 0) {
-        return category.id;
-      }
-      return findLast(children[children.length - 1]);
-    };
-
-    return findLast(rootCategory);
+    return newMetaIds;
   }
 }
