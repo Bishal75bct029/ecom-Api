@@ -23,4 +23,28 @@ export class CategoryService extends CategoryRepository {
     }
     return ids;
   }
+
+  addPropertiesToNestedTree = <T extends { children?: T[] }>(data: T[], propertyToAdd?: Record<string, any>): T[] => {
+    if (!data || !data.length) return [];
+    return data.map((category) => ({
+      ...category,
+      ...(propertyToAdd || {}),
+      children: category.children ? this.addPropertiesToNestedTree(category.children, propertyToAdd) : [],
+    }));
+  };
+
+  pickPropertiesFromNestedTree = <T extends { children?: T[] }>(data: T[], propertyToPick: (keyof T)[]) => {
+    if (!data || !data.length) return [];
+    return data.map((category) => ({
+      ...propertyToPick.reduce((acc, curr) => {
+        if (category[curr]) {
+          acc[curr] = category[curr];
+        }
+        return acc;
+      }, {} as T),
+      ...(category.children && category.children.length
+        ? { children: this.pickPropertiesFromNestedTree(category.children, propertyToPick) }
+        : {}),
+    }));
+  };
 }
