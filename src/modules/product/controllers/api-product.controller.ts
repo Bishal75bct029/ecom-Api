@@ -8,7 +8,6 @@ import { ApiGetProductsDto } from '../dto/get-products-filteredList-dto';
 import { SimilarProductsDto } from '../dto/similarProducts.dto';
 import { CategoryService } from '@/modules/category/services/category.service';
 // import { HttpsService } from '@/libs/https/https.service';
-import { getAllTreeIds } from '../helpers';
 import { getPaginatedResponse } from '@/common/utils';
 import { ValidateIDDto } from '@/common/dtos';
 
@@ -86,7 +85,7 @@ export class ApiProductController {
     if (!existingCategory) throw new NotFoundException('Category not found');
 
     const categoryTrees = await this.categoryService.findDescendantsTree(existingCategory);
-    const categoryIds = getAllTreeIds(categoryTrees);
+    const categoryIds = this.categoryService.getAllTreeIds(categoryTrees);
 
     const products = await this.productService.find({
       relations: ['productMeta', 'categories'],

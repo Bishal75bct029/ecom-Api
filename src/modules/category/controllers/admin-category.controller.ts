@@ -14,7 +14,6 @@ import {
 } from '../dto';
 import { getPaginatedResponse } from '@/common/utils';
 import { ValidateIDDto } from '@/common/dtos';
-import { addPropertiesToNestedTree, pickPropertiesFromNestedTree } from '../helpers';
 import { type CategoryEntity } from '../entities/category.entity';
 import { envConfig } from '@/configs/envConfig';
 import { RedisService } from '@/libs/redis/redis.service';
@@ -101,7 +100,7 @@ export class AdminCategoryController {
   @Get('dropdown')
   async listCategoriesForDropdown(@Query() { depth }: GetCategoryDropdownQuery) {
     const categories = await this.categoryService.findTrees(depth ? { depth: depth - 1 } : undefined);
-    return pickPropertiesFromNestedTree(categories, ['id', 'name']);
+    return this.categoryService.pickPropertiesFromNestedTree(categories, ['id', 'name']);
   }
 
   @Get(':id')
@@ -135,7 +134,7 @@ export class AdminCategoryController {
       throw new BadRequestException('Parent category name must be unique.');
     }
 
-    children = addPropertiesToNestedTree(children, { updatedBy: { id: user.id }, status });
+    children = this.categoryService.addPropertiesToNestedTree(children, { updatedBy: { id: user.id }, status });
 
     await Promise.all([
       this.categoryService.createAndSave(
@@ -183,7 +182,7 @@ export class AdminCategoryController {
     }
 
     // update
-    children = addPropertiesToNestedTree(children, { updatedBy: { id: user.id }, status });
+    children = this.categoryService.addPropertiesToNestedTree(children, { updatedBy: { id: user.id }, status });
     await Promise.all([
       this.categoryService.createAndSave(
         {
