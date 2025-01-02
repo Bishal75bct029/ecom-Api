@@ -256,15 +256,28 @@ export class AdminProductController {
 
       // updating metas and deleting old metas
       const requestMetaIds = requestProductMetas.map((meta) => meta.id);
+      const productMetaIds = product.productMeta.map((meta) => meta.id);
+      const newMetaIds = requestMetaIds.filter((id) => !productMetaIds.includes(id));
       const productMetasToDelete = product.productMeta.filter((meta) => !requestMetaIds.includes(meta.id));
 
       const newProductMetas = this.productMetaService.createMany(
-        requestProductMetas.map((meta, index) => ({
-          ...meta,
-          product: { id },
-          price: Number(meta.price) * 100,
-          isDefault: index === 0,
-        })),
+        requestProductMetas.map((meta, index) => {
+          const newMeta = {
+            ...meta,
+            product: { id },
+            price: Number(meta.price) * 100,
+            isDefault: index === 0,
+          };
+
+          if (newMetaIds.includes(meta.id)) {
+            return {
+              ...newMeta,
+              sku: Date.now().toLocaleString(),
+            };
+          }
+
+          return newMeta;
+        }),
       );
 
       // updating product and product metas
