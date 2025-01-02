@@ -93,4 +93,10 @@ export abstract class AbstractService<T> {
   createQueryBuilder(alias?: string, queryRunner?: QueryRunner): SelectQueryBuilder<T> {
     return this.repository.createQueryBuilder(alias, queryRunner);
   }
+
+  async restore(
+    criteria: string | string[] | number | number[] | Date | Date[] | ObjectId | ObjectId[] | FindOptionsWhere<T>,
+  ) {
+    return this.repository.restore(criteria);
+  }
 }

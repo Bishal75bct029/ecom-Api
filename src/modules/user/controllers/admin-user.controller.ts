@@ -23,7 +23,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
-import { ILike } from 'typeorm';
+import { ILike, Not } from 'typeorm';
 import { EditProfileDto, PasswordChangeDto, UpdateUserDto } from '../dto';
 import {
   CreateAdminUserDto,
@@ -246,7 +246,7 @@ export class AdminUserController {
   }
 
   @Get()
-  async getUsersList(@Query() query: GetUserListQueryDto) {
+  async getUsersList(@Query() query: GetUserListQueryDto, @Req() req: Request) {
     const { page = 1, limit = 10, search, status } = query;
 
     const [users, count] = await this.userService.findAndCount({
@@ -255,10 +255,12 @@ export class AdminUserController {
       take: limit,
       where: [
         {
+          id: Not(req.session.user.id),
           name: search ? ILike(`%${search}%`) : undefined,
           isActive: !status ? undefined : status.toLowerCase() === STATUS_ENUM.ACTIVE.toLowerCase(),
         },
         {
+          id: Not(req.session.user.id),
           email: search ? ILike(`%${search}%`) : undefined,
           isActive: !status ? undefined : status.toLowerCase() === STATUS_ENUM.ACTIVE.toLowerCase(),
         },
@@ -314,13 +316,32 @@ export class AdminUserController {
 
   @Delete(':id')
   async deleteUser(@Req() { session: { user: reqUserDetail } }: Request, @Param() { id }: ValidateIDDto) {
-    if (id === reqUserDetail.id) throw new BadRequestException('Cannot delete logged in user.');
+    if (id === reqUserDetail.id) throw new BadRequestException('Cannot delete yourself.');
 
     const userDetail = await this.userService.findOne({ where: { id } });
 
     if (!userDetail) throw new BadRequestException('User not found');
 
-    await this.userService.softDelete(userDetail.id);
+    await this.userService.update(
+      { id: userDetail.id },
+      { deletedAt: new Date(), deletedBy: { id: reqUserDetail.id } },
+    );
+
+    return;
+  }
+
+  @Put(':id/restore')
+  async restoreDeletedUser(@Param() { id }: ValidateIDDto) {
+    const userDetail = await this.userService.findOne({ where: { id }, withDeleted: true });
+
+    if (!userDetail) throw new BadRequestException('User not found.');
+    if (!userDetail.deletedAt) throw new BadRequestException('User is not deleted.');
+
+    // Allow undo delete within 2 minutes of deletion
+    const canBeDeleted = new Date().getTime() - new Date(userDetail.deletedAt).getTime() < 2 * 60 * 1000;
+    if (!canBeDeleted) throw new BadRequestException('User cannot be restored.');
+
+    await this.userService.update({ id: userDetail.id }, { deletedAt: null, deletedBy: null });
     return;
   }
 }
