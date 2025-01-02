@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 
 import { BaseEntity } from '@/libs/entity/base.entity';
 import { CartEntity } from '@/modules/cart/entities/cart.entity';
@@ -66,4 +66,11 @@ export class UserEntity extends BaseEntity {
 
   @OneToMany(() => CategoryEntity, (category) => category.updatedAt)
   updatedProduct: ProductEntity[];
+
+  @ManyToOne(() => UserEntity, (user) => user.deletedUsers, { nullable: true })
+  @JoinColumn({ name: 'deletedBy' })
+  deletedBy?: UserEntity;
+
+  @OneToMany(() => UserEntity, (user) => user.deletedBy)
+  deletedUsers?: UserEntity[];
 }
