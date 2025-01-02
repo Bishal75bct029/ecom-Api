@@ -14,7 +14,7 @@ export enum PRODUCT_STATUS_ENUM {
 }
 @Entity({ name: 'products' })
 export class ProductEntity extends BaseEntity {
-  @Column()
+  @Column({ unique: true })
   name: string;
 
   @Column({ type: 'text', nullable: false })
