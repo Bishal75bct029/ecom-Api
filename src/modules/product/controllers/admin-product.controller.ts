@@ -188,6 +188,7 @@ export class AdminProductController {
         requestProductMetas.map((meta, index) => ({
           ...meta,
           product,
+          sku: Date.now().toLocaleString(),
           price: meta.price * 100,
           isDefault: index === 0,
         })),
