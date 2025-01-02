@@ -225,9 +225,12 @@ export class AdminProductController {
     const product = await this.productService.findOne({ where: { id }, relations: ['productMeta'] });
     if (!product) throw new BadRequestException('Product not found.');
 
+    if (product.status === PRODUCT_STATUS_ENUM.PUBLISHED)
+      throw new BadRequestException('Published product cannot be updated.');
+
     const newMetaIds = await this.productService.findNewMetaIdsForProduct(product.productMeta, requestProductMetas);
     if (await this.productMetaService.findOne({ where: { id: In(newMetaIds) }, select: ['id'] })) {
-      throw new BadRequestException('Variant doesnot exist in current product');
+      throw new BadRequestException('Variant doesnot exist in current product.');
     }
 
     const isValidStatusChange = this.productService.validateStatusChange(product.status, updateProductDto.status);
@@ -334,10 +337,21 @@ export class AdminProductController {
         productMeta: {
           id: true,
         },
+        status: true,
       },
     });
 
     if (!product) throw new BadRequestException('Product not found');
+
+    switch (product.status) {
+      case PRODUCT_STATUS_ENUM.PUBLISHED:
+        throw new BadRequestException('Published product cannot be deleted.');
+      case PRODUCT_STATUS_ENUM.SCHEDULED:
+        await this.productScheduleQueueService.removeJob(product.id);
+        break;
+      default:
+        break;
+    }
 
     await Promise.all([this.productService.softRemove(product), this.redisService.invalidateProducts()]);
 

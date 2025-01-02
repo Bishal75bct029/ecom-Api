@@ -4,12 +4,16 @@ import { PRODUCT_SCHEDULAR_QUEUE } from '../constants';
 import { ProductService } from '@/modules/product/services';
 import { PRODUCT_STATUS_ENUM } from '@/modules/product/entities';
 import { ProductScheduleJob } from './types';
+import { RedisService } from '@/libs/redis/redis.service';
 
 @Processor(PRODUCT_SCHEDULAR_QUEUE)
 export class ProductProcessor extends WorkerHost {
   private readonly logger = new Logger(`${ProductProcessor.name}:${PRODUCT_SCHEDULAR_QUEUE}`);
 
-  constructor(private readonly productService: ProductService) {
+  constructor(
+    private readonly productService: ProductService,
+    private readonly redisService: RedisService,
+  ) {
     super();
   }
   async process(job: ProductScheduleJob): Promise<void> {
@@ -20,7 +24,13 @@ export class ProductProcessor extends WorkerHost {
     if (!data.productId) throw Error('Product Id is required.');
     const doesProductExist = await this.productService.findOne({ where: { id: data.productId } });
     if (!doesProductExist) throw Error(`Product with id ${data.productId} not found.`);
-    await this.productService.update({ id: data.productId }, { status: PRODUCT_STATUS_ENUM.PUBLISHED });
+    await Promise.all([
+      this.productService.update(
+        { id: data.productId },
+        { status: PRODUCT_STATUS_ENUM.PUBLISHED, scheduledDate: null },
+      ),
+      this.redisService.invalidateProducts(),
+    ]);
     this.logger.log(`Job ${job.id} processed successfully: ${{ type: job.name, ...data }}`);
     return;
   }
