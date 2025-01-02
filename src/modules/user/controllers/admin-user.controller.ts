@@ -193,7 +193,10 @@ export class AdminUserController {
     const otp = await this.redisService.get(user.email + '_OTP');
     if (!otp || otp != otpDto.otp) throw new BadRequestException('The code you entered is incorrect.');
 
-    await this.redisService.delete(user.email + '_OTP');
+    await Promise.all([
+      this.redisService.delete(user.email + '_OTP'),
+      this.userService.update({ id: user.id }, { lastLogInDate: new Date() }),
+    ]);
     delete user.password;
     req.session.user = user;
     return { message: 'Logged in successfully.' };
