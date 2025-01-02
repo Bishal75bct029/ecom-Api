@@ -12,7 +12,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { ValidateIDDto } from '@/common/dtos';
 import { PRODUCT_STATUS_ENUM } from '../entities';
 
@@ -25,10 +25,12 @@ export class Variant extends ValidateIDDto {
 export class CreateProductDto {
   @IsString()
   @IsNotEmpty()
+  @Transform(({ value }) => value?.trim())
   title: string;
 
   @IsString()
   @IsOptional()
+  @Transform(({ value }) => value?.trim())
   description: string;
 
   @IsOptional()

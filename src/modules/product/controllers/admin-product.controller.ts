@@ -1,7 +1,8 @@
 import { Controller, Get, Post, Body, Put, Param, BadRequestException, Query, Delete, Req } from '@nestjs/common';
 import { Request } from 'express';
 import { ApiTags } from '@nestjs/swagger';
-import { DataSource, FindManyOptions, ILike } from 'typeorm';
+import { DataSource, FindManyOptions, ILike, In } from 'typeorm';
+
 import { ProductService, ProductMetaService } from '../services';
 import { CreateProductDto, UpdateProductDto } from '../dto';
 import { CategoryService } from '../../category/services/category.service';
@@ -142,9 +143,14 @@ export class AdminProductController {
     });
 
     const { name, productMeta, categories, ...rest } = product;
-    const categoryId = this.productService.findLastCategory(categories);
+    const categoryId = this.categoryService.findLastCategory(categories);
 
-    return { ...rest, title: name, variants: productMeta, categoryId };
+    return {
+      ...rest,
+      title: name,
+      variants: productMeta.map((meta) => ({ ...meta, price: getRoundedOffValue(Number(meta.price) / 10000) })),
+      categoryId,
+    };
   }
 
   @Post()
@@ -166,7 +172,6 @@ export class AdminProductController {
     let product: ProductEntity;
     await this.dataSource.transaction(async (entityManager) => {
       const newProduct = this.productService.create({ ...rest, categories: categoryIds.map((id) => ({ id })) });
-      const newProductMetas = this.productMetaService.createMany(requestProductMetas);
 
       product = await entityManager.save(ProductEntity, {
         ...newProduct,
@@ -178,9 +183,14 @@ export class AdminProductController {
         scheduledDate,
       });
 
-      product.productMeta = await entityManager.save(
+      await entityManager.insert(
         ProductMetaEntity,
-        newProductMetas.map((meta, index) => ({ ...meta, product, price: meta.price * 100, isDefault: index === 0 })),
+        requestProductMetas.map((meta, index) => ({
+          ...meta,
+          product,
+          price: meta.price * 100,
+          isDefault: index === 0,
+        })),
       );
     });
 
@@ -214,6 +224,11 @@ export class AdminProductController {
     const product = await this.productService.findOne({ where: { id }, relations: ['productMeta'] });
     if (!product) throw new BadRequestException('Product not found.');
 
+    const newMetaIds = await this.productService.findNewMetaIdsForProduct(product.productMeta, requestProductMetas);
+    if (await this.productMetaService.findOne({ where: { id: In(newMetaIds) }, select: ['id'] })) {
+      throw new BadRequestException('Variant doesnot exist in current product');
+    }
+
     const isValidStatusChange = this.productService.validateStatusChange(product.status, updateProductDto.status);
     if (!isValidStatusChange)
       throw new BadRequestException(
@@ -246,7 +261,7 @@ export class AdminProductController {
         requestProductMetas.map((meta, index) => ({
           ...meta,
           product: { id },
-          price: Number(meta.price),
+          price: Number(meta.price) * 100,
           isDefault: index === 0,
         })),
       );
