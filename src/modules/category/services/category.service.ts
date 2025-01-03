@@ -49,17 +49,23 @@ export class CategoryService extends CategoryRepository {
       });
     }
 
-    return data.map((category) => ({
-      ...propertyToPick.reduce((acc, curr) => {
-        if (category[curr] && curr !== 'createdAt') {
-          acc[curr] = category[curr];
-        }
-        return acc;
-      }, {} as T),
-      ...(category.children && category.children.length
-        ? { children: this.pickPropertiesFromNestedTree(category.children, propertyToPick) }
-        : {}),
-    }));
+    const isActiveCategory = (item: T): boolean => {
+      return 'status' in item && (item as any).status?.toLowerCase() === 'active';
+    };
+
+    return data
+      .filter((category) => isActiveCategory(category))
+      .map((category) => ({
+        ...propertyToPick.reduce((acc, curr) => {
+          if (category[curr] && curr !== 'createdAt') {
+            acc[curr] = category[curr];
+          }
+          return acc;
+        }, {} as T),
+        ...(category.children && category.children.length
+          ? { children: this.pickPropertiesFromNestedTree(category.children, propertyToPick) }
+          : {}),
+      }));
   };
 
   getAllTreeIds(tree: CategoryEntity): string[] {
