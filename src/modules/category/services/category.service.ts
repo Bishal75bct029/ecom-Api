@@ -35,9 +35,23 @@ export class CategoryService extends CategoryRepository {
 
   pickPropertiesFromNestedTree = <T extends { children?: T[] }>(data: T[], propertyToPick: (keyof T)[]) => {
     if (!data || !data.length) return [];
+    const hasCreatedAt = (item: T): item is T & { createdAt: Date } => {
+      return 'createdAt' in item && item.createdAt instanceof Date;
+    };
+
+    if (propertyToPick.includes('createdAt' as keyof T)) {
+      data = data.sort((a, b) => {
+        if (hasCreatedAt(a) && hasCreatedAt(b)) {
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
+
+        return 0;
+      });
+    }
+
     return data.map((category) => ({
       ...propertyToPick.reduce((acc, curr) => {
-        if (category[curr]) {
+        if (category[curr] && curr !== 'createdAt') {
           acc[curr] = category[curr];
         }
         return acc;

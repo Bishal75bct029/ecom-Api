@@ -100,7 +100,7 @@ export class AdminCategoryController {
   @Get('dropdown')
   async listCategoriesForDropdown(@Query() { depth }: GetCategoryDropdownQuery) {
     const categories = await this.categoryService.findTrees(depth ? { depth: depth - 1 } : undefined);
-    return this.categoryService.pickPropertiesFromNestedTree(categories, ['id', 'name']);
+    return this.categoryService.pickPropertiesFromNestedTree(categories, ['id', 'name', 'createdAt']);
   }
 
   @Get(':id')
