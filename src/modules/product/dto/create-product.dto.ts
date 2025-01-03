@@ -27,13 +27,13 @@ export class CreateProductDto {
   @IsNotEmpty()
   @Transform(({ value }) => {
     const val = value.replace(/\s+/g, ' ').trim();
-    if (val.length > 50) throw new Error('Product name must be less than 50 characters.');
+    if (val.length > 250) throw new Error('Product name must be less than 250 characters.');
     return val;
   })
   title: string;
 
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
   @Transform(({ value }) => value?.trim())
   description: string;
 

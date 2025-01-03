@@ -35,17 +35,37 @@ export class CategoryService extends CategoryRepository {
 
   pickPropertiesFromNestedTree = <T extends { children?: T[] }>(data: T[], propertyToPick: (keyof T)[]) => {
     if (!data || !data.length) return [];
-    return data.map((category) => ({
-      ...propertyToPick.reduce((acc, curr) => {
-        if (category[curr]) {
-          acc[curr] = category[curr];
+    const hasCreatedAt = (item: T): item is T & { createdAt: Date } => {
+      return 'createdAt' in item && item.createdAt instanceof Date;
+    };
+
+    if (propertyToPick.includes('createdAt' as keyof T)) {
+      data = data.sort((a, b) => {
+        if (hasCreatedAt(a) && hasCreatedAt(b)) {
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         }
-        return acc;
-      }, {} as T),
-      ...(category.children && category.children.length
-        ? { children: this.pickPropertiesFromNestedTree(category.children, propertyToPick) }
-        : {}),
-    }));
+
+        return 0;
+      });
+    }
+
+    const isActiveCategory = (item: T): boolean => {
+      return 'status' in item && (item as any).status?.toLowerCase() === 'active';
+    };
+
+    return data
+      .filter((category) => isActiveCategory(category))
+      .map((category) => ({
+        ...propertyToPick.reduce((acc, curr) => {
+          if (category[curr] && curr !== 'createdAt') {
+            acc[curr] = category[curr];
+          }
+          return acc;
+        }, {} as T),
+        ...(category.children && category.children.length
+          ? { children: this.pickPropertiesFromNestedTree(category.children, propertyToPick) }
+          : {}),
+      }));
   };
 
   getAllTreeIds(tree: CategoryEntity): string[] {
