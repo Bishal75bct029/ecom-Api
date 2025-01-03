@@ -75,6 +75,7 @@ export class AdminProductController {
         id: true,
         name: true,
         status: true,
+        scheduledDate: true,
         images: true,
         productMeta: true,
         stock: true,
