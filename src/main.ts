@@ -102,6 +102,7 @@ BigInt.prototype.toJSON = function () {
   await app.listen(envConfig.PORT, '0.0.0.0', () => {
     const server = app.getHttpServer();
     transformAllRoutes(server);
+    console.log('hello test ');
     Logger.log(`Listening on port ${envConfig.PORT}`);
   });
 })();
