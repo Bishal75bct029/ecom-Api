@@ -6,7 +6,7 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class OrderRepository extends AbstractService<OrderEntity> {
-  constructor(@InjectRepository(OrderEntity) private readonly itemRepository: Repository<OrderEntity>) {
-    super(itemRepository);
+  constructor(@InjectRepository(OrderEntity) private readonly orderRepository: Repository<OrderEntity>) {
+    super(orderRepository);
   }
 }

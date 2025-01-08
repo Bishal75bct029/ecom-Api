@@ -9,10 +9,10 @@ import { OrderEntity, OrderStatusEnum } from '@/modules/order/entities/order.ent
 @Injectable()
 export class ReviewRepository extends AbstractService<ReviewEntity> {
   constructor(
-    @InjectRepository(ReviewEntity) private readonly itemRepository: Repository<ReviewEntity>,
+    @InjectRepository(ReviewEntity) private readonly reviewRepository: Repository<ReviewEntity>,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {
-    super(itemRepository);
+    super(reviewRepository);
   }
 
   async hasProductDelivered(productMetaIds: string[], userId: string): Promise<boolean> {

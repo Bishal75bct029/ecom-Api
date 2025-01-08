@@ -6,7 +6,9 @@ import { PaymentMethodEntity } from '../entities/payment-method.entity';
 
 @Injectable()
 export class PaymentMethodRepository extends AbstractService<PaymentMethodEntity> {
-  constructor(@InjectRepository(PaymentMethodEntity) private readonly itemRepository: Repository<PaymentMethodEntity>) {
-    super(itemRepository);
+  constructor(
+    @InjectRepository(PaymentMethodEntity) private readonly paymentMethodRepository: Repository<PaymentMethodEntity>,
+  ) {
+    super(paymentMethodRepository);
   }
 }

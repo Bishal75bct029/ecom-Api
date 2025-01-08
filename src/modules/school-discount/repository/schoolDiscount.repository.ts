@@ -7,8 +7,8 @@ import { SchoolDiscountEntity } from '../entities/schoolDiscount.entity';
 @Injectable()
 export class SchoolDiscountRepository extends AbstractService<SchoolDiscountEntity> {
   constructor(
-    @InjectRepository(SchoolDiscountEntity) private readonly itemRepository: Repository<SchoolDiscountEntity>,
+    @InjectRepository(SchoolDiscountEntity) private readonly schoolDiscountRepository: Repository<SchoolDiscountEntity>,
   ) {
-    super(itemRepository);
+    super(schoolDiscountRepository);
   }
 }

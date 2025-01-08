@@ -6,7 +6,7 @@ import { AbstractService } from '@/libs/service/abstract.service';
 
 @Injectable()
 export class PermissionRepository extends AbstractService<PermissionEntity> {
-  constructor(@InjectRepository(PermissionEntity) private readonly itemRepository: Repository<PermissionEntity>) {
-    super(itemRepository);
+  constructor(@InjectRepository(PermissionEntity) private readonly permissionRepository: Repository<PermissionEntity>) {
+    super(permissionRepository);
   }
 }

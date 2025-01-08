@@ -6,19 +6,19 @@ import { CategoryEntity } from '../entities/category.entity';
 
 @Injectable()
 export class CategoryRepository extends AbstractService<CategoryEntity> {
-  constructor(@InjectRepository(CategoryEntity) private readonly itemRepository: TreeRepository<CategoryEntity>) {
-    super(itemRepository);
+  constructor(@InjectRepository(CategoryEntity) private readonly categoryRepository: TreeRepository<CategoryEntity>) {
+    super(categoryRepository);
   }
 
   async findTrees(options: FindTreeOptions = {}) {
-    return this.itemRepository.findTrees(options);
+    return this.categoryRepository.findTrees(options);
   }
 
   async findDescendantsTree(entity: CategoryEntity, options: FindTreeOptions = {}) {
-    return this.itemRepository.findDescendantsTree(entity, options);
+    return this.categoryRepository.findDescendantsTree(entity, options);
   }
 
   async findAncestorsTree(entity: CategoryEntity, options: FindTreeOptions = {}) {
-    return this.itemRepository.findAncestorsTree(entity, options);
+    return this.categoryRepository.findAncestorsTree(entity, options);
   }
 }

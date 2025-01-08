@@ -6,7 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class UserRepository extends AbstractService<UserEntity> {
-  constructor(@InjectRepository(UserEntity) private readonly productRepository: Repository<UserEntity>) {
-    super(productRepository);
+  constructor(@InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>) {
+    super(userRepository);
   }
 }
