@@ -1,16 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { AbstractService } from '@/libs/service/abstract.service';
-import { UserEntity } from '../entities';
+import { UserRepository } from '../repositories/user.repository';
 
 @Injectable()
-export class UserService extends AbstractService<UserEntity> {
-  constructor(@InjectRepository(UserEntity) private readonly itemRepository: Repository<UserEntity>) {
-    super(itemRepository);
-  }
-
+export class UserService extends UserRepository {
   comparePassword(password: string, hashPassword: string) {
     return bcrypt.compareSync(password, hashPassword);
   }
