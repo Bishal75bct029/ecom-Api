@@ -3,6 +3,12 @@ import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { OrderEntity } from './order.entity';
 import { ProductMetaEntity } from '@/modules/product/entities/productMeta.entity';
 
+export enum OrderStatusEnum {
+  PLACED = 'PLACED',
+  SHIPPED = 'SHIPPED',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED',
+}
 @Entity('order_items')
 export class OrderItemEntity extends BaseEntity {
   @Column({ type: 'bigint' })
@@ -33,6 +39,9 @@ export class OrderItemEntity extends BaseEntity {
     },
   })
   totalPrice: number;
+
+  @Column({ type: 'enum', nullable: false, enum: OrderStatusEnum, default: OrderStatusEnum.PLACED })
+  status: OrderStatusEnum;
 
   @ManyToOne(() => ProductMetaEntity, (productMeta) => productMeta.id)
   @JoinColumn()

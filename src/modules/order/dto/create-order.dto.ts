@@ -1,5 +1,7 @@
+import { IsArray, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsUUID, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { IsArray, IsNotEmpty, IsNumber, IsString, IsUUID, ValidateNested } from 'class-validator';
+
+import { PaginationDto } from '@/common/dtos';
 
 export class CreateOrderDto {
   @IsArray()
@@ -7,12 +9,12 @@ export class CreateOrderDto {
   @Type(() => CreateOrderProductMetaDto)
   productMetaIds: CreateOrderProductMetaDto[];
 
-  @IsString()
+  @IsUUID('4', { message: 'Invalid payment method' })
   paymentMethodId: string;
 }
 
 class CreateOrderProductMetaDto {
-  @IsUUID()
+  @IsUUID('4', { message: 'Invalid product' })
   @IsNotEmpty()
   id: string;
 
@@ -21,12 +23,13 @@ class CreateOrderProductMetaDto {
   quantity: number;
 }
 
-export class OrderQueryDto {
-  @IsString()
-  status: OrderQueryEnum;
-}
-
 export enum OrderQueryEnum {
   ALL = 'all',
   PENDING = 'pending',
+}
+
+export class OrderQueryDto extends PaginationDto {
+  @IsEnum(OrderQueryEnum)
+  @IsOptional()
+  status: OrderQueryEnum;
 }
