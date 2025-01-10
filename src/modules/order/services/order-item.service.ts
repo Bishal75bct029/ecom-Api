@@ -8,7 +8,7 @@ import { OrderStatusEnum } from '../entities/order-item.entity';
 @Injectable()
 export class OrderItemService extends OrderItemRepository {
   private _statusTransitions: Record<OrderStatusEnum, OrderStatusEnum[]> = {
-    [OrderStatusEnum.PLACED]: [OrderStatusEnum.SHIPPED],
+    [OrderStatusEnum.PENDING]: [OrderStatusEnum.SHIPPED],
     [OrderStatusEnum.SHIPPED]: [OrderStatusEnum.DELIVERED],
     [OrderStatusEnum.DELIVERED]: [],
     [OrderStatusEnum.CANCELLED]: [],

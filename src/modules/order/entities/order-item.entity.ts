@@ -4,7 +4,7 @@ import { OrderEntity } from './order.entity';
 import { ProductMetaEntity } from '@/modules/product/entities/productMeta.entity';
 
 export enum OrderStatusEnum {
-  PLACED = 'PLACED',
+  PENDING = 'PENDING',
   SHIPPED = 'SHIPPED',
   DELIVERED = 'DELIVERED',
   CANCELLED = 'CANCELLED',
@@ -40,7 +40,7 @@ export class OrderItemEntity extends BaseEntity {
   })
   totalPrice: number;
 
-  @Column({ type: 'enum', nullable: false, enum: OrderStatusEnum, default: OrderStatusEnum.PLACED })
+  @Column({ type: 'enum', nullable: false, enum: OrderStatusEnum, default: OrderStatusEnum.PENDING })
   status: OrderStatusEnum;
 
   @ManyToOne(() => ProductMetaEntity, (productMeta) => productMeta.id)
