@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req, BadRequestException, Query, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, Req, BadRequestException, Query, Get, Param, Put } from '@nestjs/common';
 import { Request } from 'express';
 import { DataSource, In } from 'typeorm';
 import { ApiTags } from '@nestjs/swagger';
@@ -14,7 +14,7 @@ import { CartService } from '@/modules/cart/services/cart.service';
 import { OrderService } from '../services/order.service';
 import { PaypalService } from '@/common/module/payment/paypal.service';
 import { SchoolDiscountEntity } from '@/modules/school-discount/entities/schoolDiscount.entity';
-import { ProductMetaEntity } from '@/modules/product/entities';
+import { ProductEntity, ProductMetaEntity } from '@/modules/product/entities';
 import { OrderEntity } from '../entities/order.entity';
 import { OrderItemEntity, OrderStatusEnum } from '../entities/order-item.entity';
 import { CartEntity } from '@/modules/cart/entities/cart.entity';
@@ -305,5 +305,55 @@ export class ApiOrderController {
         updatedAt: true,
       },
     });
+  }
+
+  @Put('cancel-order/:id')
+  async cancelOrder(@Req() { session: { user } }: Request, @Param() { id }: ValidateIDDto) {
+    const order = await this.orderService.findOne({
+      where: { id, user: { id: user.id } },
+      relations: ['orderItems', 'orderItems.productMeta'],
+    });
+    if (!order) throw new BadRequestException('Order not found.');
+
+    if (!this.orderService.isOrderCancellable(OrderStatusEnum.CANCELLED, order.orderItems))
+      throw new BadRequestException('Cannot cancel order.');
+
+    await this.dataSource.transaction(async (entityManager) => {
+      const productMetas = await this.productMetaService.find({
+        where: { id: In(order.orderItems.map((item) => item.productMeta.id)) },
+        relations: ['product'],
+        select: {
+          id: true,
+          stock: true,
+          product: {
+            id: true,
+            stock: true,
+          },
+        },
+      });
+
+      const stockUpdatedProduct = new Map<string, ProductEntity>();
+      productMetas.forEach((productMeta) => {
+        const increasedStock = order.orderItems.find((item) => item.productMeta.id === productMeta.id).quantity;
+        productMeta.stock += Number(increasedStock ?? 0);
+
+        const product = stockUpdatedProduct.get(productMeta.product.id) || { ...productMeta.product };
+        product.stock += Number(increasedStock ?? 0);
+        stockUpdatedProduct.set(productMeta.product.id, product);
+      });
+
+      const cancelledOrderItems = order.orderItems.map((item) => ({
+        ...item,
+        status: OrderStatusEnum.CANCELLED,
+      }));
+
+      await Promise.all([
+        entityManager.save(ProductMetaEntity, productMetas),
+        entityManager.save(ProductEntity, [...stockUpdatedProduct.values()]),
+        entityManager.save(OrderItemEntity, cancelledOrderItems),
+      ]);
+    });
+
+    return { message: 'Order cancelled successfully' };
   }
 }

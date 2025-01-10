@@ -9,6 +9,7 @@ import { ProductMetaEntity } from '../../product/entities/productMeta.entity';
 import { ValidateIDDto } from '@/common/dtos';
 import { OrderItemService } from '../services/order-item.service';
 import { OrderItemEntity, OrderStatusEnum } from '../entities/order-item.entity';
+import { ProductEntity } from '@/modules/product/entities';
 
 @ApiTags('Admin Order')
 @Controller('admin/orders')
@@ -70,17 +71,34 @@ export class AdminOrderController {
         const orderItemsIds = order.orderItems.map((orderItem) => orderItem.id);
         const productMetas = await this.productMetaService.find({
           where: { id: In(orderItemsIds) },
+          relations: ['product'],
+          select: {
+            id: true,
+            stock: true,
+            product: {
+              id: true,
+              stock: true,
+            },
+          },
         });
+
+        const stockUpdatedProduct = new Map<string, ProductEntity>();
         productMetas.forEach((productMeta) => {
-          productMeta.stock =
-            productMeta.stock + order.orderItems.find((item) => item.productMeta.id === productMeta.id).quantity;
+          const increasedStock = order.orderItems.find((item) => item.productMeta.id === productMeta.id).quantity;
+          productMeta.stock += Number(increasedStock ?? 0);
+
+          const product = stockUpdatedProduct.get(productMeta.product.id) || { ...productMeta.product };
+          product.stock += Number(increasedStock ?? 0);
+          stockUpdatedProduct.set(productMeta.product.id, product);
         });
 
         const createdOrderItems = this.orderItemService.createMany(
           order.orderItems.map((item) => ({ ...item, status: OrderStatusEnum.CANCELLED })),
         );
+
         await Promise.all([
           entityManager.save(OrderItemEntity, createdOrderItems),
+          entityManager.save(ProductEntity, [...stockUpdatedProduct.values()]),
           entityManager.save(ProductMetaEntity, productMetas),
         ]);
 
