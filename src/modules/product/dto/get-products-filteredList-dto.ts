@@ -85,7 +85,7 @@ export class GetAdminProductsQuery {
   status: PRODUCT_STATUS_ENUM | 'all';
 
   @IsOptional()
-  @IsString()
+  @IsUUID()
   category: string;
 
   @IsOptional()

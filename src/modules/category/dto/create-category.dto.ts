@@ -1,6 +1,6 @@
 import { PaginationDto } from '@/common/dtos';
 import { Transform, Type } from 'class-transformer';
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, ValidateNested } from 'class-validator';
+import { IsEnum, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, ValidateNested } from 'class-validator';
 
 export enum CategoryStatusEnum {
   ACTIVE = 'ACTIVE',
@@ -74,4 +74,8 @@ export class GetCategoryDropdownQuery {
   @Max(5)
   @IsOptional()
   depth?: number;
+
+  @IsOptional()
+  @IsIn(['createdAt', 'name'])
+  sortBy: string;
 }

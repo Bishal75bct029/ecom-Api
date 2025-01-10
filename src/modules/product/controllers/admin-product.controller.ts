@@ -29,7 +29,7 @@ export class AdminProductController {
 
   @Get()
   async listProducts(@Query() productQuery: GetAdminProductsQuery, @Req() req: Request) {
-    const { search, status, category, limit, page, sortBy } = productQuery;
+    const { search, status, category: categoryId, limit, page, sortBy } = productQuery;
     let { order } = productQuery;
 
     order = order?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
@@ -55,14 +55,18 @@ export class AdminProductController {
       }
     }
 
-    if (category) {
+    if (categoryId) {
+      const parentCategory = await this.categoryService.findOne({ where: { id: categoryId }, select: ['id'] });
+      const descendantCategories = await this.categoryService.findDescendantsTree(parentCategory);
+      const descendantCategoriesIds = this.categoryService.getAllTreeIds(descendantCategories);
+
       if (Array.isArray(whereClause) && whereClause.length > 0) {
         whereClause = whereClause.map((condition) => ({
           ...condition,
-          categories: { name: category },
+          categories: { id: In(descendantCategoriesIds) },
         }));
       } else {
-        whereClause = [{ categories: { id: category } }];
+        whereClause = [{ categories: { id: In(descendantCategoriesIds) } }];
       }
     }
 
@@ -84,7 +88,7 @@ export class AdminProductController {
       },
       order: sortBy ? { [sortBy]: order } : { updatedAt: 'DESC' },
       cache:
-        status || category || search || sortBy
+        status || categoryId || search || sortBy
           ? undefined
           : {
               id: `${envConfig.REDIS_PREFIX}:${req.url}`,

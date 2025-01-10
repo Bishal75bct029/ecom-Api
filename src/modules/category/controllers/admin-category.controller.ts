@@ -14,7 +14,7 @@ import {
 } from '../dto';
 import { getPaginatedResponse } from '@/common/utils';
 import { ValidateIDDto } from '@/common/dtos';
-import { type CategoryEntity } from '../entities/category.entity';
+import { CategoryEntity } from '../entities/category.entity';
 import { envConfig } from '@/configs/envConfig';
 import { RedisService } from '@/libs/redis/redis.service';
 
@@ -98,9 +98,16 @@ export class AdminCategoryController {
   }
 
   @Get('dropdown')
-  async listCategoriesForDropdown(@Query() { depth }: GetCategoryDropdownQuery) {
+  async listCategoriesForDropdown(@Query() { depth, sortBy }: GetCategoryDropdownQuery) {
     const categories = await this.categoryService.findTrees(depth ? { depth: depth - 1 } : undefined);
-    return this.categoryService.pickPropertiesFromNestedTree(categories, ['id', 'name', 'createdAt', 'status']);
+    const properties: (keyof CategoryEntity)[] = ['id', 'name', 'createdAt', 'status'];
+
+    const selectedSortBy =
+      sortBy && properties.includes(sortBy as keyof CategoryEntity)
+        ? (sortBy as keyof CategoryEntity)
+        : ('name' as keyof CategoryEntity);
+
+    return this.categoryService.pickPropertiesFromNestedTree(categories, properties, selectedSortBy);
   }
 
   @Get(':id')
