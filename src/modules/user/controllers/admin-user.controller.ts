@@ -296,9 +296,12 @@ export class AdminUserController {
     if (!this.userService.comparePassword(currentPassword, userDetail.password)) {
       throw new BadRequestException('Invalid current password');
     }
+
+    if (currentPassword === newPassword) throw new BadRequestException('New password must be different from old one.');
+
     await this.userService.update({ id: user.id }, { password: await bcrypt.hash(newPassword, 10) });
 
-    return { message: 'Password change successfully' };
+    return { message: 'Password changed successfully' };
   }
 
   @Put(':id')
