@@ -120,14 +120,19 @@ export class AdminCategoryController {
         description: true,
         status: true,
       },
+      order: { createdAt: 'ASC' },
     });
     if (!category) throw new BadRequestException('Category not found');
 
     if (type === 'ancestors') {
-      return this.categoryService.findAncestorsTree(category);
+      const ancestors = await this.categoryService.findAncestorsTree(category);
+
+      return this.categoryService.sortTreeHierarchy(ancestors);
     }
 
-    return this.categoryService.findDescendantsTree(category);
+    const descendants = await this.categoryService.findDescendantsTree(category);
+
+    return this.categoryService.sortTreeHierarchy(descendants);
   }
 
   @Post()

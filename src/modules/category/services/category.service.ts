@@ -74,6 +74,17 @@ export class CategoryService extends CategoryRepository {
       }));
   };
 
+  sortTreeHierarchy(category: CategoryEntity) {
+    if (category.children === null) return category;
+
+    const sortedCategory = category.children.sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+    sortedCategory.forEach((child) => this.sortTreeHierarchy(child));
+
+    return { ...category, children: sortedCategory };
+  }
+
   getAllTreeIds(tree: CategoryEntity): string[] {
     const result: CategoryEntity[] = [];
     const stack: CategoryEntity[] = [tree];
