@@ -33,18 +33,24 @@ export class CategoryService extends CategoryRepository {
     }));
   };
 
-  pickPropertiesFromNestedTree = <T extends { children?: T[] }>(data: T[], propertyToPick: (keyof T)[]) => {
+  pickPropertiesFromNestedTree = <T extends { children?: T[] }>(
+    data: T[],
+    propertyToPick: (keyof T)[],
+    sortableProperty?: keyof T | undefined,
+  ) => {
     if (!data || !data.length) return [];
-    const hasCreatedAt = (item: T): item is T & { createdAt: Date } => {
-      return 'createdAt' in item && item.createdAt instanceof Date;
-    };
 
-    if (propertyToPick.includes('createdAt' as keyof T)) {
+    if (sortableProperty && propertyToPick.includes(sortableProperty)) {
       data = data.sort((a, b) => {
-        if (hasCreatedAt(a) && hasCreatedAt(b)) {
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        const valueA = a[sortableProperty];
+        const valueB = b[sortableProperty];
+
+        if (valueA instanceof Date && valueB instanceof Date) {
+          return valueB.getTime() - valueA.getTime();
         }
 
+        if (valueA > valueB) return 1;
+        if (valueA < valueB) return -1;
         return 0;
       });
     }
@@ -63,7 +69,7 @@ export class CategoryService extends CategoryRepository {
           return acc;
         }, {} as T),
         ...(category.children && category.children.length
-          ? { children: this.pickPropertiesFromNestedTree(category.children, propertyToPick) }
+          ? { children: this.pickPropertiesFromNestedTree(category.children, propertyToPick, sortableProperty) }
           : {}),
       }));
   };
