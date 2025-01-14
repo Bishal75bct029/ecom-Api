@@ -3,8 +3,8 @@ import { AbstractService } from '@/libs/service/abstract.service';
 import { ReviewEntity } from '../entities/review.entity';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { OrderItemEntity } from '@/modules/order/entities/order-item.entity';
-import { OrderEntity, OrderStatusEnum } from '@/modules/order/entities/order.entity';
+import { OrderItemEntity, OrderStatusEnum } from '@/modules/order/entities/order-item.entity';
+import { OrderEntity } from '@/modules/order/entities/order.entity';
 
 @Injectable()
 export class ReviewRepository extends AbstractService<ReviewEntity> {

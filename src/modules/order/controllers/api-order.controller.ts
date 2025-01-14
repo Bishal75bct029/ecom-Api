@@ -1,10 +1,10 @@
-import { Controller, Post, Body, Req, BadRequestException, Query, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, Req, BadRequestException, Query, Get, Param, Put } from '@nestjs/common';
 import { Request } from 'express';
-import { DataSource, FindOptionsWhere, In, Not } from 'typeorm';
-import { CreateOrderDto, OrderQueryDto, OrderQueryEnum } from '../dto/create-order.dto';
-
-import { CapturePaymentDto } from '@/modules/transaction/dto/capture-payment.dto';
+import { DataSource, In } from 'typeorm';
 import { ApiTags } from '@nestjs/swagger';
+
+import { CreateOrderDto, OrderQueryDto } from '../dto/create-order.dto';
+import { CapturePaymentDto } from '@/modules/transaction/dto/capture-payment.dto';
 import { OrderItemService } from '../services/order-item.service';
 import { SchoolDiscountService } from '@/modules/school-discount/services/schoolDiscount.service';
 import { ProductMetaService } from '@/modules/product/services';
@@ -14,9 +14,9 @@ import { CartService } from '@/modules/cart/services/cart.service';
 import { OrderService } from '../services/order.service';
 import { PaypalService } from '@/common/module/payment/paypal.service';
 import { SchoolDiscountEntity } from '@/modules/school-discount/entities/schoolDiscount.entity';
-import { ProductMetaEntity } from '@/modules/product/entities';
-import { OrderEntity, OrderStatusEnum } from '../entities/order.entity';
-import { OrderItemEntity } from '../entities/order-item.entity';
+import { ProductEntity, ProductMetaEntity } from '@/modules/product/entities';
+import { OrderEntity } from '../entities/order.entity';
+import { OrderItemEntity, OrderStatusEnum } from '../entities/order-item.entity';
 import { CartEntity } from '@/modules/cart/entities/cart.entity';
 import { TransactionEntity } from '@/modules/transaction/entities/transaction.entity';
 import { getRoundedOffValue } from '@/common/utils';
@@ -93,7 +93,8 @@ export class ApiOrderController {
       const orderItems = productMetas.map((productMeta) => {
         const quantity = createOrderDto.productMetaIds.find(({ id }) => id === productMeta.id).quantity;
         const pricePerUnit = Math.floor(
-          getRoundedOffValue((Number(productMeta.price) * ((1 - discount?.discountPercentage || 0) / 100)) / 100),
+          getRoundedOffValue((Number(productMeta.price) * ((1 - (discount?.discountPercentage ?? 0)) / 100)) / 100) *
+            100,
         );
 
         return {
@@ -120,7 +121,7 @@ export class ApiOrderController {
         this.cartService.findOne({ where: { user: { id: userId } } }),
       ]);
 
-      //cart query
+      // cart query
       let promisifiedCart: Promise<CartEntity>;
       const productMetaIds = userCart.cartItems.map((item) => item.productMetaId);
       if (userCart && productMetaIds.some((metaId) => productMetas.map(({ id }) => id).includes(metaId))) {
@@ -133,7 +134,7 @@ export class ApiOrderController {
         });
       }
 
-      //save transaction and cart update
+      // save transaction and cart update
       await Promise.all([
         entityManager.save(TransactionEntity, {
           transactionId: paypalPaymentPayload?.result.id,
@@ -162,10 +163,10 @@ export class ApiOrderController {
         order: {
           id: true,
           totalPrice: true,
-          status: true,
           orderItems: {
             id: true,
             pricePerUnit: true,
+            status: true,
             quantity: true,
             totalPrice: true,
             productMeta: {
@@ -198,64 +199,77 @@ export class ApiOrderController {
   }
 
   @Get()
-  async getOrders(@Req() { session: { user } }: Request, @Query() { status }: OrderQueryDto) {
-    let whereClause: FindOptionsWhere<OrderEntity> = {
-      user: { id: user.id },
-      transaction: { isSuccess: true },
-    };
-    if (status && status == OrderQueryEnum.PENDING) {
-      whereClause = {
-        ...whereClause,
-        status: Not(In([OrderStatusEnum.DELIVERED, OrderStatusEnum.CANCELLED])),
-      };
+  async getOrders(@Req() { session: { user } }: Request, @Query() orderQueryDto: OrderQueryDto) {
+    const { status, page = 1, limit = 10 } = orderQueryDto;
+
+    const queryBuilder = this.orderService.createQueryBuilder('order');
+    queryBuilder
+      .leftJoinAndSelect('order.orderItems', 'orderItem')
+      .leftJoinAndSelect('orderItem.productMeta', 'productMeta')
+      .leftJoinAndSelect('productMeta.product', 'product')
+      .leftJoinAndSelect('order.transaction', 'transaction')
+      .select([
+        'order.id',
+        'order.totalPrice',
+        'order.createdAt',
+        'order.updatedAt',
+        'orderItem.id',
+        'orderItem.quantity',
+        'orderItem.status',
+        'orderItem.pricePerUnit',
+        'orderItem.totalPrice',
+        'productMeta.id',
+        'productMeta.images',
+        'productMeta.price',
+        'productMeta.attributes',
+        'product.id',
+        'product.name',
+        'transaction.isSuccess',
+        'transaction.transactionId',
+      ])
+      .where('order.userId = :userId', { userId: user.id })
+      .andWhere('transaction.isSuccess = :isSuccess', { isSuccess: true });
+
+    if (status === 'pending') {
+      queryBuilder.andWhere((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('1')
+          .from('order_items', 'oi')
+          .where('oi.orderId = order.id AND oi.status NOT IN(:...notPendingStatuses)', {
+            notPendingStatuses: [OrderStatusEnum.DELIVERED, OrderStatusEnum.CANCELLED],
+          })
+          .getQuery();
+
+        return `EXISTS ${subQuery}`;
+      });
     }
-    const orders = await this.orderService.find({
-      where: whereClause,
-      relations: ['orderItems', 'orderItems.productMeta', 'orderItems.productMeta.product', 'transaction'],
-      order: { createdAt: 'DESC' },
-      select: {
-        id: true,
-        totalPrice: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-        orderItems: {
-          id: true,
-          quantity: true,
-          pricePerUnit: true,
-          totalPrice: true,
-          productMeta: {
-            id: true,
-            images: true,
-            price: true,
-            attributes: {},
-            product: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-        transaction: {
-          isSuccess: true,
-          transactionId: true,
-        },
-      },
-    });
-    return orders.map((order) => {
-      return {
-        ...order,
-        orderItems: order.orderItems.map((orderItem) => {
-          return {
-            ...orderItem,
-            pricePerUnit: Number(orderItem.totalPrice) / 100,
-            productMeta: {
-              ...orderItem.productMeta,
-              price: (Number(orderItem.productMeta.price) / 100) * orderItem.quantity,
-            },
-          };
-        }),
-      };
-    });
+
+    const [orders, count] = await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      count,
+      order: orders?.map((order) => {
+        return {
+          ...order,
+          totalPrice: Number(order.totalPrice) / 100,
+          orderItems: order.orderItems.map((orderItem) => {
+            return {
+              ...orderItem,
+              pricePerUnit: Number(orderItem.pricePerUnit) / 100,
+              totalPrice: Number(orderItem.totalPrice) / 100,
+              productMeta: {
+                ...orderItem.productMeta,
+                price: (Number(orderItem.productMeta.price) / 100) * orderItem.quantity,
+              },
+            };
+          }),
+        };
+      }),
+    };
   }
 
   @Get(':id')
@@ -270,9 +284,9 @@ export class ApiOrderController {
       select: {
         id: true,
         totalPrice: true,
-        status: true,
         orderItems: {
           id: true,
+          status: true,
           pricePerUnit: true,
           quantity: true,
           totalPrice: true,
@@ -291,5 +305,55 @@ export class ApiOrderController {
         updatedAt: true,
       },
     });
+  }
+
+  @Put('cancel-order/:id')
+  async cancelOrder(@Req() { session: { user } }: Request, @Param() { id }: ValidateIDDto) {
+    const order = await this.orderService.findOne({
+      where: { id, user: { id: user.id } },
+      relations: ['orderItems', 'orderItems.productMeta'],
+    });
+    if (!order) throw new BadRequestException('Order not found.');
+
+    if (!this.orderService.isOrderCancellable(OrderStatusEnum.CANCELLED, order.orderItems))
+      throw new BadRequestException('Cannot cancel order.');
+
+    await this.dataSource.transaction(async (entityManager) => {
+      const productMetas = await this.productMetaService.find({
+        where: { id: In(order.orderItems.map((item) => item.productMeta.id)) },
+        relations: ['product'],
+        select: {
+          id: true,
+          stock: true,
+          product: {
+            id: true,
+            stock: true,
+          },
+        },
+      });
+
+      const stockUpdatedProduct = new Map<string, ProductEntity>();
+      productMetas.forEach((productMeta) => {
+        const increasedStock = order.orderItems.find((item) => item.productMeta.id === productMeta.id).quantity;
+        productMeta.stock += Number(increasedStock ?? 0);
+
+        const product = stockUpdatedProduct.get(productMeta.product.id) || { ...productMeta.product };
+        product.stock += Number(increasedStock ?? 0);
+        stockUpdatedProduct.set(productMeta.product.id, product);
+      });
+
+      const cancelledOrderItems = order.orderItems.map((item) => ({
+        ...item,
+        status: OrderStatusEnum.CANCELLED,
+      }));
+
+      await Promise.all([
+        entityManager.save(ProductMetaEntity, productMetas),
+        entityManager.save(ProductEntity, [...stockUpdatedProduct.values()]),
+        entityManager.save(OrderItemEntity, cancelledOrderItems),
+      ]);
+    });
+
+    return { message: 'Order cancelled successfully' };
   }
 }

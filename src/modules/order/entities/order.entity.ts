@@ -5,14 +5,6 @@ import { OrderItemEntity } from './order-item.entity';
 import { DiscountEntity } from '@/modules/discount/entity/discount.entity';
 import { TransactionEntity } from '@/modules/transaction/entities/transaction.entity';
 
-export enum OrderStatusEnum {
-  PLACED = 'PLACED',
-  PACKED = 'PACKED',
-  SHIPPED = 'SHIPPED',
-  DELIVERED = 'DELIVERED',
-  CANCELLED = 'CANCELLED',
-}
-
 @Entity('orders')
 export class OrderEntity extends BaseEntity {
   @Column({
@@ -28,9 +20,6 @@ export class OrderEntity extends BaseEntity {
     },
   })
   totalPrice: number;
-
-  @Column({ type: 'enum', nullable: false, enum: OrderStatusEnum, default: OrderStatusEnum.PLACED })
-  status: OrderStatusEnum;
 
   @OneToMany(() => OrderItemEntity, (orderItems) => orderItems.order)
   orderItems: OrderItemEntity[];

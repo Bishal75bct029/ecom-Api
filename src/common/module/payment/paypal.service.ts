@@ -27,7 +27,8 @@ export class PaypalService {
           cancel_url: envConfig.PAYPAL_CANCEL_URL,
         },
       });
-      return await this.paypalClient.execute(request);
+
+      return this.paypalClient.execute(request);
     } catch (err) {
       throw err;
     }
@@ -37,7 +38,7 @@ export class PaypalService {
     try {
       const request = new paypal.orders.OrdersCaptureRequest(token);
 
-      return await this.paypalClient.execute(request);
+      return this.paypalClient.execute(request);
     } catch (err) {
       throw err;
     }
