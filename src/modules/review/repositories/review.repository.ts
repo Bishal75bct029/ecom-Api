@@ -3,8 +3,9 @@ import { AbstractService } from '@/libs/service/abstract.service';
 import { ReviewEntity } from '../entities/review.entity';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { OrderItemEntity, OrderStatusEnum } from '@/modules/order/entities/order-item.entity';
+import { OrderItemEntity } from '@/modules/order/entities/order-item.entity';
 import { OrderEntity } from '@/modules/order/entities/order.entity';
+import { OrderItemStatusEnum } from '@/modules/order/entities/order-history.entity';
 
 @Injectable()
 export class ReviewRepository extends AbstractService<ReviewEntity> {
@@ -23,7 +24,7 @@ export class ReviewRepository extends AbstractService<ReviewEntity> {
       .innerJoin(OrderEntity, 'o', 'o.id = oi.orderId')
       .where('oi.productMetaId IN (:...ids) and o.status = :status and o.userId = :userId', {
         ids: productMetaIds,
-        status: OrderStatusEnum.DELIVERED,
+        status: OrderItemStatusEnum.DELIVERED,
         userId: userId,
       })
       .getCount();

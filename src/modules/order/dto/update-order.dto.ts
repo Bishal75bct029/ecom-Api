@@ -2,7 +2,7 @@ import { PartialType } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
 
 import { CreateOrderDto } from './create-order.dto';
-import { OrderStatusEnum } from '../entities/order-item.entity';
+import { OrderItemStatusEnum } from '../entities/order-history.entity';
 
 export class UpdateOrderDto extends PartialType(CreateOrderDto) {}
 
@@ -12,6 +12,6 @@ export class UpdateOrderStatusDto {
   orderItemId: string;
 
   @IsNotEmpty()
-  @IsEnum(OrderStatusEnum)
-  status: OrderStatusEnum;
+  @IsEnum(OrderItemStatusEnum)
+  status: OrderItemStatusEnum;
 }

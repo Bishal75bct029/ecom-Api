@@ -8,6 +8,7 @@ import { ProductEntity } from '@/modules/product/entities';
 import { ReviewEntity } from '@/modules/review/entities/review.entity';
 import { TransactionEntity } from '@/modules/transaction/entities/transaction.entity';
 import { AddressEntity } from './address.entity';
+import { OrderStatusHistoryEntity } from '@/modules/order/entities/order-history.entity';
 
 export enum UserRoleEnum {
   ADMIN = 'ADMIN',
@@ -73,4 +74,7 @@ export class UserEntity extends BaseEntity {
 
   @OneToMany(() => UserEntity, (user) => user.deletedBy)
   deletedUsers?: UserEntity[];
+
+  @OneToMany(() => OrderStatusHistoryEntity, (orderHistory) => orderHistory.updatedBy)
+  orderHistory: OrderStatusHistoryEntity[];
 }

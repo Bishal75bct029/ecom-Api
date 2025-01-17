@@ -3,18 +3,18 @@ import { ProductMetaEntity } from '@/modules/product/entities';
 import { CreateOrderDto } from '../dto/create-order.dto';
 import { OrderItemRepository } from '../repositories/order-item.repository';
 import { DiscountEntity } from '@/modules/discount/entity/discount.entity';
-import { OrderStatusEnum } from '../entities/order-item.entity';
+import { OrderItemStatusEnum } from '../entities/order-history.entity';
 
 @Injectable()
 export class OrderItemService extends OrderItemRepository {
-  private _statusTransitions: Record<OrderStatusEnum, OrderStatusEnum[]> = {
-    [OrderStatusEnum.PENDING]: [OrderStatusEnum.SHIPPED],
-    [OrderStatusEnum.SHIPPED]: [OrderStatusEnum.DELIVERED],
-    [OrderStatusEnum.DELIVERED]: [],
-    [OrderStatusEnum.CANCELLED]: [],
+  private _statusTransitions: Record<OrderItemStatusEnum, OrderItemStatusEnum[]> = {
+    [OrderItemStatusEnum.PENDING]: [OrderItemStatusEnum.SHIPPED],
+    [OrderItemStatusEnum.SHIPPED]: [OrderItemStatusEnum.DELIVERED],
+    [OrderItemStatusEnum.DELIVERED]: [],
+    [OrderItemStatusEnum.CANCELLED]: [],
   };
 
-  isValidStatusTransition(currentStatus: OrderStatusEnum, newStatus: OrderStatusEnum) {
+  isValidStatusTransition(currentStatus: OrderItemStatusEnum, newStatus: OrderItemStatusEnum) {
     const allowedTransitions = this._statusTransitions[currentStatus];
     return allowedTransitions.includes(newStatus);
   }

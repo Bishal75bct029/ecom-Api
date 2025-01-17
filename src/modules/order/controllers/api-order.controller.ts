@@ -15,12 +15,14 @@ import { OrderService } from '../services/order.service';
 import { PaypalService } from '@/common/module/payment/paypal.service';
 import { SchoolDiscountEntity } from '@/modules/school-discount/entities/schoolDiscount.entity';
 import { ProductEntity, ProductMetaEntity } from '@/modules/product/entities';
-import { OrderEntity } from '../entities/order.entity';
-import { OrderItemEntity, OrderStatusEnum } from '../entities/order-item.entity';
+import { OrderEntity, OrderStatusEnum } from '../entities/order.entity';
+import { OrderItemEntity } from '../entities/order-item.entity';
 import { CartEntity } from '@/modules/cart/entities/cart.entity';
 import { TransactionEntity } from '@/modules/transaction/entities/transaction.entity';
 import { getRoundedOffValue } from '@/common/utils';
 import { ValidateIDDto } from '@/common/dtos';
+import { OrderItemStatusEnum } from '../entities/order-history.entity';
+import { OrderStatusHistoryService } from '../services/order-history-service';
 
 @ApiTags('API Order')
 @Controller('api/orders')
@@ -28,6 +30,7 @@ export class ApiOrderController {
   constructor(
     private readonly dataSource: DataSource,
     private readonly orderItemService: OrderItemService,
+    private readonly orderHistoryService: OrderStatusHistoryService,
     private readonly schoolDiscountService: SchoolDiscountService,
     private readonly productMetaService: ProductMetaService,
     private readonly paymentMethodService: PaymentMethodService,
@@ -108,6 +111,13 @@ export class ApiOrderController {
       const createdOrderItems = this.orderItemService.createMany(orderItems);
       await entityManager.save(OrderItemEntity, createdOrderItems);
 
+      const createOrderStatusHistory = createdOrderItems.map((item) => ({
+        status: item.status,
+        orderItems: { id: item.id },
+      }));
+
+      this.orderHistoryService.insert(createOrderStatusHistory);
+
       //create paypal payment intent
       const [paypalPaymentPayload, userCart] = await Promise.all([
         this.paypalService.createPayment([
@@ -158,7 +168,13 @@ export class ApiOrderController {
 
     const transaction = await this.transactionService.findOne({
       where: { transactionId: token, isSuccess: false },
-      relations: ['order', 'order.orderItems', 'order.orderItems.productMeta', 'order.orderItems.productMeta.product'],
+      relations: [
+        'order',
+        'order.orderItems',
+        'order.orderItems.orderHistory',
+        'order.orderItems.productMeta',
+        'order.orderItems.productMeta.product',
+      ],
       select: {
         order: {
           id: true,
@@ -166,7 +182,9 @@ export class ApiOrderController {
           orderItems: {
             id: true,
             pricePerUnit: true,
-            status: true,
+            orderHistory: {
+              status: true,
+            },
             quantity: true,
             totalPrice: true,
             productMeta: {
@@ -200,7 +218,7 @@ export class ApiOrderController {
 
   @Get()
   async getOrders(@Req() { session: { user } }: Request, @Query() orderQueryDto: OrderQueryDto) {
-    const { status, page = 1, limit = 10 } = orderQueryDto;
+    const { page = 1, limit = 10 } = orderQueryDto;
 
     const queryBuilder = this.orderService.createQueryBuilder('order');
     queryBuilder
@@ -230,20 +248,20 @@ export class ApiOrderController {
       .where('order.userId = :userId', { userId: user.id })
       .andWhere('transaction.isSuccess = :isSuccess', { isSuccess: true });
 
-    if (status === 'pending') {
-      queryBuilder.andWhere((qb) => {
-        const subQuery = qb
-          .subQuery()
-          .select('1')
-          .from('order_items', 'oi')
-          .where('oi.orderId = order.id AND oi.status NOT IN(:...notPendingStatuses)', {
-            notPendingStatuses: [OrderStatusEnum.DELIVERED, OrderStatusEnum.CANCELLED],
-          })
-          .getQuery();
+    // if (status === 'pending') {
+    //   queryBuilder.andWhere((qb) => {
+    //     const subQuery = qb
+    //       .subQuery()
+    //       .select('1')
+    //       .from('order_items', 'oi')
+    //       .where('oi.orderId = order.id AND oi.status NOT IN(:...notPendingStatuses)', {
+    //         notPendingStatuses: [OrderItemStatusEnum.DELIVERED, OrderItemStatusEnum.CANCELLED],
+    //       })
+    //       .getQuery();
 
-        return `EXISTS ${subQuery}`;
-      });
-    }
+    //     return `EXISTS ${subQuery}`;
+    //   });
+    // }
 
     const [orders, count] = await queryBuilder
       .skip((page - 1) * limit)
@@ -280,13 +298,15 @@ export class ApiOrderController {
         id,
         transaction: { isSuccess: true },
       },
-      relations: ['orderItems', 'orderItems.productMeta', 'orderItems.productMeta.product'],
+      relations: ['orderItems', 'orderItems.productMeta', 'orderItems.orderHistory', 'orderItems.productMeta.product'],
       select: {
         id: true,
         totalPrice: true,
         orderItems: {
           id: true,
-          status: true,
+          orderHistory: {
+            status: true,
+          },
           pricePerUnit: true,
           quantity: true,
           totalPrice: true,
@@ -315,8 +335,7 @@ export class ApiOrderController {
     });
     if (!order) throw new BadRequestException('Order not found.');
 
-    if (!this.orderService.isOrderCancellable(OrderStatusEnum.CANCELLED, order.orderItems))
-      throw new BadRequestException('Cannot cancel order.');
+    if (order.status !== OrderStatusEnum.PENDING) throw new BadRequestException('Cannot cancel order.');
 
     await this.dataSource.transaction(async (entityManager) => {
       const productMetas = await this.productMetaService.find({
@@ -342,15 +361,23 @@ export class ApiOrderController {
         stockUpdatedProduct.set(productMeta.product.id, product);
       });
 
-      const cancelledOrderItems = order.orderItems.map((item) => ({
-        ...item,
-        status: OrderStatusEnum.CANCELLED,
-      }));
+      const orderItemsId: string[] = [];
+      const cancelledOrderItems = order.orderItems.map((item) => {
+        orderItemsId.push(item.id);
+        return {
+          ...item,
+          status: OrderItemStatusEnum.CANCELLED,
+        };
+      });
 
       await Promise.all([
         entityManager.save(ProductMetaEntity, productMetas),
         entityManager.save(ProductEntity, [...stockUpdatedProduct.values()]),
         entityManager.save(OrderItemEntity, cancelledOrderItems),
+        this.orderHistoryService.update(
+          { orderItems: { id: In(orderItemsId) } },
+          { status: OrderItemStatusEnum.CANCELLED },
+        ),
       ]);
     });
 

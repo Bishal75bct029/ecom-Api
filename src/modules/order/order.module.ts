@@ -12,10 +12,12 @@ import { TransactionModule } from '../transaction/transaction.module';
 import { PaymentMethodModule } from '../payment-method/payment-method.module';
 import { SchoolDiscountModule } from '../school-discount/school-discount.module';
 import { CartModule } from '../cart/cart.module';
+import { OrderStatusHistoryService } from './services/order-history-service';
+import { OrderStatusHistoryEntity } from './entities/order-history.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([OrderEntity, OrderItemEntity]),
+    TypeOrmModule.forFeature([OrderEntity, OrderItemEntity, OrderStatusHistoryEntity]),
     ProductModule,
     SchoolDiscountModule,
     PaymentModule,
@@ -25,6 +27,6 @@ import { CartModule } from '../cart/cart.module';
     CartModule,
   ],
   controllers: [ApiOrderController, AdminOrderController],
-  providers: [OrderService, OrderItemService],
+  providers: [OrderService, OrderItemService, OrderStatusHistoryService],
 })
 export class OrderModule {}

@@ -48,9 +48,11 @@ class SubCategory {
 
 export class GetCategoryQuery extends PaginationDto {
   @IsOptional()
+  @IsIn(['name', 'updatedAt', 'productCount'])
   sortBy?: 'name' | 'updatedAt' | 'productCount';
 
   @IsOptional()
+  @IsIn(['asc', 'desc'])
   order?: 'ASC' | 'DESC';
 
   @IsString()

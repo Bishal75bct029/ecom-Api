@@ -13,7 +13,7 @@ export const TYPEORM_CONFIG = {
   migrations: [join(__dirname, '../migrations/*{.ts,.js}')],
   migrationsTableName: 'migrations',
   synchronize: false,
-  logging: false,
+  logging: true,
   cache: {
     duration: 86400 * 1000,
     type: 'ioredis',
